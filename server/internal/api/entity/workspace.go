@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -164,6 +165,11 @@ func (w *Workspace) AttachMetadatas(ctx context.Context, cfg *Config) (err error
 
 		// parse license token
 		parser := paseto.NewParser()
+		// each Rimdian deployment has a different API endpoint
+		parser.AddRule(paseto.ForAudience(cfg.API_ENDPOINT))
+		parser.AddRule(paseto.Subject(w.ID))
+		parser.AddRule(paseto.NotExpired())
+
 		token, err := parser.ParseV4Public(publicKey, *w.LicenseKey, nil)
 
 		// silent error
@@ -175,15 +181,33 @@ func (w *Workspace) AttachMetadatas(ctx context.Context, cfg *Config) (err error
 		claims := token.Claims()
 
 		if usq, ok := claims["usq"]; ok {
-			w.LicenseInfo.UserSegmentsQuota = int64(usq.(float64))
+			// convert string to int64
+			quota, err := strconv.ParseInt(usq.(string), 10, 64)
+			if err != nil {
+				log.Printf("error parsing license usq: %s", err.Error())
+			} else {
+				w.LicenseInfo.UserSegmentsQuota = quota
+			}
 		}
 
 		if dlo90, ok := claims["dlo90"]; ok {
-			w.LicenseInfo.DataLogsOver90Days = int64(dlo90.(float64))
+			// convert string to int64
+			quota90days, err := strconv.ParseInt(dlo90.(string), 10, 64)
+			if err != nil {
+				log.Printf("error parsing license dlo90: %s", err.Error())
+			} else {
+				w.LicenseInfo.DataLogsOver90Days = quota90days
+			}
 		}
 
 		if ar, ok := claims["ar"]; ok {
-			w.LicenseInfo.HasAdminRoles = ar.(bool)
+			// convert string to bool
+			hasAdminRoles, err := strconv.ParseBool(ar.(string))
+			if err != nil {
+				log.Printf("error parsing license ar: %s", err.Error())
+			} else {
+				w.LicenseInfo.HasAdminRoles = hasAdminRoles
+			}
 		}
 	}
 

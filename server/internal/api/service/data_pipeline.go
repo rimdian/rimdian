@@ -338,6 +338,8 @@ func (pipe *DataLogPipeline) Replay(ctx context.Context) {
 		return
 	}
 
+	pipe.DataLogInQueue.IsReplay = true
+
 	// ignore if dataLog is already done without errors
 	if pipe.DataLog.Checkpoint == entity.DataLogCheckpointDone && pipe.DataLog.HasError == entity.DataLogHasErrorNone {
 		return

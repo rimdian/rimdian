@@ -397,7 +397,7 @@ func (pipe *DataLogPipeline) Execute(ctx context.Context) {
 				if err := pipe.Repository.UpdateDataLog(spanCtx, pipe.Workspace.ID, pipe.DataLog); err != nil {
 					pipe.SetError("server", fmt.Sprintf("doDataLog: %v", err), true)
 				}
-			} else {
+			} else if pipe.HasError() {
 				// persist invalid datalog in DB to keep track of the error
 				pipe.Repository.RunInTransactionForWorkspace(spanCtx, pipe.Workspace.ID, func(ctx context.Context, tx *sql.Tx) (txCode int, txErr error) {
 					pipe.Repository.InsertDataLog(ctx, pipe.Workspace.ID, pipe.DataLog, tx)

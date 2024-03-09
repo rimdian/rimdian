@@ -1,0 +1,531 @@
+
+@api_host = https://localapi.rimdian.com:8000
+@collector_host = https://localcollector.rimdian.com:8888
+
+### Collector: Import data into live Queue
+POST {{collector_host}}/data
+Content-Type: application/json
+
+{
+    "foo": "bar"
+}
+
+### Collector: Import data into historical Queue
+# POST {{collector_host}}/historical
+# Content-Type: application/json
+
+# {
+#     "foo": "bar"
+# }
+
+### Collector: Bypass the Queue, import data directly into the API
+POST {{collector_host}}/bypass
+Content-Type: application/json
+Authorization: Bearer v2.local.hiiqXmip8drkyRcAdoyQQVmJSpXBtLtY2RgDhf-HQVHhiNOGqTcLkYXVpnXfxjkFUN0DhSGJZY7tCCOJplg45aNIPvGSTikHXVEB9YTLpnsjgmLMN0yjXC-VJD8SeYuSsiXc9OIuXO2H0eeAMEAxOdPOaYweR0aS6Tv3i17jb71NZfOzOuveq1IvhnbdJgB87zohgEQ-debGzsJx69QcZDG_zejOjnYt1_HxwzYCSnfrAem-DiobOiih3fh6qnXZetXn7AQLHPWBwwGigFKqIKug5DFBJSA1SWoSJVeTvVDSvdTdW_NfDAhu5OPVdEXt2MvZhTWw4j5PcxJsB7zG5FtpJRk3YXnNS_k5FVGm0cAwA0CRzFk2Pw
+
+{
+    "workspace_id": "acme_testing",
+    "items": [
+        {
+            "kind": "order",
+            "user": {
+                "external_id": "1125509",
+                "created_at": "2023-06-13T08:09:49+00:00",
+                "is_authenticated": true,
+                "signed_up_at": "2023-06-13T08:09:49+00:00"
+            },
+            "order": {
+                "external_id": "000515645",
+                "created_at": "2023-06-13T02:07:31+00:00",
+                "domain_id": "web",
+                "subtotal_price": 3333,
+                "total_price": 4444,
+                "updated_at": "2023-06-13T08:11:45+00:00",
+                "cancel_reason": null,
+                "items": [
+                    {
+                        "external_id": "TEDPM140200",
+                        "name": "Le prot\\u00e8ge matelas",
+                        "product_external_id": "Protection\\u00a0matelas 140x200 cm",
+                        "price": 6666,
+                        "quantity": 3,
+                        "category": "mattress-protector",
+                        "sku": "TEDPM140200",
+                        "brand": "Tediber"
+                    }
+                ]
+            }
+        }
+    ]
+}
+
+
+### API: reset the DB in dev env only
+POST {{api_host}}/api/dev.resetDB
+Content-Type: application/json
+
+{}
+
+
+### API: receive a webhook from Shopify
+POST https://ngrok.rimdian.com/api/shopify.webhook?app_id=shopify&workspace_id=acme_testing
+Content-Type: application/json
+
+{}
+
+###
+# @name login
+POST {{api_host}}/api/account.login
+Content-Type: application/json
+
+{
+    "email": "root@rimdian.com",
+    "password": "root"
+}
+
+###
+# @name loginServiceAccount
+POST {{api_host}}/api/account.login
+Content-Type: application/json
+
+{
+    "email": "test.acme@localapi.rimdian.com",
+    "password": "1234567890123456"
+}
+
+###
+# API: refresh access token
+POST {{api_host}}/api/account.refreshAccessToken
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.refreshToken}} 
+
+
+###
+# API: account set profile
+POST {{api_host}}/api/account.setProfile
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.refreshToken}} 
+
+{
+    "fullName": "John Doe",
+    "timezone": "Europe/Paris"
+}
+
+###
+# API: organization set profile
+POST {{api_host}}/api/organizations.setProfile
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.refreshToken}} 
+
+{
+    "id": "acme",
+    "name": "ACME 2",
+    "currency": "EUR"
+}
+
+###
+# API: list organizations
+GET {{api_host}}/api/organizations.list
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.refreshToken}} 
+
+### API: create workspace
+POST {{api_host}}/api/workspaces.create
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "id": "testworkspace",
+    "organizationId": "acme",
+    "name": "Test",
+    "websiteURL": "https://rimdian.com",
+    "privacyPolicyURL": "https://rimdian.com",
+    "industry": "science",
+    "currency": "USD",
+    "defaultUserTimezone": "America/New_York",
+    "defaultUserCountry": "US",
+    "defaultUserLanguage": "en"
+}
+
+###
+# API: list workspaces
+GET {{api_host}}/api/workspace.list?organizationId=acme
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.refreshToken}} 
+
+###
+# API: list accounts
+# @name accounts
+GET {{api_host}}/api/organizationAccount.list?organizationId=acme
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.refreshToken}} 
+
+### API: create service account
+POST {{api_host}}/api/organizationAccount.createServiceAccount
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "name": "API Key",
+    "emailId": "apikey",
+    "password": "01234567890123456789",
+    "organizationId": "acme"
+}
+
+### API: invite account in organization
+POST {{api_host}}/api/organizationInvitation.create
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "email": "invited@rimdian.com",
+    "organizationId": "acme"
+}
+
+### API: consume invitation
+POST {{api_host}}/api/organizationInvitation.consume
+Content-Type: application/json
+# Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "token": "aW52aXRlZEBjYXB0YWlubWV0cmljcy5jb21-YWNtZQ==.2e05884bdab16d47e58a9ae8f603fda0d6f150f5143b53f58722b25fd5d20a51",
+    "name": "the full name",
+    "password": "123456"
+}
+
+###
+# API: list invitations
+# @name invitations
+GET {{api_host}}/api/organizationInvitation.list?organizationId=acme
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.refreshToken}} 
+
+### API: cancel invitation
+POST {{api_host}}/api/organizationInvitation.cancel
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "email": "invited@rimdian.com",
+    "organizationId": "acme"
+}
+
+### API: transfer organization ownership
+POST {{api_host}}/api/organizationAccount.transferOwnership
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "organizationId": "acme",
+    "toAccountId": "{{account.response.body.accounts[1].id}}"
+}
+
+### API: deactivate organization account
+POST {{api_host}}/api/organizationAccount.deactivate
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "organizationId": "acme",
+    "deactivateAccountId": "{{account.response.body.accounts[1].id}}"
+}
+
+
+### API: upsert domain
+POST {{api_host}}/api/domain.upsert
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "id": "localhost",
+    "workspace_id": "testworkspace",
+    "kind": "web",
+    "name": "localhost",
+    "hosts": [
+    {
+        "host": "https://localconsole.rimdian.com:4433"
+    },
+    {
+        "host": "https://localblog.rimdian.com:4433",
+        "pathPrefix": "blog"
+    }
+    ],
+    "paramsWhitelist": ["category", "id"],
+    "homepagePaths": ["/"]
+}
+
+### API: upsert order conversion rule
+POST {{api_host}}/api/conversionRule.upsert
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+	"id": "sales",
+	"workspace_id": "testworkspace",
+	"name": "Sales",
+	"kind": "order"
+}
+
+### API: upsert lead conversion rule
+POST {{api_host}}/api/conversionRule.upsert
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+	"id": "leads",
+	"workspace_id": "testworkspace",
+	"name": "Leads",
+	"kind": "lead",
+    "leadStages": [
+        {
+            "id": "new",
+            "label": "New 2",
+            "status": "open",
+            "color": "blue"
+        },
+        {
+            "id": "converted",
+            "label": "Converted 2",
+            "status": "converted",
+            "color": "green"
+        },
+        {
+            "id": "lost",
+            "label": "Lost 2",
+            "status": "lost",
+            "color": "orange"
+        },
+        {
+            "id": "migrated",
+            "label": "Migrated",
+            "status": "open",
+            "color": "orange",
+            "deletedAt": "2022-03-12T09:38:06.042Z",
+            "migrateToId": "new"
+        }
+    ]
+}
+
+
+### API: upsert channel group
+POST {{api_host}}/api/channelGroup.upsert
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+    "id": "test",
+    "workspace_id": "testworkspace",
+    "name": "Test group",
+    "color": "red"
+}
+
+### API: delete channel group
+POST {{api_host}}/api/channelGroup.delete
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+	"id": "test",
+	"workspace_id": "testworkspace"
+}
+
+### API: create channel
+POST {{api_host}}/api/channel.create
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+	"id": "test",
+	"workspace_id": "testworkspace",
+	"name": "Test channel",
+	"origins": [
+        {"matchType": "equals", "value": "source_test / medium_test / campaign_test"},
+        {"matchType": "equals", "value": "source_test2 / medium_test2"}
+    ],
+	"voucherCodes": [
+        {
+            "code": "XYZ",
+            "origin": "source_test2 / medium_test2",
+            "setCampaign": "overwritten_campaign",
+            "setAd": "overwritten_ad",
+            "description": "code description"
+        }
+    ],
+	"groupId": "direct"
+}
+
+### API: update channel
+POST {{api_host}}/api/channel.update
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+	"id": "test",
+	"workspace_id": "testworkspace",
+	"name": "Test channel updated",
+	"origins": [
+        {"matchType": "equals", "value": "aa / bb / cc"},
+        {"matchType": "equals", "value": "a / b"}
+    ],
+	"voucherCodes": [
+        {
+            "code": "XYZ",
+            "origin": "a / b",
+            "setCampaign": "x",
+            "setAd": "y",
+            "description": "z"
+        }
+    ],
+	"groupId": "direct"
+}
+
+### API: delete channel
+POST {{api_host}}/api/channel.delete
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+{
+	"id": "test",
+	"workspace_id": "testworkspace"
+}
+
+### API: exec task
+# tasks id: "todo" in dev will fetch the first not-done-yet task to exec
+POST {{api_host}}/api/task.exec?workspace_id=acme_demoecommerce
+Content-Type: application/json
+
+{
+	"id": "todo",
+	"workerId": 0
+}
+
+### API DEV ONLY: exec task with its workers in parallel
+GET {{api_host}}/api/dev.execTaskWithWorkers?workspace_id=acme_testing
+Content-Type: application/json
+
+### API DEV ONLY: process data import in memory queue
+GET {{api_host}}/api/dev.execDataImportFromQueue
+Content-Type: application/json
+
+
+### Wake up cron tasks
+# POST {{api_host}}/api/scheduledTask.wakeUpCrons
+POST {{api_host}}/api/task.wakeUpCrons
+Content-Type: application/json
+
+{
+}
+
+### API: list data imports
+GET {{api_host}}/api/dataImport.list?limit=1&workspace_id=acme_testing
+Content-Type: application/json
+Authorization: Bearer v2.local.wBzsyxt0zCuvbgKiK9gv0B-okDnLKyF8h0q-WoJ_OQykOYsVmNWm-y1YPR9bigBKmcTpzLRDA4lFTol-hB2u3_3thr8tRYQn4dNG64DCICHxn6dh5HZGl52YFu2FI5h06VByI6cbZ83YYk3v_V4KOPGuB7R9VZTCJ_HpTeChwqmjf8z8wk6l7q8d4uwitUsyrSt1qGV_lYa-ypMvB_-VuGmi7O0LvkydKVhrHbQmuVnV-4uPKD1HLHcArxc6P_3EqwNwFYFpnIZpeNIoSK7PRw1_KClmrv-UY2U0D1fvzR_s_69dl47-y1uFIYgpm1Ya386UTIvQmO4
+
+
+### API: list tasks
+GET {{api_host}}/api/task.list?workspace_id=acme_demoecommerce&skip=0&limit=10
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### API: show workspace tables
+GET {{api_host}}/api/workspace.showTables?workspace_id=acme_demoecommerce
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+
+
+### Google Ads: list accounts
+# {
+#   "resourceNames": [
+#     "customers/4885902643",
+#   ]
+# }
+GET https://googleads.googleapis.com/v11/customers:listAccessibleCustomers
+Content-Type: application/json
+Authorization: Bearer ya29.a0Aa4xrXOa94NIis5Hq0CPNicxTc4j0ivqX44Cn8Zuzvf5PIoebLeaW2i4DK3ktEfnSUYHF5rAsX0R_x8Yvj8K1pbiCDA-ZBZRK06K2fuuvMs_yImLnRjIL_2TmofPaIqGux-lftmgMpjuP4AuuL1sJZncyeeGaCgYKATASARMSFQEjDvL9sZEoPTBC0-OOBWmCjzBZqQ0163
+developer-token: xxx
+
+### Google Ads: list 2nd level accounts
+POST https://googleads.googleapis.com/v11/customers/4885902643/googleAds:search
+Content-Type: application/json
+Authorization: Bearer ya29.a0Aa4xrXOa94NIis5Hq0CPNicxTc4j0ivqX44Cn8Zuzvf5PIoebLeaW2i4DK3ktEfnSUYHF5rAsX0R_x8Yvj8K1pbiCDA-ZBZRK06K2fuuvMs_yImLnRjIL_2TmofPaIqGux-lftmgMpjuP4AuuL1sJZncyeeGaCgYKATASARMSFQEjDvL9sZEoPTBC0-OOBWmCjzBZqQ0163
+developer-token: xxxx
+
+{
+    "query": "SELECT customer.time_zone, customer.currency_code, customer.descriptive_name, customer.manager, customer.id, customer.test_account, customer_client.resource_name, customer_client.client_customer, customer_client.hidden, customer_client.level FROM customer_client"
+}
+
+### Local node server
+# POST http://localhost:4444/parse-ua
+# POST https://localapi.rimdian.com:8000/api/node.proxy/parse-ua
+# Content-Type: application/json
+
+# {
+#     "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+# }
+
+### PROD Create a reprocess data imports task
+# POST {{api_host}}/api/dataImport.reprocessUntil?delay=1m
+POST https://api-eu.rimdian.com/api/dataImport.reprocessUntil?delay=10m
+Content-Type: application/json
+
+{
+}
+
+### Create a reprocess data imports task
+# POST {{api_host}}/api/dataImport.reprocessUntil?delay=1h
+POST {{api_host}}/api/dataImport.reprocessUntil?delay=1m
+Content-Type: application/json
+
+{
+}
+
+### Test
+POST {{collector_host}}/bypass
+Content-Type: application/json
+Authorization: Bearer v2.local.Oy8PTBxiID1YKs_eHPP7qpoRb_5FmM0M-uAw_TAE8e5IpKYIGNfWRDQWkD50hKCb73AIhlUeuoOGBWDEXDHgsXPD7ZSz4MWC7vxrb7iSODnX249TtFZ3-4aODj3sDfb5eGkumV2DiFcyF1hIFkaSwt1r1GjSlu81GJNH5PeHhZog4KzpVNiYG8dQT1c20EyS9kNUeOh8gtd8pHVICG_MQ4fT77mSrtPwyqvZip5DHvN6vUCDuMbU9JINcBbcgwjKLpmlPFGaB2li7HNUZE5TD5AkUk2P2aA1yTPSNQnJev7hFmj0nnyPLgvuEALikN88wsGL76KREGiU6okJwyHesGEshNr8qanwdFiAq2vLX-QtmLfhKxoR5w
+
+{
+    "workspace_id": "acme_testing",
+    "items": [
+  {
+    "device": {
+      "ad_blocker": false,
+      "created_at": "2022-12-21T17:04:36.075Z",
+      "external_id": "ce43aed2-158d-4891-b083-864c7133d6b7",
+      "language": "fr-FR",
+      "resolution": "1728x1117",
+      "updated_at": "2023-02-16T21:41:32.658Z",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0"
+    },
+    "kind": "pageview",
+    "operation": "upsert",
+    "pageview": {
+      "created_at": "2023-02-16T21:41:28.987Z",
+      "domain_id": "web",
+      "duration": 4,
+      "external_id": "71653448-2eb5-4993-a4b4-a47820daa7b1",
+      "page_id": "https://www.toto.com/",
+      "session_external_id": "01949ee8-e316-42cc-a9ee-87de7bea2fa6",
+      "title": "My pageview title",
+      "updated_at": "2023-02-16T21:41:32.658Z"
+    },
+    "session": {
+      "created_at": "2023-01-01T00:39:16.878Z",
+      "device_external_id": "ce43aed2-158d-4891-b083-864c7133d6b7",
+      "domain_id": "web",
+      "external_id": "01949ee8-e316-42cc-a9ee-87de7bea2fa6",
+      "landing_page": "https://www.toto.com/",
+      "timezone": "America/Lima",
+      "updated_at": "2023-02-16T21:41:28.987Z",
+      "utm_medium": "none",
+      "utm_source": "direct",
+      "app_admo_cookie_id": "7111905f-81cf-4627-8a62-21092a8d3a07"
+    },
+    "user": {
+      "created_at": "2022-12-21T17:04:36.074Z",
+      "external_id": "3cdeb0d8-4b5e-4d1d-89be-d8d305f3a08b",
+      "is_authenticated": false
+    }
+  }
+    ]
+}

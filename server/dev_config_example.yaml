@@ -1,0 +1,66 @@
+# Rename this file in config.yaml
+# 
+# To ease dev, config variables are provided from this config file, in production, only ENV variables are allowed
+
+
+ENV: development
+API_PORT: 8000
+# add an entry in your /etc/hosts file
+# 127.0.0.1 localapi.captainmetrics.com
+API_ENDPOINT: "https://localapi.captainmetrics.com:8000"
+COLLECTOR_ENDPOINT: "https://localcollector.captainmetrics.com:8000"
+ROOT_EMAIL: you@domain.com
+SECRET_KEY: '12345678901234567890123456789012'
+LICENSE_PUBLIC_KEY: xxxxx
+ORGANIZATION_ID: acme
+ORGANIZATION_NAME: ACME
+DB_MAINTENANCE: false
+DB_DSN: user:password@tcp(DB_IP:3306)/?tls=skip-verify
+DB_PREFIX: dev_cm_
+DB_CA_CERT_BASE64: |
+  -----BEGIN CERTIFICATE-----
+  xxx
+  -----END CERTIFICATE-----
+DB_TLS_CERT: |
+  -----BEGIN CERTIFICATE-----
+  xxx
+  -----END CERTIFICATE-----
+DB_TLS_KEY: |
+  -----BEGIN RSA PRIVATE KEY-----
+  xxx
+  -----END RSA PRIVATE KEY-----
+SMTP_HOST: smtp.postmarkapp.com
+SMTP_PORT: 587
+SMTP_USERNAME: username
+SMTP_PASSWORD: password
+SMTP_FROM: service@domain.com
+SMTP_TLS: true
+# To allow CORS & proper function of the web Console, the API & Collector are served over HTTPS in dev, you can use self-signed SSL certs
+DEV_SSL_CERT: /Users/you/path-to-your-local-ssl-cert/ssl_dev.crt
+DEV_SSL_KEY: /Users/you/path-to-your-local-ssl-cert/ssl_dev.key
+
+# COLLECTOR
+COLLECTOR_PORT: 8888
+GCLOUD_PROJECT: your-dev-gcloud-project
+# You can create a GCP Service Account via: https://console.cloud.google.com/apis/credentials
+# and give it the roles: 
+# - Cloud Tasks Enqueuer
+# - Cloud Tasks Viewer
+GCLOUD_JSON_CREDENTIALS: '{
+  "type": "service_account",
+  "project_id": "your-dev-gcloud-project",
+  "private_key_id": "xxx",
+  "private_key": "xxx",
+  "client_email": "xxx",
+  "client_id": "xxx",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "xxx"
+}'
+TASK_QUEUE_NAME: dev-live
+TASK_QUEUE_LOCATION: europe-west1
+DATA_LIVE_QUEUE_NAME: dev-live
+DATA_LIVE_QUEUE_LOCATION: europe-west1
+DATA_HISTORICAL_QUEUE_NAME: dev-historical
+DATA_HISTORICAL_QUEUE_LOCATION: europe-west1

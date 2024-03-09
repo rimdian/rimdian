@@ -1,0 +1,11 @@
+{
+  "name": "rimdian_nodejs",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "mysql": "^2.18.1",
+    "mysql2": "^3.6.3",
+    "ua-parser-js": "^1.0.32"
+  }
+}

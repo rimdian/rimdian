@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Rimdian JS SDK Playground</title>
+    <script src="sdk.js"></script>
+</head>
+
+<body>
+    <h1>Playground 2</h1>
+    <script>
+        Rimdian.init({
+            workspace_id: 'acme_test',
+            host: 'https://localcollector.rimdian.com:8888',
+            // namespace: '_test_',
+            from_legacy: true,
+            dispatch_consent: false,
+            cross_domains: ['test.com'],
+            ignored_origins: [{
+                utm_source: 'test_source',
+                utm_medium: 'test_medium'
+            }],
+            log_level: 'debug',
+            // sessionTimeout: 5,
+            max_retry: 0 // dev only
+        })
+        console.log('current user', JSON.stringify(Rimdian.currentUser))
+        console.log('READY', Rimdian.isReady)
+
+        // test migration from legacy cookies:
+
+        Rimdian._setCookie("user", '{"id":"6614af96-3e72-4f88-902a-37cbf3991d53","authenticated":false}');
+        Rimdian._setCookie("session", '{"id":"7ea84c8c-547a-4064-9dad-323ea2bccb8b","from":{"source":"direct","medium":"none","campaign":null,"creative":null,"keyword":null,"referrer":"","gclid":null}}');
+        Rimdian._setCookie("sessionExpiresAt", "2022-10-23T18%3A45%3A55.678Z");
+        Rimdian._setCookie("cidat", "1666548955679");
+        Rimdian._setCookie("cid", "f306a3a9-11c4-4550-947f-aca1a399b7c4");
+
+        Rimdian.setDispatchConsent(true);
+
+        Rimdian.trackPageview()
+        Rimdian.dispatch()
+        // Rimdian.setDispatchConsent(true)
+        // Rimdian.setUserContext({
+        //     external_id: 'test'
+        // });
+    </script>
+</body>
+
+</html>

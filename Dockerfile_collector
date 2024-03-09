@@ -1,0 +1,76 @@
+FROM golang:1.21-alpine AS build
+
+# Add TLS
+
+RUN apk --update add ca-certificates
+RUN apk --no-cache add tzdata
+
+# Add git
+
+RUN apk add git
+
+# Create appuser
+
+ENV USER=appuser
+ENV UID=10001
+
+# See https://stackoverflow.com/a/55757473/12429735RUN
+
+RUN adduser \  
+ --disabled-password \  
+ --gecos "" \  
+ --home "/nonexistent" \  
+ --shell "/sbin/nologin" \  
+ --no-create-home \  
+ --uid "${UID}" \    
+    "${USER}"
+
+# Set necessary environmet variables needed for our image
+
+ENV GO111MODULE=on \
+ CGO_ENABLED=0 \
+ GOOS=linux \
+ GOARCH=amd64 \
+ GODEBUG=madvdontneed=1
+
+# Move to working directory /build
+
+WORKDIR /build
+COPY /server .
+RUN go mod download
+
+# Build the application
+
+RUN go build -o main ./cmd/collector/
+
+# Move to /dist directory as the place for resulting binary folder
+
+WORKDIR /dist
+
+# Copy binary from build to main folder
+
+RUN cp /build/main .
+
+# Build a small image
+
+FROM scratch
+
+COPY --from=build /etc/passwd /etc/passwd
+COPY --from=build /etc/group /etc/group
+
+COPY --from=build /dist/main /
+
+# COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
+ENV TZ=UTC
+
+# Use an unprivileged user.
+
+USER appuser:appuser
+
+# Command to run
+
+EXPOSE 8080
+ENTRYPOINT ["/main"]

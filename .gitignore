@@ -1,0 +1,16 @@
+.DS_Store
+.next
+
+server/config.yaml
+ngrok
+*.log
+*.env
+*.pem
+
+go.work
+go.work.sum
+
+console/public/config.js
+console/build
+
+node_modules/

@@ -1,0 +1,41 @@
+{
+  "name": "rimdian_js_sdk",
+  "version": "1.0.0",
+  "description": "Rimdian JS web SDK",
+  "scripts": {
+    "build": "cross-env ENVIRONMENT=prod BUILD=prod rollup --config rollup.config.js; uglifyjs dist/sdk.js -m -o dist/sdk.min.js; cp dist/sdk.js playground/sdk.js",
+    "dev": "cross-env ENVIRONMENT=dev BUILD=dev rollup --config rollup.config.js --watch",
+    "play": "nodemon --exec http-server ./playground -o -a cmplayground.com --tls --cert ./cmplayground_cert.pem --key ./cmplayground_key.pem"
+  },
+  "author": "Pierre Bazoge",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@babel/runtime": "^7.6.0",
+    "ajv": "^8.11.0",
+    "blueimp-md5": "^2.19.0",
+    "global": "^4.4.0",
+    "page-lifecycle": "^0.1.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.0",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
+    "@babel/plugin-transform-runtime": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
+    "@babel/preset-typescript": "^7.6.0",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-commonjs": "^22.0.1",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^8.3.3",
+    "babel-eslint": "^10.0.3",
+    "babel-preset-minify": "^0.5.1",
+    "cross-env": "^7.0.3",
+    "gts": "^3.1.0",
+    "rollup": "^2.75.7",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4",
+    "uglify-js": "^3.4.9"
+  }
+}

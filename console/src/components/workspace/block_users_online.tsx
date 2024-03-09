@@ -1,0 +1,81 @@
+import { Spin, Tooltip } from 'antd'
+import { CubeContext } from '@cubejs-client/react'
+import FormatNumber from 'utils/format_number'
+import { useContext, useEffect, useRef, useState } from 'react'
+import CSS from 'utils/css'
+
+export type UsersOnlineProps = {
+  workspaceId: string
+  timezone: string
+  refreshAt: number
+}
+
+export const UsersOnline = (props: UsersOnlineProps) => {
+  const { cubejsApi } = useContext(CubeContext)
+  const refreshAt = useRef(0)
+  const [loadingOnline, setLoadingOnline] = useState<boolean>(true)
+  const [usersOnline, setUsersOnline] = useState<string | undefined>(undefined)
+  const [loading24h, setLoading24h] = useState<boolean>(true)
+  const [users24h, setUsers24h] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (refreshAt.current === props.refreshAt) {
+      return
+    }
+
+    refreshAt.current = props.refreshAt
+
+    setLoadingOnline(true)
+    setLoading24h(true)
+
+    cubejsApi
+      .load({
+        measures: ['Session.users_online'],
+        dimensions: [],
+        timezone: props.timezone
+      })
+      .then((resultSet) => {
+        setUsersOnline(FormatNumber(resultSet?.tablePivot()[0]['Session.users_online'] as number))
+        setLoadingOnline(false)
+        // if (error) {
+        //   setError(undefined)
+        // }
+      })
+      .catch((_error) => {
+        // setError(error.toString())
+      })
+
+    cubejsApi
+      .load({
+        measures: ['Session.users_last_24h'],
+        dimensions: [],
+        timezone: props.timezone
+      })
+      .then((resultSet) => {
+        setUsers24h(FormatNumber(resultSet?.tablePivot()[0]['Session.users_last_24h'] as number))
+        setLoading24h(false)
+        // if (error) {
+        //   setErrorGraph(undefined)
+        // }
+      })
+      .catch((_error) => {
+        // setErrorGraph(error.toString())
+      })
+  }, [props.refreshAt, cubejsApi, props.timezone, loadingOnline])
+
+  return (
+    <>
+      <Tooltip title="In the last 5 minutes">
+        <span className={CSS.font_size_m + ' ' + CSS.font_weight_semibold}>
+          {loadingOnline ? <Spin size="small" className={CSS.margin_r_s} /> : usersOnline}
+        </span>
+        &nbsp;
+        <span className={CSS.padding_r_l}>users online</span>
+      </Tooltip>
+      <span className={CSS.font_size_m + ' ' + CSS.font_weight_semibold}>
+        {loading24h ? <Spin size="small" className={CSS.margin_r_s} /> : users24h}
+      </span>
+      &nbsp; users in the last 24h
+    </>
+  )
+}

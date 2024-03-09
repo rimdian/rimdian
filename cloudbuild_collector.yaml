@@ -1,0 +1,30 @@
+steps:
+  # build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '--file',
+        'Dockerfile_api',
+        '-t',
+        'gcr.io/$PROJECT_ID/rimdian-collector:$COMMIT_SHA',
+        '.'
+      ]
+  # push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/rimdian-collector:$COMMIT_SHA']
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'rimdian-collector'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/rimdian-collector:$COMMIT_SHA'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+images:
+  - 'gcr.io/$PROJECT_ID/rimdian-collector:$COMMIT_SHA'

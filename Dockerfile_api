@@ -1,0 +1,70 @@
+FROM node:16-alpine AS builder
+
+# Create appuser
+ENV USER=appuser
+ENV UID=10001
+# See https://stackoverflow.com/a/55757473/12429735RUN 
+RUN adduser \    
+    --disabled-password \    
+    --gecos "" \    
+    --home "/nonexistent" \    
+    --shell "/sbin/nologin" \    
+    --no-create-home \    
+    --uid "${UID}" \    
+    "${USER}"
+
+# Add TLS
+RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add tzdata
+ENV TZ=UTC
+
+# Install nodejs
+WORKDIR /nodejs
+COPY /nodejs/ .
+RUN apk add --no-cache python3 g++ make
+ENV NODE_ENV production
+RUN yarn install
+RUN pwd && ls -l
+
+# Add Golang
+COPY --from=golang:1.21-alpine /usr/local/go/ /usr/local/go/
+ENV PATH /usr/local/go/bin:$PATH
+
+# Move to working directory /build, copy source code and build
+# Then remove the /build directory that may contain config files with secrets
+WORKDIR /build
+COPY /server/cmd ./cmd
+COPY /server/console ./console
+COPY /server/internal ./internal
+COPY /server/package ./package
+COPY /server/go.mod .
+COPY /server/go.sum .
+RUN pwd && ls -l
+RUN go mod download
+
+# Build the application
+RUN go build -o main ./cmd/server/
+# RUN pwd && ls -l
+
+WORKDIR /
+# Copy binary from build to main folder
+RUN mv /build/main .
+RUN rm -R /build
+COPY /server/console /console
+ENV API_PORT=8000
+# RUN pwd && ls -l
+# RUN ./main
+
+# Add supervisor
+# RUN apk add supervisor
+# COPY /supervisord.conf .
+# RUN touch /supervisord.pid
+# RUN chown appuser:appuser /supervisord.pid
+# RUN pwd && ls -l
+
+# Use an unprivileged user.
+USER appuser:appuser
+
+EXPOSE 8000
+ENTRYPOINT ["/main"]
+# ENTRYPOINT ["supervisord", "--nodaemon", "--configuration", "/supervisord.conf"]

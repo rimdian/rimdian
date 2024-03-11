@@ -48,8 +48,7 @@ func TestServiceImpl_DataPipelineUpsertAppItem(t *testing.T) {
 			AppID:   entity.AppManifestTest.ID,
 			Name:    hook.Name,
 			On:      hook.On,
-			Kind:    hook.Kind,
-			Action:  hook.Action,
+			For:     hook.For,
 			Enabled: true,
 		})
 	}

@@ -173,8 +173,12 @@ const googleAdsEC: AppManifest = {
       id: 'appx_googleadsec_hook',
       name: 'Google Ads Enhanced Conversions API',
       on: 'on_success',
-      kind: ['order'],
-      action: ['create']
+      for: [
+        {
+          kind: 'order',
+          action: 'create'
+        }
+      ]
     }
   ]
 }
@@ -490,8 +494,20 @@ const metaCapi: AppManifest = {
       id: 'appx_metacapi_hook',
       name: 'Meta server-side conversions API',
       on: 'on_success',
-      kind: ['order', 'pageview', 'cart_item'],
-      action: ['create']
+      for: [
+        {
+          kind: 'order',
+          action: 'create'
+        },
+        {
+          kind: 'pageview',
+          action: 'create'
+        },
+        {
+          kind: 'cart_item',
+          action: 'create'
+        }
+      ]
     }
   ]
 }

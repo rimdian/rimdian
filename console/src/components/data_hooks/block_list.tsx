@@ -1,5 +1,5 @@
 import { Button, Popconfirm, Space, Switch, Table, message } from 'antd'
-import { DataHook } from 'interfaces'
+import { DataHook, DataHookFor } from 'interfaces'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPenToSquare, faTrashCan } from '@fortawesome/free-regular-svg-icons'
@@ -87,26 +87,13 @@ const BlockDataHooks = () => {
             render: (hook: DataHook) => hook.on
           },
           {
-            title: 'Kind',
+            title: 'For',
             key: 'kind',
             render: (hook: DataHook) => {
-              return hook.kind.map((tableName: string) => {
+              return hook.for.map((x: DataHookFor) => {
                 return (
-                  <div key={tableName}>
-                    <TableTag table={tableName} />
-                  </div>
-                )
-              })
-            }
-          },
-          {
-            title: 'Action',
-            key: 'action',
-            render: (hook: DataHook) => {
-              return hook.action.map((action: string) => {
-                return (
-                  <div key={action}>
-                    <TableTag table={action} />
+                  <div key={x.kind}>
+                    <TableTag table={x.kind} />:{x.action}
                   </div>
                 )
               })

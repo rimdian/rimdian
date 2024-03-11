@@ -1101,8 +1101,13 @@ export interface DataHookManifest {
   id: string
   name: string
   on: 'on_validation' | 'on_success'
-  kind: string[]
-  action: string[]
+  for: DataHookFor[]
+  js?: string
+}
+
+export interface DataHookFor {
+  kind: string
+  action: string
 }
 
 export interface DataHook {
@@ -1110,8 +1115,7 @@ export interface DataHook {
   app_id: string
   name: string
   on: 'on_validation' | 'on_success'
-  kind: string[]
-  action: string[]
+  for: DataHookFor[]
   js?: string
   enabled: boolean
   db_created_at: string

@@ -656,8 +656,7 @@ func (svc *ServiceImpl) AppInstall(ctx context.Context, accountID string, params
 						AppID:   installedApp.Manifest.ID,
 						Name:    dataHook.Name,
 						On:      dataHook.On,
-						Kind:    dataHook.Kind,
-						Action:  dataHook.Action,
+						For:     dataHook.For,
 						JS:      nil,
 						Enabled: false, // will be enabled when the app is activated
 					}

@@ -41,32 +41,28 @@ var (
 		WebhookEndpoint:  "API_ENDPOINT/api/webhook.receiver",
 		DataHooks: DataHooksManifest{
 			{
-				ID:     "app_test_table_oncreate",
-				Name:   "Test on create",
-				On:     DataHookKindOnSuccess,
-				Kind:   []string{"app_test_table"},
-				Action: []string{"create"},
+				ID:   "app_test_table_oncreate",
+				Name: "Test on create",
+				On:   DataHookKindOnSuccess,
+				For:  []*DataHookFor{{Kind: "app_test_table", Action: "create"}},
 			},
 			{
-				ID:     "app_test_table_onupdate",
-				Name:   "Test on update",
-				On:     DataHookKindOnSuccess,
-				Kind:   []string{"app_test_table"},
-				Action: []string{"update"},
+				ID:   "app_test_table_onupdate",
+				Name: "Test on update",
+				On:   DataHookKindOnSuccess,
+				For:  []*DataHookFor{{Kind: "app_test_table", Action: "update"}},
 			},
 			{
-				ID:     "app_test_table_segment_enter",
-				Name:   "Test on segment enter",
-				On:     DataHookKindOnSuccess,
-				Kind:   []string{"segment"},
-				Action: []string{"enter"},
+				ID:   "app_test_table_segment_enter",
+				Name: "Test on segment enter",
+				On:   DataHookKindOnSuccess,
+				For:  []*DataHookFor{{Kind: "segment", Action: "enter"}},
 			},
 			{
-				ID:     "app_test_table_segment_exit",
-				Name:   "Test on segment exit",
-				On:     DataHookKindOnSuccess,
-				Kind:   []string{"segment"},
-				Action: []string{"exit"},
+				ID:   "app_test_table_segment_exit",
+				Name: "Test on segment exit",
+				On:   DataHookKindOnSuccess,
+				For:  []*DataHookFor{{Kind: "segment", Action: "exit"}},
 			},
 		},
 		Tasks: TasksManifest{
@@ -380,11 +376,10 @@ func (x AppManifest) Value() (driver.Value, error) {
 type DataHooksManifest []*DataHookManifest
 
 type DataHookManifest struct {
-	ID     string   `json:"id"`
-	Name   string   `json:"name"`
-	On     string   `json:"on"` // on_validation, on_success
-	Kind   []string `json:"kind"`
-	Action []string `json:"action"`
+	ID   string         `json:"id"`
+	Name string         `json:"name"`
+	On   string         `json:"on"` // on_validation, on_success
+	For  []*DataHookFor `json:"for"`
 }
 
 type SQLQueriesManifest []*SQLQueryManifest

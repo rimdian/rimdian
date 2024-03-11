@@ -34,8 +34,7 @@ func (svc *ServiceImpl) DataHookUpdate(ctx context.Context, accountID string, da
 	if dataHook.AppID == entity.AppIDSystem {
 		dataHook.Name = dataHookDTO.Name
 		dataHook.On = dataHookDTO.On
-		dataHook.Kind = dataHookDTO.Kind
-		dataHook.Action = dataHookDTO.Action
+		dataHook.For = dataHookDTO.For
 		dataHook.JS = dataHookDTO.JS
 
 		if err := dataHook.Validate(workspace.InstalledApps); err != nil {

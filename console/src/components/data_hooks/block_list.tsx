@@ -90,13 +90,11 @@ const BlockDataHooks = () => {
             title: 'For',
             key: 'kind',
             render: (hook: DataHook) => {
-              return hook.for.map((x: DataHookFor) => {
-                return (
-                  <div key={x.kind}>
-                    <TableTag table={x.kind} />:{x.action}
-                  </div>
-                )
-              })
+              return hook.for.map((x: DataHookFor) => (
+                <div key={x.kind}>
+                  <TableTag table={x.kind} /> - {x.action}
+                </div>
+              ))
             }
           },
           {

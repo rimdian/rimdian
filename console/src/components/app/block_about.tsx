@@ -6,7 +6,8 @@ import {
   ExtraColumnsManifest,
   TableJoin,
   DataHook,
-  SqlQuery
+  SqlQuery,
+  DataHookFor
 } from 'interfaces'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
@@ -261,29 +262,14 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
                   render: (record: DataHook) => record.on
                 },
                 {
-                  title: 'Kind',
-                  key: 'kind',
+                  title: 'For',
+                  key: 'for',
                   render: (record: DataHook) => {
-                    return record.kind.map((kind: string) => {
-                      return (
-                        <div key={kind}>
-                          <TableTag table={kind} />
-                        </div>
-                      )
-                    })
-                  }
-                },
-                {
-                  title: 'Action',
-                  key: 'action',
-                  render: (record: DataHook) => {
-                    return record.action.map((action: string) => {
-                      return (
-                        <div key={action}>
-                          <TableTag table={action} />
-                        </div>
-                      )
-                    })
+                    return record.for.map((x: DataHookFor) => (
+                      <div key={x.kind}>
+                        <TableTag table={x.kind} /> - {x.action}
+                      </div>
+                    ))
                   }
                 }
               ]}

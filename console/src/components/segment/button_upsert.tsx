@@ -20,7 +20,6 @@ import { TreeNodeInput, HasLeaf } from './input'
 import { Segment } from './interfaces'
 import { Timezones } from 'utils/countries_timezones'
 import CSS from 'utils/css'
-import { LicenseInfo } from 'interfaces'
 import { size } from 'lodash'
 
 const ButtonUpsertSegment = (props: { segment?: Segment }) => {

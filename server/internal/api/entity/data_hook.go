@@ -24,8 +24,8 @@ type DataHook struct {
 	ID    string         `json:"id"`
 	AppID string         `json:"app_id"` // system or app_id_xxx
 	Name  string         `json:"name"`
-	On    string         `json:"on"`            // on_validation | on_success
-	For   []*DataHookFor `json:"for,omitempty"` // for which data log
+	On    string         `json:"on"`  // on_validation | on_success
+	For   []*DataHookFor `json:"for"` // for which data log
 	// Kind        []string `json:"kind"`         // data log kind
 	// Action      []string `json:"action"`       // data log action
 	JS          *string `json:"js,omitempty"` // javascript code to execute, otherwise app endpoint
@@ -128,23 +128,29 @@ func (x *DataHook) Validate(installedApps InstalledApps) error {
 			return eris.New("invalid data hook for action")
 		}
 
+		kindAllowed := false
 		for _, allowedKind := range allowedKinds {
 			if allowedKind == forItem.Kind || forItem.Kind == "*" {
-				break
+				kindAllowed = true
 			}
 
 			if strings.HasPrefix(forItem.Kind, "app_") || strings.HasPrefix(forItem.Kind, "appx_") {
-				break
+				kindAllowed = true
 			}
-
+		}
+		if !kindAllowed {
 			return eris.Errorf("invalid data hook for kind: %s", forItem.Kind)
 		}
 
+		actionAllowed := false
+
 		for _, allowedAction := range allowedActions {
 			if allowedAction == forItem.Action || forItem.Action == "*" {
-				break
+				actionAllowed = true
 			}
+		}
 
+		if !actionAllowed {
 			return eris.Errorf("invalid data hook for action: %s", forItem.Action)
 		}
 	}

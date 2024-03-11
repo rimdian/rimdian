@@ -25,8 +25,8 @@ func (pipe *DataLogPipeline) ParseUserAgent(userAgent string) (result *entity.Us
 	// call nodejs cmd
 	output, err := exec.Command("node", scriptPath, userAgentB64).Output()
 
-	// log.Printf("output: %v", string(output))
-	// log.Printf("err: %v", err)
+	// svc.Logger.Printf("output: %v", string(output))
+	// svc.Logger.Printf("err: %v", err)
 	if err != nil {
 		return nil, eris.Wrap(err, "ParseUserAgent")
 	}

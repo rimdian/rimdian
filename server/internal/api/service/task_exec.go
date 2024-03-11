@@ -236,6 +236,7 @@ func (svc *ServiceImpl) TaskExecDo(ctx context.Context, workspaceID string, payl
 
 	props := &TaskExecPipelineProps{
 		Config:           svc.Config,
+		Logger:           svc.Logger,
 		NetClient:        svc.NetClient,
 		Repository:       svc.Repo,
 		Workspace:        workspace,

@@ -131,7 +131,7 @@ func (svc *ServiceImpl) OrganizationAccountCreateServiceAccount(ctx context.Cont
 	// Hash password
 	serviceAccount.HashedPassword = pwd
 
-	// log.Printf("serviceAccount %+v\n", serviceAccount)
+	// svc.Logger.Printf("serviceAccount %+v\n", serviceAccount)
 	workspaceScopes := entity.WorkspacesScopes{}
 
 	for _, ws := range createServiceAccount.WorkspacesScopes {

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"strconv"
 	"strings"
 
@@ -34,7 +33,7 @@ func (pipe *DataLogPipeline) StepPending(ctx context.Context) {
 				pipe.DataLog.Item, err = sjson.Set(pipe.DataLog.Item, "user.country", country)
 				if err != nil {
 					// log error and ignore
-					log.Printf("Error setting user.country: %v", err.Error())
+					pipe.Logger.Printf("Error setting user.country: %v", err.Error())
 					return
 				}
 			}
@@ -52,22 +51,22 @@ func (pipe *DataLogPipeline) StepPending(ctx context.Context) {
 				longitude, lonErr := strconv.ParseFloat(parts[1], 64)
 
 				if latErr != nil {
-					log.Printf("parse X-Client-Geo-Latlon latitude: %v", latErr.Error())
+					pipe.Logger.Printf("parse X-Client-Geo-Latlon latitude: %v", latErr.Error())
 				} else if lonErr != nil {
-					log.Printf("parse X-Client-Geo-Latlon longitude: %v", lonErr.Error())
+					pipe.Logger.Printf("parse X-Client-Geo-Latlon longitude: %v", lonErr.Error())
 				}
 
 				// set user latitude in item json
 				pipe.DataLog.Item, err = sjson.Set(pipe.DataLog.Item, "user.latitude", latitude)
 				if err != nil {
 					// log error and ignore
-					log.Printf("Error setting user.latitude: %v", err.Error())
+					pipe.Logger.Printf("Error setting user.latitude: %v", err.Error())
 					return
 				}
 				pipe.DataLog.Item, err = sjson.Set(pipe.DataLog.Item, "user.longitude", longitude)
 				if err != nil {
 					// log error and ignore
-					log.Printf("Error setting user.longitude: %v", err.Error())
+					pipe.Logger.Printf("Error setting user.longitude: %v", err.Error())
 					return
 				}
 			}

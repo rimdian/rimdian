@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"strings"
 	"time"
 
@@ -209,12 +208,12 @@ func (svc *ServiceImpl) AppExecQuery(ctx context.Context, accountID string, para
 	// start timer
 	start := time.Now()
 
-	// log.Printf("AppExecQuery: %v", query)
+	// svc.Logger.Printf("AppExecQuery: %v", query)
 
 	output, err := svc.DoDBSelect(workspace.ID, query, params.Args)
 
 	if err != nil {
-		log.Printf("error AppExecQuery output: %v, %v", string(output), err)
+		svc.Logger.Printf("error AppExecQuery output: %v, %v", string(output), err)
 		return nil, 500, eris.Errorf("AppExecQuery %v", output)
 	}
 
@@ -229,7 +228,7 @@ func (svc *ServiceImpl) AppExecQuery(ctx context.Context, accountID string, para
 
 	// decode output
 	if err = json.Unmarshal(output, &result.Rows); err != nil {
-		log.Printf("error AppExecQuery output: %v", string(output))
+		svc.Logger.Printf("error AppExecQuery output: %v", string(output))
 		return nil, 400, eris.Wrap(err, "AppExecQuery")
 	}
 

@@ -20,7 +20,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func NewService(ctx context.Context, log *logrus.Logger, cfg *entity.Config, repo repository.Repository) (service.Service, error) {
+func NewService(ctx context.Context, logger *logrus.Logger, cfg *entity.Config, repo repository.Repository) (service.Service, error) {
 
 	mailer := mailer.NewMailer(cfg.SMTP_FROM, cfg.SMTP_USERNAME, cfg.SMTP_PASSWORD, cfg.SMTP_HOST, cfg.SMTP_PORT, cfg.SMTP_ENCRYPTION)
 
@@ -67,7 +67,7 @@ func NewService(ctx context.Context, log *logrus.Logger, cfg *entity.Config, rep
 		Transport: netTransport,
 	}
 
-	svc := service.NewService(cfg, repo, mailer, taskOrchestrator, storageClient, netClient)
+	svc := service.NewService(cfg, logger, repo, mailer, taskOrchestrator, storageClient, netClient)
 
 	if _, err := svc.InstallOrVerifyServer(ctx); err != nil {
 		return nil, err

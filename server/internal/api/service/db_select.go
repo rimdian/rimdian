@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os/exec"
 
 	"github.com/Masterminds/squirrel"
@@ -65,12 +64,12 @@ func (svc *ServiceImpl) DBSelect(ctx context.Context, accountID string, params *
 		return nil, 500, eris.Wrap(err, "DoDBSelect")
 	}
 
-	// log.Printf("sql: %v, args: %v", sql, args)
+	// svc.Logger.Printf("sql: %v, args: %v", sql, args)
 
 	jsonRows, err := svc.DoDBSelect(params.WorkspaceID, sql, args)
 
 	if err != nil {
-		log.Printf("error DBSelect output: %v, %v", string(jsonRows), err)
+		svc.Logger.Printf("error DBSelect output: %v, %v", string(jsonRows), err)
 		return nil, 500, eris.Wrap(err, "DBSelect")
 	}
 
@@ -80,7 +79,7 @@ func (svc *ServiceImpl) DBSelect(ctx context.Context, accountID string, params *
 
 	// decode output
 	if err = json.Unmarshal(jsonRows, &rows); err != nil {
-		log.Printf("error DBSelect output: %v", string(jsonRows))
+		svc.Logger.Printf("error DBSelect output: %v", string(jsonRows))
 		return nil, 400, eris.Wrap(err, "DBSelect")
 	}
 
@@ -117,7 +116,7 @@ func (svc *ServiceImpl) DoDBSelect(workspaceID string, query string, args []inte
 
 	scriptPath := dir + "query.js"
 
-	// log.Printf("scriptPath: %v, payload %v", scriptPath, payloadB64)
+	// svc.Logger.Printf("scriptPath: %v, payload %v", scriptPath, payloadB64)
 
 	// call nodejs cmd
 	return exec.Command("node", scriptPath, payloadB64).Output()

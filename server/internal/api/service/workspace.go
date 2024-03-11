@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -266,7 +265,7 @@ func (svc *ServiceImpl) WorkspaceShowTables(ctx context.Context, accountID strin
 		return nil, 500, eris.Wrap(err, "WorkspaceShowTables")
 	}
 
-	// log.Printf("formated %+v\n", tables)
+	// svc.Logger.Printf("formated %+v\n", tables)
 
 	result = &dto.WorkspaceShowTablesResult{
 		Tables: tables,
@@ -378,14 +377,14 @@ func (svc *ServiceImpl) WorkspaceUpdate(ctx context.Context, accountID string, p
 	}
 
 	// verify license
-	if payload.LicenseKey != nil {
+	if payload.LicenseKey != nil && *payload.LicenseKey != "" {
 		body := fmt.Sprintf(`{
 			"license": "%v",
 			"api_endpoint": "%v",
 			"workspace_id": "%v"
-		}`, payload.LicenseKey, svc.Config.API_ENDPOINT, workspace.ID)
+		}`, *payload.LicenseKey, svc.Config.API_ENDPOINT, workspace.ID)
 
-		req, _ := http.NewRequest("POST", "http://store.rimdian.com/verifyLicense", bytes.NewBuffer([]byte(body)))
+		req, _ := http.NewRequest("POST", "https://store.rimdian.com/verifyLicense", bytes.NewBuffer([]byte(body)))
 		req.Header.Set("Content-Type", "application/json")
 
 		// inject OpenCensus span context into the request
@@ -406,6 +405,8 @@ func (svc *ServiceImpl) WorkspaceUpdate(ctx context.Context, accountID string, p
 		}
 
 		workspace.LicenseKey = payload.LicenseKey
+	} else {
+		workspace.LicenseKey = nil
 	}
 
 	// insert workspace in repo
@@ -415,7 +416,7 @@ func (svc *ServiceImpl) WorkspaceUpdate(ctx context.Context, accountID string, p
 
 	// TODO: migrate deleted lead stages
 	if len(deletedLeadStages) > 0 {
-		log.Printf("migrating deleted lead stages not implented %+v\n", deletedLeadStages)
+		svc.Logger.Printf("migrating deleted lead stages not implented %+v\n", deletedLeadStages)
 	}
 
 	// for _, stage := range leadStages {

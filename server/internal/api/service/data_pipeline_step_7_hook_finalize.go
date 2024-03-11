@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -143,7 +142,7 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 
 			if payload.AppID == "system" {
 				// TODO: call internal function
-				log.Println("TODO: implement system hook")
+				pipe.Logger.Println("TODO: implement system hook")
 				return
 			} else {
 

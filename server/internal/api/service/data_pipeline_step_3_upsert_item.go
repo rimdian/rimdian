@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
@@ -193,7 +192,7 @@ func (pipe *DataLogPipeline) StepUpsertItem(ctx context.Context) {
 	if pipe.DataLog.UserAlias != nil {
 		if err := pipe.Repository.CleanAfterUserAlias(pipe.Workspace.ID, pipe.DataLog.UserAlias.FromUserExternalID); err != nil {
 			// just log error and continue
-			log.Println(err)
+			pipe.Logger.Println(err)
 		}
 	}
 

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
@@ -33,7 +32,7 @@ func TaskExecRecomputeSegment(ctx context.Context, pipe *TaskExecPipeline) (resu
 	// log time taken
 	startedAt := time.Now()
 	defer func() {
-		log.Printf("TaskRecomputeSegment: workspace %s, taskExec %s, worker %d, took %s", pipe.Workspace.ID, pipe.TaskExec.ID, pipe.TaskExecPayload.WorkerID, time.Since(startedAt))
+		pipe.Logger.Printf("TaskRecomputeSegment: workspace %s, taskExec %s, worker %d, took %s", pipe.Workspace.ID, pipe.TaskExec.ID, pipe.TaskExecPayload.WorkerID, time.Since(startedAt))
 	}()
 
 	// by default, keep current state
@@ -206,7 +205,7 @@ func TaskExecRecomputeSegment(ctx context.Context, pipe *TaskExecPipeline) (resu
 				// check if the we have less than 5 secs remaining
 				if deadline, _ := spanCtx.Deadline(); time.Until(deadline) < 5*time.Second {
 					shouldContinue = false
-					log.Printf("TaskRecomputeSegment: deadline ellapsed, should continue = false")
+					pipe.Logger.Printf("TaskRecomputeSegment: deadline ellapsed, should continue = false")
 					continue
 				}
 
@@ -303,7 +302,7 @@ func TaskExecRecomputeSegment(ctx context.Context, pipe *TaskExecPipeline) (resu
 // 	// check if the we have less than 5 secs remaining
 // 	if deadline, _ := spanCtx.Deadline(); time.Until(deadline) < 5*time.Second {
 // 		shouldContinue = false
-// 		log.Printf("TaskRecomputeSegment: deadline ellapsed, should continue = false")
+// 		pipe.Logger.Printf("TaskRecomputeSegment: deadline ellapsed, should continue = false")
 // 		continue
 // 	}
 
@@ -315,14 +314,14 @@ func TaskExecRecomputeSegment(ctx context.Context, pipe *TaskExecPipeline) (resu
 // 	// tickets can wait in the Acquire() before the shouldContinue changed to false
 // 	// check if we can still continue
 // 	if !shouldContinue {
-// 		log.Println("abort, shouldContinue == false")
+// 		pipe.Logger.Println("abort, shouldContinue == false")
 // 		// exit the loop
 // 		break
 // 	}
 
 // 	if index >= totalRows {
 // 		noMoreRows = true
-// 		log.Printf("done, index >= totalRows: %d >= %d", index, totalRows)
+// 		pipe.Logger.Printf("done, index >= totalRows: %d >= %d", index, totalRows)
 // 		// exit the loop
 // 		break
 // 	}

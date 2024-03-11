@@ -356,6 +356,11 @@ func (p *Workspace) Validate() error {
 		}
 	}
 
+	if p.LicenseKey != nil {
+		sanitized := strings.TrimSpace(*p.LicenseKey)
+		p.LicenseKey = &sanitized
+	}
+
 	return nil
 }
 

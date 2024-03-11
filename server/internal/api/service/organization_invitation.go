@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,7 +44,7 @@ func (svc *ServiceImpl) OrganizationInvitationConsume(ctx context.Context, consu
 
 		existing, err := svc.Repo.GetAccountFromEmail(ctx, email)
 
-		// log.Printf("is ? %v", eris.Is(err, entity.ErrAccountNotFound))
+		// svc.Logger.Printf("is ? %v", eris.Is(err, entity.ErrAccountNotFound))
 		if err != nil && !eris.Is(err, entity.ErrAccountNotFound) {
 			return nil, 500, eris.Wrapf(err, "OrganizationInvitationConsume, got err: %v", err)
 		}
@@ -184,7 +183,7 @@ func (svc *ServiceImpl) OrganizationInvitationCreate(ctx context.Context, accoun
 
 	// in dev we print the token in the console for testing purpose
 	if svc.Config.ENV == entity.ENV_DEV {
-		log.Printf("invitation token is: %v", token)
+		svc.Logger.Printf("invitation token is: %v", token)
 	}
 
 	invitation := &entity.OrganizationInvitation{

@@ -193,7 +193,7 @@ func TaskExecGenerateDemo(ctx context.Context, pipe *TaskExecPipeline) (result *
 
 	itemsCount := len(items)
 
-	// log.Printf("Day %v, %v items", currentDay, itemsCount)
+	// svc.Logger.Printf("Day %v, %v items", currentDay, itemsCount)
 
 	// cut items into batches of 10 and import them internally
 	const maxBatchSize int = 10
@@ -212,7 +212,7 @@ func TaskExecGenerateDemo(ctx context.Context, pipe *TaskExecPipeline) (result *
 
 		skip += maxBatchSize
 
-		// log.Printf("batch %v, %v to %v", i, lowerBound, upperBound)
+		// svc.Logger.Printf("batch %v, %v to %v", i, lowerBound, upperBound)
 		pipe.DataLogEnqueue(spanCtx, nil, dto.DataLogOriginInternalTaskExec, pipe.TaskExec.ID, pipe.Workspace.ID, items[lowerBound:upperBound], false)
 		if pipe.HasError() {
 			result.SetError("error while enqueueing data logs", false)

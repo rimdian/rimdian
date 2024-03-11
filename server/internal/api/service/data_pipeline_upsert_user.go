@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/asaskevich/govalidator"
@@ -301,10 +300,10 @@ func (pipe *DataLogPipeline) UpsertUser(ctx context.Context, isChild bool, tx *s
 	updatedFields := []*entity.UpdatedField{}
 
 	if existingUser != nil {
-		// log.Printf("USER ALREADY EXISTS %+v\n", existingUser)
+		// svc.Logger.Printf("USER ALREADY EXISTS %+v\n", existingUser)
 		updatedFields = upsertedUser.MergeInto(existingUser, pipe.Workspace)
 		upsertedUser = existingUser
-		// log.Printf("AFTER MERGE %+v\n", upsertedUser)
+		// svc.Logger.Printf("AFTER MERGE %+v\n", upsertedUser)
 	}
 
 	// handle default mandatory values
@@ -365,7 +364,7 @@ func (pipe *DataLogPipeline) UpsertUser(ctx context.Context, isChild bool, tx *s
 			if eris.Is(err, repository.ErrRowNotUpdated) {
 				// debug updatedFields
 				updatedFieldsJSON, _ := json.Marshal(updatedFields)
-				log.Printf("user row not updated with fields: %s", string(updatedFieldsJSON))
+				pipe.Logger.Printf("user row not updated with fields: %s", string(updatedFieldsJSON))
 				return nil
 			}
 			return eris.Wrap(err, "UserUpsert")

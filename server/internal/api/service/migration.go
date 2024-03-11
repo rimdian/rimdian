@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"math"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
@@ -21,7 +20,7 @@ var (
 
 func (svc *ServiceImpl) ExecuteMigration(ctx context.Context, installedVersion float64, codeVersion float64) error {
 
-	log.Printf("Migrating from %v to %v", installedVersion, codeVersion)
+	svc.Logger.Printf("Migrating from %v to %v", installedVersion, codeVersion)
 
 	sysConn, err := svc.Repo.GetSystemConnection(ctx)
 	if err != nil {
@@ -32,10 +31,10 @@ func (svc *ServiceImpl) ExecuteMigration(ctx context.Context, installedVersion f
 	// bump version on minor version change
 	if math.Trunc(installedVersion) == math.Trunc(codeVersion) {
 		if _, err = sysConn.ExecContext(ctx, "UPDATE setting SET installed_version = ?", codeVersion); err != nil {
-			log.Printf("error updating setting table: %v", err)
+			svc.Logger.Printf("error updating setting table: %v", err)
 			return err
 		}
-		log.Printf("bumped version to %v", codeVersion)
+		svc.Logger.Printf("bumped version to %v", codeVersion)
 		return nil
 	}
 
@@ -47,9 +46,9 @@ func (svc *ServiceImpl) ExecuteMigration(ctx context.Context, installedVersion f
 	}
 
 	if migration.HasSystemUpdate() {
-		log.Println("running system migration")
+		svc.Logger.Println("running system migration")
 		if err = migration.UpdateSystem(ctx, svc.Config, sysConn); err != nil {
-			log.Printf("error updating system: %v", err)
+			svc.Logger.Printf("error updating system: %v", err)
 			return eris.Wrap(err, "ExecuteMigration")
 		}
 	}
@@ -60,25 +59,25 @@ func (svc *ServiceImpl) ExecuteMigration(ctx context.Context, installedVersion f
 
 		// list all workspaces
 		if err = sqlscan.Select(ctx, sysConn, &workspaces, `SELECT id FROM workspace`); err != nil {
-			log.Printf("error listing workspaces: %v", err)
+			svc.Logger.Printf("error listing workspaces: %v", err)
 			return eris.Wrap(err, "ExecuteMigration")
 		}
 
 		// update each workspace
 		for _, workspace := range workspaces {
 
-			log.Printf("updating workspace %s", workspace.ID)
+			svc.Logger.Printf("updating workspace %s", workspace.ID)
 
 			conn, err := svc.Repo.GetWorkspaceConnection(ctx, workspace.ID)
 
 			if err != nil {
-				log.Printf("error getting workspace connection: %v", err)
+				svc.Logger.Printf("error getting workspace connection: %v", err)
 				continue
 			}
 			defer conn.Close()
 
 			if err = migration.UpdateWorkspace(ctx, svc.Config, workspace, conn); err != nil {
-				log.Printf("error updating workspace %s: %v", workspace.ID, err)
+				svc.Logger.Printf("error updating workspace %s: %v", workspace.ID, err)
 				return eris.Wrap(err, "ExecuteMigration")
 			}
 
@@ -89,10 +88,10 @@ func (svc *ServiceImpl) ExecuteMigration(ctx context.Context, installedVersion f
 
 		// bump version
 		if _, err = sysConn.ExecContext(ctx, "UPDATE setting SET installed_version = ?", toVersion); err != nil {
-			log.Printf("error updating setting table: %v", err)
+			svc.Logger.Printf("error updating setting table: %v", err)
 			return err
 		}
-		log.Printf("bumped version to %v", toVersion)
+		svc.Logger.Printf("bumped version to %v", toVersion)
 
 		return nil
 	}

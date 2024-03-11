@@ -71,7 +71,7 @@ func AttributeOrder(ctx context.Context, pipe Pipeline, order *entity.Order, ord
 
 	// attribute voucher code if exists
 	if order.DiscountCodes != nil && len(*order.DiscountCodes) > 0 && totalTouchpoints > 0 && len(orderSessions) > 0 {
-		// log.Printf("found order with discounts %v, %+v\n", order.ConversionExternalId, order.OrderData.Discounts)
+		// svc.Logger.Printf("found order with discounts %v, %+v\n", order.ConversionExternalId, order.OrderData.Discounts)
 
 		for _, discountCode := range *order.DiscountCodes {
 
@@ -83,7 +83,7 @@ func AttributeOrder(ctx context.Context, pipe Pipeline, order *entity.Order, ord
 						// we have a matching voucher
 						// extract source and medium from channel voucher sourceMediumPath
 
-						// log.Printf("channelOrigin %v", channelOrigin)
+						// svc.Logger.Printf("channelOrigin %v", channelOrigin)
 
 						lastSession := orderSessions[len(orderSessions)-1]
 
@@ -128,7 +128,7 @@ func AttributeOrder(ctx context.Context, pipe Pipeline, order *entity.Order, ord
 								lastSession.UTMContent = &entity.NullableString{IsNull: false, String: *voucher.SetUTMContent}
 							}
 
-							// log.Printf("last timeline session %+v\n", timeline[len(timeline)-1])
+							// svc.Logger.Printf("last timeline session %+v\n", timeline[len(timeline)-1])
 						}
 					}
 				}
@@ -148,7 +148,7 @@ func AttributeOrder(ctx context.Context, pipe Pipeline, order *entity.Order, ord
 	touchpointsAttributed := []Touchpoint{}
 
 	for _, hit := range touchpoints {
-		// log.Printf("touchpoint %+v\n", touchpoint)
+		// svc.Logger.Printf("touchpoint %+v\n", touchpoint)
 
 		// check if this impression is allowed in the conversion funnel
 		if hit.Postview != nil {
@@ -193,7 +193,7 @@ func AttributeOrder(ctx context.Context, pipe Pipeline, order *entity.Order, ord
 		}
 	}
 
-	// log.Printf("impressionsInFunnel %+v\n", impressionsInFunnel)
+	// svc.Logger.Printf("impressionsInFunnel %+v\n", impressionsInFunnel)
 
 	// funnel sums up the conversion path
 	devicesFunnel := []string{}
@@ -359,10 +359,10 @@ func AttributeOrder(ctx context.Context, pipe Pipeline, order *entity.Order, ord
 	order.SetDomainsTypeFunnel(strings.Join(domainsTypeFunnel, "~"))
 	order.SetDomainsCount(int64(len(domainsTypeMap)))
 
-	// log.Printf("order.DevicesFunnel = %v", order.DevicesFunnel)
-	// log.Printf("order.DevicesTypeCount = %v", order.DevicesTypeCount)
-	// log.Printf("order.DomainsFunnel = %v", order.DomainsFunnel)
-	// log.Printf("order.DomainsCount = %v", order.DomainsCount)
+	// svc.Logger.Printf("order.DevicesFunnel = %v", order.DevicesFunnel)
+	// svc.Logger.Printf("order.DevicesTypeCount = %v", order.DevicesTypeCount)
+	// svc.Logger.Printf("order.DomainsFunnel = %v", order.DomainsFunnel)
+	// svc.Logger.Printf("order.DomainsCount = %v", order.DomainsCount)
 
 	// compute funnel hash key for conversion paths aggregation
 
@@ -379,7 +379,7 @@ func AttributeOrder(ctx context.Context, pipe Pipeline, order *entity.Order, ord
 	order.SetTimeToConversion(&orderTimeToConversion)
 	order.SetAttributionUpdatedAt(&now)
 
-	// log.Printf("funnel %+v\n", funnel)
+	// svc.Logger.Printf("funnel %+v\n", funnel)
 
 	// update order attribution data
 	if err = pipe.Repo().UpdateOrderAttribution(spanCtx, order, tx); err != nil {
@@ -468,7 +468,7 @@ func AttributeOrder(ctx context.Context, pipe Pipeline, order *entity.Order, ord
 
 	// TODO: generate data_logs for affected touchpoints ?
 
-	// log.Printf("attribute one order took: %v", time.Now().Sub(attributeStart))
+	// svc.Logger.Printf("attribute one order took: %v", time.Now().Sub(attributeStart))
 
 	return
 }

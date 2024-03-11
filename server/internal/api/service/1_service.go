@@ -18,6 +18,7 @@ import (
 	"github.com/rimdian/rimdian/internal/common/mailer"
 	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
 	"github.com/rotisserie/eris"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -159,13 +160,13 @@ func (svc *ServiceImpl) GetWorkspaceForAccount(ctx context.Context, workspaceID 
 
 type ServiceImpl struct {
 	Config             *entity.Config
+	Logger             *logrus.Logger
 	Repo               repository.Repository
 	Mailer             mailer.Mailer
 	TaskOrchestrator   taskorchestrator.Client
 	NetClient          httpClient.HTTPClient
 	StorageClient      *storage.Client
 	DevDataImportQueue *entity.DevDataImportQueue
-	// Logger     *zerolog.Logger
 }
 
 func (svc *ServiceImpl) GetConfig() *entity.Config {
@@ -180,10 +181,10 @@ func GetNodeJSDir() (dir string, err error) {
 	return strings.Split(currentPath, "server")[0] + "nodejs/", nil
 }
 
-func NewService(cfg *entity.Config, repo repository.Repository, mailer mailer.Mailer, taskOrchestrator taskorchestrator.Client, storageClient *storage.Client, netClient httpClient.HTTPClient) Service {
+func NewService(cfg *entity.Config, logger *logrus.Logger, repo repository.Repository, mailer mailer.Mailer, taskOrchestrator taskorchestrator.Client, storageClient *storage.Client, netClient httpClient.HTTPClient) Service {
 	return &ServiceImpl{
-		Config: cfg,
-		// Logger:     logger,
+		Config:             cfg,
+		Logger:             logger,
 		Repo:               repo,
 		Mailer:             mailer,
 		TaskOrchestrator:   taskOrchestrator,

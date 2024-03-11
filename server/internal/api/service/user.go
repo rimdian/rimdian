@@ -69,7 +69,7 @@ func (svc *ServiceImpl) UserShow(ctx context.Context, workspaceID string, accoun
 		return nil, 500, eris.Wrap(err, "UserShow")
 	}
 
-	// log.Printf("result.Devices = %+v", result.Devices)
+	// svc.Logger.Printf("result.Devices = %+v", result.Devices)
 
 	// fetch user aliases
 	result.Aliases, err = svc.Repo.FindUsersAliased(ctx, workspace.ID, user.ExternalID)

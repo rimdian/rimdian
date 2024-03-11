@@ -7,7 +7,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -20,6 +19,7 @@ import (
 	common "github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rimdian/rimdian/internal/common/httpClient"
 	"github.com/rotisserie/eris"
+	"github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"go.opencensus.io/trace"
 )
@@ -27,6 +27,7 @@ import (
 type IDataLogPipeline interface {
 	// Pipeline interface
 	Cfg() *entity.Config
+	Log() *logrus.Logger
 	Net() httpClient.HTTPClient
 	Repo() repository.Repository
 	GetWorkspace() *entity.Workspace
@@ -90,6 +91,7 @@ type IDataLogPipeline interface {
 
 type DataLogPipeline struct {
 	Config     *entity.Config
+	Logger     *logrus.Logger
 	NetClient  httpClient.HTTPClient
 	Repository repository.Repository
 	Workspace  *entity.Workspace
@@ -110,6 +112,10 @@ type DataLogPipeline struct {
 
 func (pipe *DataLogPipeline) Cfg() *entity.Config {
 	return pipe.Config
+}
+
+func (pipe *DataLogPipeline) Log() *logrus.Logger {
+	return pipe.Logger
 }
 
 func (pipe *DataLogPipeline) Net() httpClient.HTTPClient {
@@ -256,7 +262,7 @@ func (pipe *DataLogPipeline) LoadFxRates(ctx context.Context) (err error) {
 			resp, err := pipe.NetClient.Do(req)
 
 			if err != nil {
-				log.Printf("error get new rates: %v", err)
+				pipe.Logger.Printf("error get new rates: %v", err)
 				return eris.Wrap(err, "LoadFxRates")
 			}
 
@@ -271,7 +277,7 @@ func (pipe *DataLogPipeline) LoadFxRates(ctx context.Context) (err error) {
 		var newRatesXML entity.FxCurrencyXML
 
 		if err := xml.Unmarshal(data, &newRatesXML); err != nil {
-			log.Printf("error unmarshal new rates: %v", err)
+			pipe.Logger.Printf("error unmarshal new rates: %v", err)
 			return eris.Wrap(err, "LoadFxRates")
 		}
 
@@ -411,7 +417,7 @@ func (pipe *DataLogPipeline) Execute(ctx context.Context) {
 
 		// release user lock
 		if err := pipe.ReleaseUsersLock(); err != nil {
-			log.Println(err)
+			pipe.Logger.Println(err)
 		}
 	}()
 
@@ -425,7 +431,7 @@ func (pipe *DataLogPipeline) ProcessNextStep(ctx context.Context) {
 
 	// stop processing if there is an error in a previous step
 	if pipe.HasError() {
-		log.Printf("error in previous step, aborting: %+v\n", pipe.QueueResult)
+		pipe.Logger.Printf("error in previous step, aborting: %+v\n", pipe.QueueResult)
 		return
 	}
 
@@ -529,7 +535,7 @@ func (pipe *DataLogPipeline) InitDataLog(ctx context.Context) {
 	computedID := dto.ComputeDataLogID(pipe.Config.SECRET_KEY, pipe.DataLogInQueue.Origin, pipe.DataLogInQueue.Item)
 
 	if computedID != pipe.DataLogInQueue.ID {
-		log.Printf("dropping data: ID integrity check failed: %+v\n", pipe.DataLogInQueue)
+		pipe.Logger.Printf("dropping data: ID integrity check failed: %+v\n", pipe.DataLogInQueue)
 		pipe.SetError("id", fmt.Sprintf("id integrity check failed: %+v\n != %v", pipe.DataLogInQueue.Item, computedID), false)
 		return
 	}
@@ -611,6 +617,7 @@ func (pipeline *DataLogPipeline) AddDataLogGenerated(dataLog *entity.DataLog) {
 
 type DataPipelineProps struct {
 	Config         *entity.Config
+	Logger         *logrus.Logger
 	NetClient      httpClient.HTTPClient
 	Repository     repository.Repository
 	Workspace      *entity.Workspace
@@ -621,6 +628,7 @@ func NewDataPipeline(props *DataPipelineProps) IDataLogPipeline {
 
 	return &DataLogPipeline{
 		Config:            props.Config,
+		Logger:            props.Logger,
 		NetClient:         props.NetClient,
 		Repository:        props.Repository,
 		Workspace:         props.Workspace,

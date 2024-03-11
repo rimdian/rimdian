@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rimdian/rimdian/internal/api/repository"
@@ -94,7 +93,7 @@ func (pipe *DataLogPipeline) UpsertUserAlias(ctx context.Context, isChild bool, 
 
 	// log upated fields
 	// for _, uf := range updatedFields {
-	// 	log.Printf("field %+v\n", uf)
+	// 	svc.Logger.Printf("field %+v\n", uf)
 	// }
 
 	upsertUser := toUser
@@ -127,7 +126,7 @@ func (pipe *DataLogPipeline) UpsertUserAlias(ctx context.Context, isChild bool, 
 				if eris.Is(err, repository.ErrRowNotUpdated) {
 					// debug updatedFields
 					updatedFieldsJSON, _ := json.Marshal(updatedFields)
-					log.Printf("user row not updated with fields: %s", string(updatedFieldsJSON))
+					pipe.Logger.Printf("user row not updated with fields: %s", string(updatedFieldsJSON))
 					return nil
 				}
 				return eris.Wrap(err, "UserAlias")

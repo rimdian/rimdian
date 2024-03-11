@@ -91,7 +91,7 @@ func (svc *ServiceImpl) TaskWakeUpCron(ctx context.Context) (code int, err error
 				return 200, nil
 			}
 
-			// log.Printf("will launch scheduledTask: %+v/n", scheduledTask)
+			// svc.Logger.Printf("will launch scheduledTask: %+v/n", scheduledTask)
 
 			taskExec := &entity.TaskExec{
 				TaskID:         scheduledTask.ID,

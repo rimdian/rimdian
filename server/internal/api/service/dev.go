@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
@@ -90,7 +89,7 @@ func (svc *ServiceImpl) DevExecDataImportFromQueue(ctx context.Context, concurre
 		return 400, ErrDevOnly
 	}
 
-	log.Printf("data import with concurrency %v", concurrency)
+	svc.Logger.Printf("data import with concurrency %v", concurrency)
 
 	if concurrency <= 1 {
 		// fetch data import to process
@@ -100,10 +99,10 @@ func (svc *ServiceImpl) DevExecDataImportFromQueue(ctx context.Context, concurre
 		}
 		result := svc.DataLogImportFromQueue(ctx, dataLogInQueue)
 		if result.HasError {
-			log.Printf("DataImportFromQueue error: %v\n", result.Error)
+			svc.Logger.Printf("DataImportFromQueue error: %v\n", result.Error)
 			return 500, eris.Errorf("DataImportFromQueue error: %v", result.Error)
 		}
-		log.Printf("DataImportFromQueue result: %+v\n", result)
+		svc.Logger.Printf("DataImportFromQueue result: %+v\n", result)
 		return 200, nil
 	}
 
@@ -134,7 +133,7 @@ func (svc *ServiceImpl) DevExecDataImportFromQueue(ctx context.Context, concurre
 		// tickets can wait in the Acquire() before the shouldContinue changed to false
 		// check if we can still continue
 		if !shouldContinue {
-			log.Println("abort, shouldContinue == false")
+			svc.Logger.Println("abort, shouldContinue == false")
 			continue
 		}
 
@@ -152,7 +151,7 @@ func (svc *ServiceImpl) DevExecDataImportFromQueue(ctx context.Context, concurre
 				time.Sleep(3 * time.Second) // no data wait a bit before checking again
 				return
 			}
-			log.Printf("remaining: %v, processing data_log %v", len(svc.DevDataImportQueue.List), dataLogInQueue.ID)
+			svc.Logger.Printf("remaining: %v, processing data_log %v", len(svc.DevDataImportQueue.List), dataLogInQueue.ID)
 
 			result := svc.DataLogImportFromQueue(ctx, dataLogInQueue)
 
@@ -163,7 +162,7 @@ func (svc *ServiceImpl) DevExecDataImportFromQueue(ctx context.Context, concurre
 				time.Sleep(3 * time.Second) // wait a bit before checking again
 			}
 
-			// log.Printf("data import success: %v, will retry: %v, errors: %+v\n", result.Success, result.WillRetry, result.Errors)
+			// svc.Logger.Printf("data import success: %v, will retry: %v, errors: %+v\n", result.Success, result.WillRetry, result.Errors)
 
 			timeTaken := time.Since(startTimer)
 			if timeTaken > maxTimeTaken {

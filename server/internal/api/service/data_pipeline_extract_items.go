@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -13,7 +12,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// extract the data from the data_log.item JSON and validate it
+// extract the data from the data_pipe.Logger.item JSON and validate it
 func (pipe *DataLogPipeline) ExtractAndValidateItem() {
 
 	// verify Origin is allowed in workspace a web domain, for client-side batches only
@@ -65,7 +64,7 @@ func (pipe *DataLogPipeline) ExtractAndValidateItem() {
 
 	// verify that item is a valid JSON
 	if !gjson.Valid(pipe.DataLog.Item) {
-		log.Printf("doDataLog: item is not a valid JSON: %v", pipe.DataLog.Item)
+		pipe.Logger.Printf("doDataLog: item is not a valid JSON: %v", pipe.DataLog.Item)
 		// replace item with a valid JSON
 		replace := struct {
 			Item string `json:"invalid_json"`

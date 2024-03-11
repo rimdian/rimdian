@@ -15,6 +15,7 @@ import (
 	"github.com/rimdian/rimdian/internal/api/repository"
 	"github.com/rimdian/rimdian/internal/common/httpClient"
 	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,6 +36,9 @@ func TestServiceImpl_TaskPipeline(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generate demo workspace err %v", err)
 	}
+
+	// create logger
+	logger := logrus.New()
 
 	netClientMock := &httpClient.HTTPClientMock{
 		DoFunc: func(req *http.Request) (*http.Response, error) {
@@ -81,6 +85,7 @@ func TestServiceImpl_TaskPipeline(t *testing.T) {
 
 		props := &TaskExecPipelineProps{
 			Config:           cfg,
+			Logger:           logger,
 			NetClient:        netClientMock,
 			Repository:       repoMock,
 			Workspace:        demoWorkspace,
@@ -142,6 +147,7 @@ func TestServiceImpl_TaskPipeline(t *testing.T) {
 
 		props := &TaskExecPipelineProps{
 			Config:           cfg,
+			Logger:           logger,
 			NetClient:        netClientMock,
 			Repository:       repoMock,
 			Workspace:        demoWorkspace,
@@ -212,6 +218,7 @@ func TestServiceImpl_TaskPipeline(t *testing.T) {
 
 		props := &TaskExecPipelineProps{
 			Config:           cfg,
+			Logger:           logger,
 			NetClient:        netClientMock,
 			Repository:       repoMock,
 			Workspace:        demoWorkspace,
@@ -278,6 +285,7 @@ func TestServiceImpl_TaskPipeline(t *testing.T) {
 
 		props := &TaskExecPipelineProps{
 			Config:           cfg,
+			Logger:           logger,
 			NetClient:        netClientMock,
 			Repository:       repoMock,
 			Workspace:        demoWorkspace,
@@ -349,6 +357,7 @@ func TestServiceImpl_TaskPipeline(t *testing.T) {
 
 		props := &TaskExecPipelineProps{
 			Config:           cfg,
+			Logger:           logger,
 			NetClient:        netClientMock,
 			Repository:       repoMock,
 			Workspace:        demoWorkspace,

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -17,10 +16,13 @@ import (
 	"github.com/rimdian/rimdian/internal/api/repository"
 	commonDTO "github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rimdian/rimdian/internal/common/httpClient"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestServiceImpl_DataPipelineUpsertUser(t *testing.T) {
+
+	logger := logrus.New()
 
 	cfgSecretKey := "12345678901234567890123456789012"
 
@@ -131,7 +133,7 @@ func TestServiceImpl_DataPipelineUpsertUser(t *testing.T) {
 				return false
 			},
 			UpdateDataLogFunc: func(ctx context.Context, workspaceID string, dataLog *entity.DataLog) error {
-				log.Printf("UpdateDataLog: %+v\n", dataLog)
+				// logger.Printf("UpdateDataLog: %+v\n", dataLog)
 				// if dataLog.Checkpoint != entity.DataLogCheckpointDone {
 				// 	return fmt.Errorf("invalid status: %v", dataLog.Checkpoint)
 				// }
@@ -181,6 +183,7 @@ func TestServiceImpl_DataPipelineUpsertUser(t *testing.T) {
 
 		props := &DataPipelineProps{
 			Config:         cfg,
+			Logger:         logger,
 			NetClient:      netClientMock,
 			Repository:     repoMock,
 			Workspace:      demoWorkspace,
@@ -193,9 +196,9 @@ func TestServiceImpl_DataPipelineUpsertUser(t *testing.T) {
 		result := pipeline.GetQueueResult()
 
 		// for _, dl := range pipeline.GetDataLogsGenerated() {
-		// 	log.Printf("dl %v : %v : %v", dl.Kind, dl.Action, dl.ItemExternalID)
+		// 	svc.Logger.Printf("dl %v : %v : %v", dl.Kind, dl.Action, dl.ItemExternalID)
 		// }
-		// log.Printf("GetDataLog: %+v\n", pipeline.GetDataLog())
+		// svc.Logger.Printf("GetDataLog: %+v\n", pipeline.GetDataLog())
 
 		assert.NotNil(t, result)
 		assert.False(t, result.HasError)

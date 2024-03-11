@@ -10,6 +10,7 @@ import (
 	"github.com/rimdian/rimdian/internal/api/repository"
 	common "github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rimdian/rimdian/internal/common/httpClient"
+	"github.com/sirupsen/logrus"
 )
 
 // Pipeline is the interface that wraps the basic methods to generate a data_log
@@ -18,6 +19,7 @@ import (
 type Pipeline interface {
 	// Ctx() context.Context
 	Cfg() *entity.Config
+	Log() *logrus.Logger
 	Net() httpClient.HTTPClient
 	Repo() repository.Repository
 	GetWorkspace() *entity.Workspace

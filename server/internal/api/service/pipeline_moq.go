@@ -10,6 +10,7 @@ import (
 	"github.com/rimdian/rimdian/internal/api/repository"
 	common "github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rimdian/rimdian/internal/common/httpClient"
+	"github.com/sirupsen/logrus"
 	"sync"
 	"time"
 )
@@ -56,6 +57,9 @@ var _ Pipeline = &PipelineMock{}
 //			},
 //			InsertChildDataLogFunc: func(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) error {
 //				panic("mock out the InsertChildDataLog method")
+//			},
+//			LogFunc: func() *logrus.Logger {
+//				panic("mock out the Log method")
 //			},
 //			NetFunc: func() httpClient.HTTPClient {
 //				panic("mock out the Net method")
@@ -114,6 +118,9 @@ type PipelineMock struct {
 
 	// InsertChildDataLogFunc mocks the InsertChildDataLog method.
 	InsertChildDataLogFunc func(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) error
+
+	// LogFunc mocks the Log method.
+	LogFunc func() *logrus.Logger
 
 	// NetFunc mocks the Net method.
 	NetFunc func() httpClient.HTTPClient
@@ -220,6 +227,9 @@ type PipelineMock struct {
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
+		// Log holds details about calls to the Log method.
+		Log []struct {
+		}
 		// Net holds details about calls to the Net method.
 		Net []struct {
 		}
@@ -260,6 +270,7 @@ type PipelineMock struct {
 	lockGetWorkspace           sync.RWMutex
 	lockHasError               sync.RWMutex
 	lockInsertChildDataLog     sync.RWMutex
+	lockLog                    sync.RWMutex
 	lockNet                    sync.RWMutex
 	lockProcessNextStep        sync.RWMutex
 	lockReattributeUsersOrders sync.RWMutex
@@ -672,6 +683,33 @@ func (mock *PipelineMock) InsertChildDataLogCalls() []struct {
 	mock.lockInsertChildDataLog.RLock()
 	calls = mock.calls.InsertChildDataLog
 	mock.lockInsertChildDataLog.RUnlock()
+	return calls
+}
+
+// Log calls LogFunc.
+func (mock *PipelineMock) Log() *logrus.Logger {
+	if mock.LogFunc == nil {
+		panic("PipelineMock.LogFunc: method is nil but Pipeline.Log was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockLog.Lock()
+	mock.calls.Log = append(mock.calls.Log, callInfo)
+	mock.lockLog.Unlock()
+	return mock.LogFunc()
+}
+
+// LogCalls gets all the calls that were made to Log.
+// Check the length with:
+//
+//	len(mockedPipeline.LogCalls())
+func (mock *PipelineMock) LogCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockLog.RLock()
+	calls = mock.calls.Log
+	mock.lockLog.RUnlock()
 	return calls
 }
 

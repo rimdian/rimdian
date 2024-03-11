@@ -112,7 +112,7 @@ func (svc *ServiceImpl) DataLogImportFromQueue(ctx context.Context, dataLogInQue
 
 	// fetch workspace from DB
 	workspace, err := svc.Repo.GetWorkspace(ctx, dataLogInQueue.Context.WorkspaceID)
-	// log.Printf("workspace %v", workspace)
+	// svc.Logger.Printf("workspace %v", workspace)
 
 	if err != nil {
 		// check if not found
@@ -133,6 +133,7 @@ func (svc *ServiceImpl) DataLogImportFromQueue(ctx context.Context, dataLogInQue
 
 	props := &DataPipelineProps{
 		Config:         svc.Config,
+		Logger:         svc.Logger,
 		NetClient:      svc.NetClient,
 		Repository:     svc.Repo,
 		Workspace:      workspace,
@@ -177,6 +178,7 @@ func (svc *ServiceImpl) DataLogReprocessOne(ctx context.Context, accountID strin
 
 	props := &DataPipelineProps{
 		Config:         svc.Config,
+		Logger:         svc.Logger,
 		NetClient:      svc.NetClient,
 		Repository:     svc.Repo,
 		Workspace:      workspace,

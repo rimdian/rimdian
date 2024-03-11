@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -38,7 +37,7 @@ func TaskExecReattributeConversions(ctx context.Context, pipe *TaskExecPipeline)
 	// log time taken
 	startedAt := time.Now()
 	defer func() {
-		log.Printf("TaskReattributeConversions: workspace %s, task %s, worker %d, took %s", pipe.Workspace.ID, pipe.TaskExec.ID, pipe.TaskExecPayload.WorkerID, time.Since(startedAt))
+		pipe.Logger.Printf("TaskReattributeConversions: workspace %s, task %s, worker %d, took %s", pipe.Workspace.ID, pipe.TaskExec.ID, pipe.TaskExecPayload.WorkerID, time.Since(startedAt))
 	}()
 
 	bgCtx := context.Background()
@@ -78,7 +77,7 @@ func TaskExecReattributeConversions(ctx context.Context, pipe *TaskExecPipeline)
 			return
 		}
 
-		// log.Printf("TaskReattributeConversions: got %+v users to process", userIDs)
+		// pipe.Logger.Printf("TaskReattributeConversions: got %+v users to process", userIDs)
 
 		// process users
 		pipe.ReattributeUsersOrders(spanCtx)
@@ -122,7 +121,7 @@ func TaskExecReattributeConversions(ctx context.Context, pipe *TaskExecPipeline)
 			// check if the we have less than 5 secs remaining
 			if deadline, _ := spanCtx.Deadline(); time.Until(deadline) < 5*time.Second {
 				shouldContinue = false
-				log.Printf("TaskExecReattributeConversions: deadline ellapsed, should continue = false")
+				pipe.Logger.Printf("TaskExecReattributeConversions: deadline ellapsed, should continue = false")
 				continue
 			}
 
@@ -262,7 +261,7 @@ func ReattributeUsersOrders(ctx context.Context, pipe Pipeline) {
 					return 500, eris.Wrap(txErr, "ReattributeUsersOrders")
 				}
 
-				// log.Printf("got %v orders for user %v", len(orders), user.ID)
+				// pipe.Logger.Printf("got %v orders for user %v", len(orders), user.ID)
 
 				// abort if had no orders
 				if len(orders) == 0 {
@@ -490,7 +489,7 @@ func ReattributeUsersOrders(ctx context.Context, pipe Pipeline) {
 						if eris.Is(err, repository.ErrRowNotUpdated) {
 							// debug updatedFields
 							updatedFieldsJSON, _ := json.Marshal(updatedFields)
-							log.Printf("user row not updated with fields: %s", string(updatedFieldsJSON))
+							pipe.Log().Printf("user row not updated with fields: %s", string(updatedFieldsJSON))
 							return 200, nil
 						}
 						return 500, eris.Wrap(err, "ReattributeUsersOrders")

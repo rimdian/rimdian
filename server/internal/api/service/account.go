@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -224,7 +223,7 @@ func (svc *ServiceImpl) AccountResetPassword(ctx context.Context, resetDTO *dto.
 
 	// log token in dev to simplify testing
 	if svc.Config.ENV == entity.ENV_DEV {
-		log.Printf("resetToken %v", resetToken)
+		svc.Logger.Printf("resetToken %v", resetToken)
 	}
 
 	if err := svc.SendSystemEmail(ctx, &dto.SystemEmail{

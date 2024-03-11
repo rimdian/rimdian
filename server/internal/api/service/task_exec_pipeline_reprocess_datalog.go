@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -33,7 +32,7 @@ func TaskExecDataLogReprocessUntil(ctx context.Context, pipe *TaskExecPipeline) 
 	// log time taken
 	startedAt := time.Now()
 	defer func() {
-		log.Printf("TaskDataLogReprocessUntil: workspace %s, task %s, worker %d, took %s", pipe.Workspace.ID, pipe.TaskExec.ID, pipe.TaskExecPayload.WorkerID, time.Since(startedAt))
+		pipe.Logger.Printf("TaskDataLogReprocessUntil: workspace %s, task %s, worker %d, took %s", pipe.Workspace.ID, pipe.TaskExec.ID, pipe.TaskExecPayload.WorkerID, time.Since(startedAt))
 	}()
 
 	bgCtx := context.Background()
@@ -104,7 +103,7 @@ func TaskExecDataLogReprocessUntil(ctx context.Context, pipe *TaskExecPipeline) 
 		return
 	}
 
-	// log.Printf("found %v data imports", len(dataLogs))
+	// pipe.Logger.Printf("found %v data imports", len(dataLogs))
 
 	// process data imports in parallel with a wait group
 	var wg sync.WaitGroup
@@ -133,7 +132,7 @@ func TaskExecDataLogReprocessUntil(ctx context.Context, pipe *TaskExecPipeline) 
 				return
 			}
 
-			log.Printf("requeued data_log %s, event_at %v", dataLogRef.ID, dataLogRef.EventAt)
+			pipe.Logger.Printf("requeued data_log %s, event_at %v", dataLogRef.ID, dataLogRef.EventAt)
 
 		}(*dataLogRef)
 
@@ -173,7 +172,7 @@ func TaskExecDataLogReprocessUntil(ctx context.Context, pipe *TaskExecPipeline) 
 
 	result.UpdatedWorkerState = mainState
 
-	// log.Printf("data import result: %+v", result)
+	// pipe.Logger.Printf("data import result: %+v", result)
 
 	return
 }

@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -19,12 +18,14 @@ import (
 	"github.com/rimdian/rimdian/internal/common/httpClient"
 	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
 	"github.com/rotisserie/eris"
+	"github.com/sirupsen/logrus"
 	"go.opencensus.io/trace"
 )
 
 type ITaskExecPipeline interface {
 	// Pipeline interface
 	Cfg() *entity.Config
+	Log() *logrus.Logger
 	Net() httpClient.HTTPClient
 	Repo() repository.Repository
 	GetWorkspace() *entity.Workspace
@@ -51,6 +52,7 @@ type ITaskExecPipeline interface {
 
 type TaskExecPipeline struct {
 	Config           *entity.Config
+	Logger           *logrus.Logger
 	NetClient        httpClient.HTTPClient
 	Repository       repository.Repository
 	Workspace        *entity.Workspace
@@ -74,6 +76,10 @@ type TaskExecPipeline struct {
 
 func (pipe *TaskExecPipeline) Cfg() *entity.Config {
 	return pipe.Config
+}
+
+func (pipe *TaskExecPipeline) Log() *logrus.Logger {
+	return pipe.Logger
 }
 
 func (pipe *TaskExecPipeline) Net() httpClient.HTTPClient {
@@ -109,7 +115,7 @@ func (pipe *TaskExecPipeline) Execute(ctx context.Context) {
 
 		// release user lock
 		if err := pipe.ReleaseUsersLock(); err != nil {
-			log.Println(err)
+			pipe.Logger.Println(err)
 		}
 
 		if pipe.HasError() && pipe.TaskExec != nil && pipe.TaskExec.IsPersisted() {
@@ -128,7 +134,7 @@ func (pipe *TaskExecPipeline) Execute(ctx context.Context) {
 
 			// use background context to avoid timeout while persisting results
 			if err := pipe.Repository.SetTaskExecError(context.Background(), pipe.Workspace.ID, pipe.TaskExec.ID, pipe.TaskExecPayload.WorkerID, status, pipe.QueueResult.Error); err != nil {
-				log.Println(err)
+				pipe.Logger.Println(err)
 				// task queue will retry at this point...
 			}
 		}
@@ -146,7 +152,7 @@ func (pipe *TaskExecPipeline) Execute(ctx context.Context) {
 			}
 
 			if err := pipe.Repository.SetTaskExecError(context.Background(), pipe.Workspace.ID, pipe.TaskExec.ID, pipe.TaskExecPayload.WorkerID, entity.TaskExecStatusRetryingError, message); err != nil {
-				log.Println(err)
+				pipe.Logger.Println(err)
 				pipe.SetError("server", err.Error(), true) // db error, should retry
 				return
 			}
@@ -238,7 +244,7 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 				}
 			}
 
-			// log.Printf("update task results %+v", result)
+			// pipe.Logger.Printf("update task results %+v", result)
 
 			// enqueue next task if has more to do
 			if !pipe.TaskExecResult.IsDone {
@@ -271,14 +277,14 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 				if pipe.TaskExecResult.DelayNextRequestInSecs != nil {
 					scheduledAt := time.Now().Add(time.Duration(*pipe.TaskExecResult.DelayNextRequestInSecs) * time.Second)
 					job.ScheduleTime = &scheduledAt
-					// log.Printf("now %v, schedule time %v", time.Now(), *job.ScheduleTime)
+					// pipe.Logger.Printf("now %v, schedule time %v", time.Now(), *job.ScheduleTime)
 				}
 
 				if err := pipe.TaskOrchestrator.PostRequest(ctx, job); err != nil {
 					return 500, err
 				}
 
-				// log.Printf("enqueued next task %s", task.ID)
+				// pipe.Logger.Printf("enqueued next task %s", task.ID)
 			}
 
 			return 200, nil
@@ -451,7 +457,7 @@ func (pipe *TaskExecPipeline) DataLogEnqueue(ctx context.Context, replayID *stri
 
 // an error in the item will end the processing of the data_log
 func (pipe *TaskExecPipeline) SetError(key string, err string, shouldRetry bool) {
-	log.Printf("TaskExecPipeline error %v: %v", key, err)
+	pipe.Logger.Printf("TaskExecPipeline error %v: %v", key, err)
 	pipe.QueueResult.SetError(err, shouldRetry)
 	if pipe.TaskExec != nil {
 		pipe.TaskExec.Message = entity.StringPtr(err)
@@ -524,6 +530,7 @@ func (pipeline *TaskExecPipeline) AddDataLogGenerated(dataLog *entity.DataLog) {
 
 type TaskExecPipelineProps struct {
 	Config           *entity.Config
+	Logger           *logrus.Logger
 	NetClient        httpClient.HTTPClient
 	Repository       repository.Repository
 	Workspace        *entity.Workspace
@@ -534,6 +541,7 @@ type TaskExecPipelineProps struct {
 func NewTaskExecPipeline(props *TaskExecPipelineProps) ITaskExecPipeline {
 	return &TaskExecPipeline{
 		Config:            props.Config,
+		Logger:            props.Logger,
 		NetClient:         props.NetClient,
 		Repository:        props.Repository,
 		Workspace:         props.Workspace,

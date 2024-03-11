@@ -29,7 +29,7 @@ func (svc *ServiceImpl) InstallOrVerifyServer(ctx context.Context) (success bool
 			return false, eris.Wrap(err, "InstallOrVerifyServer")
 		}
 
-		// log.Printf("svc.Config.ORGANIZATION_ID %v", svc.Config.ORGANIZATION_ID)
+		// svc.Logger.Printf("svc.Config.ORGANIZATION_ID %v", svc.Config.ORGANIZATION_ID)
 		defaultOrganization, err := entity.GenerateDefaultOrganization(svc.Config.ORGANIZATION_ID, svc.Config.ORGANIZATION_NAME)
 
 		if err != nil {

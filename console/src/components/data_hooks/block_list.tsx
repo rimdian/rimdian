@@ -100,20 +100,15 @@ const BlockDataHooks = () => {
           {
             title: (
               <div className={CSS.text_right}>
-                {/* <UpsertDataHookButton
+                <UpsertDataHookButton
                   organizationId={workspaceCtx.organization.id}
                   workspaceId={workspaceCtx.workspace.id}
                   btnSize="small"
                   btnType="primary"
-                  btnContent={
-                    <>
-                      <FontAwesomeIcon icon={faPlus} />
-                      &nbsp; New data hook
-                    </>
-                  }
+                  btnContent={<>New data hook</>}
                   apiPOST={workspaceCtx.apiPOST}
                   refreshWorkspace={workspaceCtx.refreshWorkspace}
-                /> */}
+                />
               </div>
             ),
             key: 'actions',
@@ -156,7 +151,7 @@ const BlockDataHooks = () => {
                         <UpsertDataHookButton
                           organizationId={workspaceCtx.organization.id}
                           workspaceId={workspaceCtx.workspace.id}
-                          domain={row}
+                          dataHook={row}
                           btnSize="small"
                           btnType="text"
                           btnContent={<FontAwesomeIcon icon={faPenToSquare} />}

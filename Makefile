@@ -12,11 +12,11 @@ tunnel:
 
 dockerapi:
 	@echo "Build server"
-	# docker build . --file Dockerfile_api --progress=plain --tag cmapi --no-cache
-	docker build . --file Dockerfile_api --progress=plain --tag cmapi
+	# docker build . --file Dockerfile_api --progress=plain --tag rimdianapi --no-cache
+	docker build . --file Dockerfile_api --progress=plain --tag rimdianapi
 
 dockercollector:
-	@echo "Build server"
+	@echo "Build collector"
 	# docker build . --file Dockerfile_collector --progress=plain --no-cache
 	docker build . --file Dockerfile_collector --progress=plain
 

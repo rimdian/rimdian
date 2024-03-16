@@ -30,6 +30,7 @@ func NewRepository(ctx context.Context, log *logrus.Logger) (repository.Reposito
 	viper.SetDefault("DB_MAX_OPEN_CONNS", 200)
 	viper.SetDefault("DB_MAX_IDLE_CONNS", 200)
 	viper.SetDefault("CUBEJS_ENDPOINT", "http://localhost:4444")
+	viper.SetDefault("LICENSE_PUBLIC_KEY", "122d5ab94bdaf760cb57b36abd4df805f2b869f8fc02dcd974a0f87daba45a12")
 
 	// we can use config files in non-production env
 	if os.Getenv("ENV") != entity.ENV_PROD {
@@ -68,26 +69,23 @@ func NewRepository(ctx context.Context, log *logrus.Logger) (repository.Reposito
 		DB_CA_CERT_BASE64:  viper.GetString("DB_CA_CERT_BASE64"),
 		// DB_TLS_CERT:                    viper.GetString("DB_TLS_CERT"),
 		// DB_TLS_KEY:                     viper.GetString("DB_TLS_KEY"),
-		DB_PREFIX:                      viper.GetString("DB_PREFIX"),
-		DB_MAX_OPEN_CONNS:              viper.GetInt("DB_MAX_OPEN_CONNS"),
-		DB_MAX_IDLE_CONNS:              viper.GetInt("DB_MAX_IDLE_CONNS"),
-		SMTP_HOST:                      viper.GetString("SMTP_HOST"),
-		SMTP_PORT:                      viper.GetInt("SMTP_PORT"),
-		SMTP_USERNAME:                  viper.GetString("SMTP_USERNAME"),
-		SMTP_PASSWORD:                  viper.GetString("SMTP_PASSWORD"),
-		SMTP_FROM:                      viper.GetString("SMTP_FROM"),
-		SMTP_ENCRYPTION:                viper.GetString("SMTP_ENCRYPTION"),
-		GCLOUD_PROJECT:                 viper.GetString("GCLOUD_PROJECT"),
-		GCLOUD_JSON_CREDENTIALS:        viper.GetString("GCLOUD_JSON_CREDENTIALS"),
-		TASK_QUEUE_LOCATION:            viper.GetString("TASK_QUEUE_LOCATION"),
-		CUBEJS_ENDPOINT:                viper.GetString("CUBEJS_ENDPOINT"),
-		DEV_SSL_CERT:                   viper.GetString("DEV_SSL_CERT"),
-		DEV_SSL_KEY:                    viper.GetString("DEV_SSL_KEY"),
-		MANAGED_CM:                     viper.GetBool("MANAGED_CM"),
-		APP_GOOGLE_API_KEY:             viper.GetString("APP_GOOGLE_API_KEY"),
-		APP_GOOGLE_OAUTH_CLIENT_ID:     viper.GetString("APP_GOOGLE_OAUTH_CLIENT_ID"),
-		APP_GOOGLE_OAUTH_SECRET:        viper.GetString("APP_GOOGLE_OAUTH_SECRET"),
-		APP_GOOGLE_ADS_DEVELOPER_TOKEN: viper.GetString("APP_GOOGLE_ADS_DEVELOPER_TOKEN"),
+		DB_PREFIX:               viper.GetString("DB_PREFIX"),
+		DB_MAX_OPEN_CONNS:       viper.GetInt("DB_MAX_OPEN_CONNS"),
+		DB_MAX_IDLE_CONNS:       viper.GetInt("DB_MAX_IDLE_CONNS"),
+		SMTP_HOST:               viper.GetString("SMTP_HOST"),
+		SMTP_PORT:               viper.GetInt("SMTP_PORT"),
+		SMTP_USERNAME:           viper.GetString("SMTP_USERNAME"),
+		SMTP_PASSWORD:           viper.GetString("SMTP_PASSWORD"),
+		SMTP_FROM:               viper.GetString("SMTP_FROM"),
+		SMTP_ENCRYPTION:         viper.GetString("SMTP_ENCRYPTION"),
+		GCLOUD_PROJECT:          viper.GetString("GCLOUD_PROJECT"),
+		GCLOUD_JSON_CREDENTIALS: viper.GetString("GCLOUD_JSON_CREDENTIALS"),
+		TASK_QUEUE_LOCATION:     viper.GetString("TASK_QUEUE_LOCATION"),
+		CUBEJS_ENDPOINT:         viper.GetString("CUBEJS_ENDPOINT"),
+		DEV_SSL_CERT:            viper.GetString("DEV_SSL_CERT"),
+		DEV_SSL_KEY:             viper.GetString("DEV_SSL_KEY"),
+		MANAGED_CM:              viper.GetBool("MANAGED_CM"),
+		OPEN_CENSUS_EXPORTER:    viper.GetString("OPEN_CENSUS_EXPORTER"),
 	}
 
 	if err := entity.ValidateConfig(cfg); err != nil {

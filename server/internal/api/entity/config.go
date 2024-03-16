@@ -28,27 +28,24 @@ type Config struct {
 	DB_CA_CERT_BASE64  string // DB TLS Certificate Authority
 	// DB_TLS_CERT                    string // DB TLS Certificate
 	// DB_TLS_KEY                     string // DB TLS Key
-	DB_PREFIX                      string // DB prefix default: cm_
-	DB_MAX_OPEN_CONNS              int    // DB max open connections
-	DB_MAX_IDLE_CONNS              int    // DB max idle connections
-	SENTRY_DSN                     string // Sentry DSN
-	SMTP_HOST                      string // SMTP host
-	SMTP_PORT                      int    // SMTP port
-	SMTP_USERNAME                  string // SMTP user
-	SMTP_PASSWORD                  string // SMTP pass
-	SMTP_FROM                      string // SMTP from email
-	SMTP_ENCRYPTION                string // SMTP encryption SSLTLS or STARTTLS
-	GCLOUD_PROJECT                 string // Google Cloud workspace ID
-	GCLOUD_JSON_CREDENTIALS        string // Google Cloud JSON credentials
-	TASK_QUEUE_LOCATION            string // Task Queue location for tasks (i.e: europe-west3)
-	CUBEJS_ENDPOINT                string // Cube.js endpoint
-	DEV_SSL_CERT                   string // ssl certificate for dev server
-	DEV_SSL_KEY                    string // ssl certificate for dev server
-	MANAGED_CM                     bool
-	APP_GOOGLE_API_KEY             string // frontend SDK API key
-	APP_GOOGLE_OAUTH_CLIENT_ID     string
-	APP_GOOGLE_OAUTH_SECRET        string
-	APP_GOOGLE_ADS_DEVELOPER_TOKEN string
+	DB_PREFIX               string // DB prefix default: cm_
+	DB_MAX_OPEN_CONNS       int    // DB max open connections
+	DB_MAX_IDLE_CONNS       int    // DB max idle connections
+	SENTRY_DSN              string // Sentry DSN
+	SMTP_HOST               string // SMTP host
+	SMTP_PORT               int    // SMTP port
+	SMTP_USERNAME           string // SMTP user
+	SMTP_PASSWORD           string // SMTP pass
+	SMTP_FROM               string // SMTP from email
+	SMTP_ENCRYPTION         string // SMTP encryption SSLTLS or STARTTLS
+	GCLOUD_PROJECT          string // Google Cloud workspace ID
+	GCLOUD_JSON_CREDENTIALS string // Google Cloud JSON credentials
+	TASK_QUEUE_LOCATION     string // Task Queue location for tasks (i.e: europe-west3)
+	CUBEJS_ENDPOINT         string // Cube.js endpoint
+	DEV_SSL_CERT            string // ssl certificate for dev server
+	DEV_SSL_KEY             string // ssl certificate for dev server
+	MANAGED_CM              bool
+	OPEN_CENSUS_EXPORTER    string
 }
 
 func ValidateConfig(cfg *Config) error {

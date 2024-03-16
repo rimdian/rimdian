@@ -22,58 +22,60 @@ func NewAPIServer(ctx context.Context, log *logrus.Logger, svc service.Service) 
 
 	cfg := svc.GetConfig()
 
-	// GCP service account
-	serviceAccount := option.WithCredentialsJSON([]byte(cfg.GCLOUD_JSON_CREDENTIALS))
+	if cfg.OPEN_CENSUS_EXPORTER == "stackdriver" {
+		// GCP service account
+		serviceAccount := option.WithCredentialsJSON([]byte(cfg.GCLOUD_JSON_CREDENTIALS))
 
-	// https://opencensus.io/exporters/supported-exporters/go/stackdriver/
-	exporter, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID:               cfg.GCLOUD_PROJECT,
-		MonitoringClientOptions: []option.ClientOption{serviceAccount},
-		TraceClientOptions:      []option.ClientOption{serviceAccount},
-		// https://cloud.google.com/trace/docs/setup/go#oc-upload-fail
-		ReportingInterval:        60 * time.Second,  // Stackdriver’s minimum stats reporting period must be >= 60 seconds
-		TraceSpansBufferMaxBytes: 100 * 1000 * 1000, // 100 MB
-		BundleCountThreshold:     500,
-	})
-	if err != nil {
-		log.Printf("stackdriver trace init error: %s", err)
-		return nil, err
-	}
-	defer exporter.Flush()
+		// https://opencensus.io/exporters/supported-exporters/go/stackdriver/
+		exporter, err := stackdriver.NewExporter(stackdriver.Options{
+			ProjectID:               cfg.GCLOUD_PROJECT,
+			MonitoringClientOptions: []option.ClientOption{serviceAccount},
+			TraceClientOptions:      []option.ClientOption{serviceAccount},
+			// https://cloud.google.com/trace/docs/setup/go#oc-upload-fail
+			ReportingInterval:        60 * time.Second,  // Stackdriver’s minimum stats reporting period must be >= 60 seconds
+			TraceSpansBufferMaxBytes: 100 * 1000 * 1000, // 100 MB
+			BundleCountThreshold:     500,
+		})
+		if err != nil {
+			log.Printf("stackdriver trace init error: %s", err)
+			return nil, err
+		}
+		defer exporter.Flush()
 
-	// start the metrics exporter
-	exporter.StartMetricsExporter()
-	defer exporter.StopMetricsExporter()
+		// start the metrics exporter
+		exporter.StartMetricsExporter()
+		defer exporter.StopMetricsExporter()
 
-	// Subscribe client + server views to see stats in Stackdriver Monitoring.
+		// Subscribe client + server views to see stats in Stackdriver Monitoring.
 
-	if err := view.Register(
-		ochttp.ClientSentBytesDistribution,
-		ochttp.ClientReceivedBytesDistribution,
-		ochttp.ClientRoundtripLatencyDistribution,
-		ochttp.ClientCompletedCount,
-	); err != nil {
-		log.Printf("stackdriver register client stats: %s", err)
-		return nil, err
-	}
+		if err := view.Register(
+			ochttp.ClientSentBytesDistribution,
+			ochttp.ClientReceivedBytesDistribution,
+			ochttp.ClientRoundtripLatencyDistribution,
+			ochttp.ClientCompletedCount,
+		); err != nil {
+			log.Printf("stackdriver register client stats: %s", err)
+			return nil, err
+		}
 
-	if err := view.Register(
-		ochttp.ServerRequestCountView,
-		ochttp.ServerRequestBytesView,
-		ochttp.ServerResponseBytesView,
-		ochttp.ServerLatencyView,
-		ochttp.ServerRequestCountByMethod,
-		ochttp.ServerResponseCountByStatusCode,
-	); err != nil {
-		log.Printf("stackdriver register server stats: %s", err)
-		return nil, err
-	}
+		if err := view.Register(
+			ochttp.ServerRequestCountView,
+			ochttp.ServerRequestBytesView,
+			ochttp.ServerResponseBytesView,
+			ochttp.ServerLatencyView,
+			ochttp.ServerRequestCountByMethod,
+			ochttp.ServerResponseCountByStatusCode,
+		); err != nil {
+			log.Printf("stackdriver register server stats: %s", err)
+			return nil, err
+		}
 
-	// export traces in production
-	if cfg.ENV == "production" {
-		trace.RegisterExporter(exporter)
-		trace.ApplyConfig(trace.Config{DefaultSampler: trace.ProbabilitySampler(0.03)})
-		// trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+		// export traces in production
+		if cfg.ENV == "production" {
+			trace.RegisterExporter(exporter)
+			trace.ApplyConfig(trace.Config{DefaultSampler: trace.ProbabilitySampler(0.03)})
+			// trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+		}
 	}
 
 	api := api.NewAPI(cfg, svc, log)

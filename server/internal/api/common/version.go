@@ -1,3 +1,3 @@
 package common
 
-var Version float64 = 37.1
+var Version float64 = 37.2

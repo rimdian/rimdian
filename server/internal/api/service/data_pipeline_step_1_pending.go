@@ -152,13 +152,23 @@ func (pipe *DataLogPipeline) StepPending(ctx context.Context) {
 			continue
 		}
 
+		// returned a message to attach to the hook result
+		var msg string
+		messageResult := gjson.Get(string(body), "message")
+		if messageResult.Exists() {
+			msg = messageResult.String()
+		}
+
 		result := gjson.Get(string(body), "action")
 
 		// item rejected
 		if result.String() == entity.RejectItem {
 			pipe.DataLog.Hooks[hook.ID].Done = true
 			pipe.DataLog.Hooks[hook.ID].Message = "item rejected"
-			pipe.SetError("on_validation", fmt.Sprintf("item rejected by hook %v", hook.ID), false)
+			if msg == "" {
+				msg = fmt.Sprintf("item rejected by hook %v", hook.ID)
+			}
+			pipe.SetError("on_validation", msg, false)
 			// end here
 			return
 		}
@@ -166,7 +176,10 @@ func (pipe *DataLogPipeline) StepPending(ctx context.Context) {
 		// item updated
 		if result.String() == entity.UpdateItem {
 			pipe.DataLog.Hooks[hook.ID].Done = true
-			pipe.DataLog.Hooks[hook.ID].Message = "item updated"
+			if msg == "" {
+				msg = "item updated"
+			}
+			pipe.DataLog.Hooks[hook.ID].Message = msg
 			newItemResult := gjson.Get(string(body), "updated_item")
 
 			if newItemResult.Exists() {

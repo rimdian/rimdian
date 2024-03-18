@@ -51,5 +51,6 @@ type DataHookPayload struct {
 
 type DataHookOnvalidationResponse struct {
 	Action      string `json:"action"`       // reject | update (empty = accept)
+	Message     string `json:"message"`      // reason for reject or update
 	UpdatedItem string `json:"updated_item"` // order, segment, user...
 }

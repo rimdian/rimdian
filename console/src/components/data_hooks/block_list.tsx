@@ -2,8 +2,7 @@ import { Button, Popconfirm, Space, Switch, Table, message } from 'antd'
 import { DataHook, DataHookFor } from 'interfaces'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPenToSquare, faTrashCan } from '@fortawesome/free-regular-svg-icons'
-import UpsertDataHookButton from './button_upsert'
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons'
 import CSS from 'utils/css'
 import { blockCss } from 'components/common/block'
 import { useState } from 'react'
@@ -98,19 +97,18 @@ const BlockDataHooks = () => {
             }
           },
           {
-            title: (
-              <div className={CSS.text_right}>
-                <UpsertDataHookButton
-                  organizationId={workspaceCtx.organization.id}
-                  workspaceId={workspaceCtx.workspace.id}
-                  btnSize="small"
-                  btnType="primary"
-                  btnContent={<>New data hook</>}
-                  apiPOST={workspaceCtx.apiPOST}
-                  refreshWorkspace={workspaceCtx.refreshWorkspace}
-                />
-              </div>
-            ),
+            title: '',
+            // <div className={CSS.text_right}>
+            //   <UpsertDataHookButton
+            //     organizationId={workspaceCtx.organization.id}
+            //     workspaceId={workspaceCtx.workspace.id}
+            //     btnSize="small"
+            //     btnType="primary"
+            //     btnContent={<>New data hook</>}
+            //     apiPOST={workspaceCtx.apiPOST}
+            //     refreshWorkspace={workspaceCtx.refreshWorkspace}
+            //   />
+            // </div>
             key: 'actions',
             className: 'actions',
             render: (row: DataHook) => {
@@ -147,8 +145,7 @@ const BlockDataHooks = () => {
                             <FontAwesomeIcon icon={faTrashCan} />
                           </Button>
                         </Popconfirm>
-
-                        <UpsertDataHookButton
+                        {/* <UpsertDataHookButton
                           organizationId={workspaceCtx.organization.id}
                           workspaceId={workspaceCtx.workspace.id}
                           dataHook={row}
@@ -157,7 +154,7 @@ const BlockDataHooks = () => {
                           btnContent={<FontAwesomeIcon icon={faPenToSquare} />}
                           apiPOST={workspaceCtx.apiPOST}
                           refreshWorkspace={workspaceCtx.refreshWorkspace}
-                        />
+                        /> */}
                       </>
                     )}
                   </Button.Group>

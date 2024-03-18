@@ -95,6 +95,7 @@ type DataLogPipeline struct {
 	NetClient  httpClient.HTTPClient
 	Repository repository.Repository
 	Workspace  *entity.Workspace
+	Apps       []*entity.App
 	// data received from the queue
 	DataLogInQueue *dto.DataLogInQueue
 	// data_log generated & persisted from the dDataLogInQueue
@@ -525,6 +526,17 @@ func (pipe *DataLogPipeline) InitDataLog(ctx context.Context) {
 		return
 	}
 
+	// load apps
+
+	apps, err := pipe.Repository.ListApps(ctx, pipe.Workspace.ID)
+
+	if err != nil {
+		pipe.SetError("server", fmt.Sprintf("doDataLog: %v", err), true)
+		return
+	}
+
+	pipe.Apps = apps
+
 	// check if the dataLog is a replay of a previous data import
 	if pipe.DataLogInQueue.IsReplay {
 		pipe.Replay(spanCtx)
@@ -583,8 +595,8 @@ func (pipe *DataLogPipeline) InsertChildDataLog(ctx context.Context, kind string
 
 	for _, hook := range pipe.Workspace.DataHooks {
 		// only on_success hooks here
-		if (hook.On == entity.DataHookKindOnSuccess && childDataLog.HasError == 0) &&
-			hook.MatchesDataLog(childDataLog.Kind, childDataLog.Action) {
+		if (hook.On == entity.DataHookKindOnSuccess && hook.Enabled && childDataLog.HasError == 0) &&
+			hook.MatchesDataLogKind(childDataLog.Kind, childDataLog.Action) {
 
 			// init hooks state if nil
 			if childDataLog.Hooks == nil {

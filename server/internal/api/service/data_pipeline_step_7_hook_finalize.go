@@ -35,14 +35,6 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 
 	hookPayloads := []*entity.AppWebhookPayload{}
 
-	// get app states
-	apps, err := pipe.Repository.ListApps(ctx, pipe.Workspace.ID)
-
-	if err != nil {
-		pipe.SetError("hook", fmt.Sprintf("error listing apps: %s", err), true)
-		return
-	}
-
 	// children item is the parent item
 	parentDataLogItem := pipe.DataLog.Item
 
@@ -55,8 +47,8 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 			if dataLog.ID == pipe.DataLog.ID && len(dataLog.Hooks) == 0 {
 				for _, hook := range pipe.Workspace.DataHooks {
 					// only on_success hooks here
-					if (hook.On == entity.DataHookKindOnSuccess && dataLog.HasError == 0) &&
-						hook.MatchesDataLog(dataLog.Kind, dataLog.Action) {
+					if hook.On == entity.DataHookKindOnSuccess && hook.Enabled && dataLog.HasError == 0 &&
+						hook.MatchesDataLogKind(dataLog.Kind, dataLog.Action) {
 						// set default hook state
 						dataLog.Hooks[hook.ID] = &entity.DataHookState{
 							Done: false,
@@ -76,7 +68,7 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 				appState := entity.MapOfInterfaces{}
 
 				// get app state
-				for _, app := range apps {
+				for _, app := range pipe.Apps {
 					if app.ID == hook.AppID {
 						appState = app.State
 						break
@@ -96,10 +88,10 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 						DataHookOn:            hook.On,
 						DataLogID:             dataLog.ID,
 						DataLogKind:           dataLog.Kind,
-						DataLogAction:         dataLog.Action,
 						DataLogItem:           parentDataLogItem,
-						DataLogItemID:         dataLog.ItemID,
-						DataLogItemExternalID: dataLog.ItemExternalID,
+						DataLogAction:         &dataLog.Action,
+						DataLogItemID:         &dataLog.ItemID,
+						DataLogItemExternalID: &dataLog.ItemExternalID,
 						DataLogUpdatedFields:  dataLog.UpdatedFields,
 						User:                  dataLog.UpsertedUser,
 					},
@@ -124,7 +116,7 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 	resultsChan := make(chan hookResult, total)
 
 	// restrict the roundtripper to 7 seconds
-	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	ctxWithTimeout, cancel := context.WithTimeout(spanCtx, 7*time.Second)
 	defer cancel()
 
 	for i := range hookPayloads {
@@ -136,10 +128,6 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 		go func(payload entity.AppWebhookPayload) {
 			defer wg.Done()
 
-			// call webhooks with a timeout of 5 seconds
-			_, cancel := context.WithTimeout(spanCtx, 5*time.Second)
-			defer cancel()
-
 			if payload.AppID == "system" {
 				// TODO: call internal function
 				pipe.Logger.Println("TODO: implement system hook")
@@ -149,7 +137,7 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 				// get app endpoint
 				var app *entity.App
 
-				for _, a := range apps {
+				for _, a := range pipe.Apps {
 					if a.ID == payload.AppID && a.Status == entity.AppStatusActive {
 						app = a
 						break
@@ -362,7 +350,7 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 				dataLog.Checkpoint = entity.DataLogCheckpointDone
 			}
 
-			if err = pipe.Repository.UpdateDataLog(ctx, pipe.Workspace.ID, dataLog); err != nil {
+			if err := pipe.Repository.UpdateDataLog(ctx, pipe.Workspace.ID, dataLog); err != nil {
 				pipe.SetError("hook", fmt.Sprintf("error updating data log: %s", err), true)
 				return
 			}

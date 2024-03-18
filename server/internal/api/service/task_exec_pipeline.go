@@ -498,8 +498,8 @@ func (pipe *TaskExecPipeline) InsertChildDataLog(ctx context.Context, kind strin
 
 	for _, hook := range pipe.Workspace.DataHooks {
 		// only on_success hooks here
-		if (hook.On == entity.DataHookKindOnSuccess && childDataLog.HasError == 0) &&
-			hook.MatchesDataLog(childDataLog.Kind, childDataLog.Action) {
+		if (hook.On == entity.DataHookKindOnSuccess && hook.Enabled && childDataLog.HasError == 0) &&
+			hook.MatchesDataLogKind(childDataLog.Kind, childDataLog.Action) {
 
 			// init hooks state if nil
 			if childDataLog.Hooks == nil {

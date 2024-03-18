@@ -30,18 +30,6 @@ func (svc *ServiceImpl) DataHookUpdate(ctx context.Context, accountID string, da
 		return nil, 400, eris.New("data hook not found")
 	}
 
-	// update data hook
-	if dataHook.AppID == entity.AppIDSystem {
-		dataHook.Name = dataHookDTO.Name
-		dataHook.On = dataHookDTO.On
-		dataHook.For = dataHookDTO.For
-		dataHook.JS = dataHookDTO.JS
-
-		if err := dataHook.Validate(workspace.InstalledApps); err != nil {
-			return nil, 400, eris.Wrap(err, "DataHookUpdate")
-		}
-	}
-
 	dataHook.Enabled = dataHookDTO.Enabled
 
 	if err := svc.Repo.UpdateWorkspace(ctx, workspace, nil); err != nil {

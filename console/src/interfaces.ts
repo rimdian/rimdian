@@ -1116,7 +1116,6 @@ export interface DataHook {
   name: string
   on: 'on_validation' | 'on_success'
   for: DataHookFor[]
-  js?: string
   enabled: boolean
   db_created_at: string
   db_updated_at: string

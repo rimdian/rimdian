@@ -20,11 +20,13 @@ type TaskExecRequestPayload struct {
 	WorkerID   int    `json:"worker_id"` // 0 = parent thread
 	JobID      string `json:"job_id"`
 }
+
 type TaskExecAbortParams struct {
 	TaskExecID  string `json:"id"`
 	WorkspaceID string `json:"workspace_id"`
 	Message     string `json:"message"`
 }
+
 type TaskExecCreateParams struct {
 	WorkspaceID     string                 `json:"workspace_id"`
 	TaskID          string                 `json:"task_id"`

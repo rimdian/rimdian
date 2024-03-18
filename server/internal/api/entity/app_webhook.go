@@ -7,6 +7,9 @@ import (
 var (
 	AppWebhookKindDataHook = "data_hook"
 	AppWebhookKindTaskExec = "task_exec_worker"
+
+	RejectItem = "reject"
+	UpdateItem = "update"
 )
 
 // payload sent to apps
@@ -32,15 +35,21 @@ type TaskExecWorker struct {
 }
 
 type DataHookPayload struct {
-	DataHookID            string        `json:"data_hook_id"`
-	DataHookName          string        `json:"data_hook_name"`
-	DataHookOn            string        `json:"data_hook_on"` // on_validation, on_success
-	DataLogID             string        `json:"data_log_id"`
-	DataLogKind           string        `json:"data_log_kind"` // order, segment, user...
-	DataLogAction         string        `json:"data_log_action"`
-	DataLogItem           string        `json:"data_log_item"`
-	DataLogItemID         string        `json:"data_log_item_id"`
-	DataLogItemExternalID string        `json:"data_log_item_external_id"`
-	DataLogUpdatedFields  UpdatedFields `json:"data_log_updated_fields"`
-	User                  *User         `json:"user"` // user object if user_id is not none
+	DataHookID   string `json:"data_hook_id"`
+	DataHookName string `json:"data_hook_name"`
+	DataHookOn   string `json:"data_hook_on"` // on_validation, on_success
+	DataLogID    string `json:"data_log_id"`
+	DataLogItem  string `json:"data_log_item"` // raw json string of the item
+	DataLogKind  string `json:"data_log_kind"` // order, segment, user...
+	// fields provided for "on_success" hooks:
+	DataLogAction         *string       `json:"data_log_action,omitempty"`
+	DataLogItemID         *string       `json:"data_log_item_id,omitempty"`
+	DataLogItemExternalID *string       `json:"data_log_item_external_id,omitempty"`
+	DataLogUpdatedFields  UpdatedFields `json:"data_log_updated_fields,omitempty"`
+	User                  *User         `json:"user,omitempty"` // user object if user_id is not none
+}
+
+type DataHookOnvalidationResponse struct {
+	Action      string `json:"action"`       // reject | update (empty = accept)
+	UpdatedItem string `json:"updated_item"` // order, segment, user...
 }

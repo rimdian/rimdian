@@ -11,7 +11,6 @@ import TableTag from 'components/common/partial_table_tag'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
-import AceInput from 'components/common/input_ace'
 
 type UpsertDataHookButtonProps = {
   dataHook?: DataHook
@@ -168,19 +167,19 @@ const UpsertDataHookButton = (props: UpsertDataHookButtonProps) => {
             </Form.Item>
 
             <Form.Item
+              name="endpoint"
+              label="Webhook URL"
+              rules={[{ type: 'string', required: true }]}
+            >
+              <Input placeholder="https://..." />
+            </Form.Item>
+
+            <Form.Item
               name="for"
               label="For events"
               rules={[{ type: 'array', required: true, min: 1 }]}
             >
               <ForInput />
-            </Form.Item>
-
-            <Form.Item
-              name="js"
-              label="Javascript code"
-              rules={[{ type: 'string', required: true }]}
-            >
-              <AceInput id="content" width="100%" height="550px" mode="nunjucks" />
             </Form.Item>
           </Form>
         </Drawer>

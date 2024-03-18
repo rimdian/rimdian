@@ -21,21 +21,18 @@ type DataHookFor struct {
 }
 
 type DataHook struct {
-	ID    string         `json:"id"`
-	AppID string         `json:"app_id"` // system or app_id_xxx
-	Name  string         `json:"name"`
-	On    string         `json:"on"`  // on_validation | on_success
-	For   []*DataHookFor `json:"for"` // for which data log
-	// Kind        []string `json:"kind"`         // data log kind
-	// Action      []string `json:"action"`       // data log action
-	JS          *string `json:"js,omitempty"` // javascript code to execute, otherwise app endpoint
-	Enabled     bool    `json:"enabled"`      // is enabled
-	DBCreatedAt string  `json:"db_created_at"`
-	DBUpdatedAt string  `json:"db_updated_at"`
+	ID          string         `json:"id"`
+	AppID       string         `json:"app_id"` // system or app_id_xxx
+	Name        string         `json:"name"`
+	On          string         `json:"on"`      // on_validation | on_success
+	For         []*DataHookFor `json:"for"`     // for which data log
+	Enabled     bool           `json:"enabled"` // is enabled
+	DBCreatedAt string         `json:"db_created_at"`
+	DBUpdatedAt string         `json:"db_updated_at"`
 }
 
 // is this data hook for the given event kind
-func (x *DataHook) MatchesDataLog(dataLogKind string, dataLogAction string) bool {
+func (x *DataHook) MatchesDataLogKind(dataLogKind string, dataLogAction string) bool {
 
 	if x.For == nil {
 		return false
@@ -43,7 +40,7 @@ func (x *DataHook) MatchesDataLog(dataLogKind string, dataLogAction string) bool
 
 	for _, forKind := range x.For {
 		if forKind.Kind == "*" || forKind.Kind == dataLogKind {
-			if forKind.Action == "*" || forKind.Action == dataLogAction {
+			if forKind.Action == "" || forKind.Action == dataLogAction {
 				return true
 			}
 		}
@@ -64,22 +61,20 @@ func (x *DataHook) Validate(installedApps InstalledApps) error {
 	}
 
 	// id should start with app_ or system
-	if !strings.HasPrefix(x.ID+"_", x.AppID) && x.AppID != AppIDSystem {
+	if !strings.HasPrefix(x.ID+"_", x.AppID) {
 		return eris.New("invalid data hook id, should start with app_id_")
 	}
 
 	// verify that app exists
-	if x.ID != AppIDSystem {
-		appFound := false
-		for _, app := range installedApps {
-			if app.ID == x.AppID {
-				appFound = true
-				break
-			}
+	appFound := false
+	for _, app := range installedApps {
+		if app.ID == x.AppID {
+			appFound = true
+			break
 		}
-		if !appFound {
-			return eris.Errorf("invalid data hook app id: %s", x.AppID)
-		}
+	}
+	if !appFound {
+		return eris.Errorf("invalid data hook app id: %s", x.AppID)
 	}
 
 	if x.On != DataHookKindOnValidation && x.On != DataHookKindOnSuccess {
@@ -92,10 +87,6 @@ func (x *DataHook) Validate(installedApps InstalledApps) error {
 
 	if x.Name == "" {
 		return eris.New("invalid data hook name")
-	}
-
-	if x.AppID == AppIDSystem && (x.JS == nil || *x.JS == "") {
-		return eris.New("data hook js is required")
 	}
 
 	allowedKinds := []string{
@@ -111,7 +102,7 @@ func (x *DataHook) Validate(installedApps InstalledApps) error {
 	}
 
 	allowedActions := []string{
-		"*",
+		"",
 		"create",
 		"update",
 		"noop",
@@ -122,10 +113,6 @@ func (x *DataHook) Validate(installedApps InstalledApps) error {
 	for _, forItem := range x.For {
 		if forItem.Kind == "" {
 			return eris.New("invalid data hook for kind")
-		}
-
-		if forItem.Action == "" {
-			return eris.New("invalid data hook for action")
 		}
 
 		kindAllowed := false
@@ -145,7 +132,7 @@ func (x *DataHook) Validate(installedApps InstalledApps) error {
 		actionAllowed := false
 
 		for _, allowedAction := range allowedActions {
-			if allowedAction == forItem.Action || forItem.Action == "*" {
+			if allowedAction == forItem.Action || forItem.Action == "" {
 				actionAllowed = true
 			}
 		}

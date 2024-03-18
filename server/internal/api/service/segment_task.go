@@ -132,7 +132,7 @@ func TaskExecRecomputeSegment(ctx context.Context, pipe *TaskExecPipeline) (resu
 		// TODO: find if workflows are matched here
 
 		for _, hook := range pipe.GetWorkspace().DataHooks {
-			if hook.MatchesDataLog("segment", "enter") {
+			if hook.MatchesDataLogKind("segment", "enter") {
 				mainState["has_hooks"] = true
 				checkpoint = entity.DataLogCheckpointWorkflowsTriggered
 			}
@@ -156,14 +156,14 @@ func TaskExecRecomputeSegment(ctx context.Context, pipe *TaskExecPipeline) (resu
 		// TODO in future: find if workflows are matched here
 
 		for _, hook := range pipe.GetWorkspace().DataHooks {
-			if hook.MatchesDataLog("segment", "exit") {
+			if hook.MatchesDataLogKind("segment", "exit") {
 				mainState["has_hooks"] = true
 				checkpoint = entity.DataLogCheckpointWorkflowsTriggered
 			}
 		}
 
 		for _, hook := range pipe.GetWorkspace().DataHooks {
-			if hook.MatchesDataLog("segment", "exit") {
+			if hook.MatchesDataLogKind("segment", "exit") {
 				mainState["has_hooks"] = true
 				checkpoint = entity.DataLogCheckpointWorkflowsTriggered
 			}

@@ -9,6 +9,5 @@ type DataHook struct {
 	On          string                `json:"on"`
 	Name        string                `json:"name"`
 	For         []*entity.DataHookFor `json:"for"`
-	JS          *string               `json:"js"`
 	Enabled     bool                  `json:"enabled"`
 }

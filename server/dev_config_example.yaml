@@ -6,12 +6,14 @@
 ENV: development
 API_PORT: 8000
 # add an entry in your /etc/hosts file
-# 127.0.0.1 localapi.captainmetrics.com
-API_ENDPOINT: "https://localapi.captainmetrics.com:8000"
-COLLECTOR_ENDPOINT: "https://localcollector.captainmetrics.com:8000"
+# 127.0.0.1 localapi.rimdian.com
+# 127.0.0.1 localcollector.rimdian.com
+API_ENDPOINT: "https://localapi.rimdian.com:8000"
+COLLECTOR_ENDPOINT: "https://localcollector.rimdian.com:8000"
 ROOT_EMAIL: you@domain.com
 SECRET_KEY: '12345678901234567890123456789012'
 LICENSE_PUBLIC_KEY: xxxxx
+CUBEJS_API_SECRET: xxxxxx
 ORGANIZATION_ID: acme
 ORGANIZATION_NAME: ACME
 DB_MAINTENANCE: false

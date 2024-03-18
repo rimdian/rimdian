@@ -16,7 +16,7 @@ import (
 func (svc *ServiceImpl) OrganizationCreate(ctx context.Context, orgCreateDTO *dto.OrganizationCreate) (result *dto.OrganizationResult, code int, err error) {
 
 	// only for Cloud Managed CM
-	if !svc.Config.MANAGED_CM {
+	if !svc.Config.MANAGED_RMD {
 		return nil, 403, eris.New("Forbidden")
 	}
 

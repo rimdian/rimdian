@@ -49,7 +49,7 @@ export interface Config {
   API_ENDPOINT: string
   COLLECTOR_ENDPOINT: string
   CUBEJS_ENDPOINT: string
-  MANAGED_CM: boolean
+  MANAGED_RMD: boolean
 }
 
 declare global {
@@ -64,9 +64,6 @@ declare global {
   interface Navigator {
     userLanguage: any
   }
-}
-if (window.location.hostname.indexOf('captainmetrics.com') > -1) {
-  window.location.replace(window.location.href.replace('captainmetrics.com', 'rimdian.com'))
 }
 
 const queryClient = new QueryClient()

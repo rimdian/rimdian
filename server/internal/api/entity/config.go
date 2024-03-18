@@ -15,10 +15,11 @@ var ENV_PROD = "production"
 type Config struct {
 	ENV                string
 	API_PORT           string
-	API_ENDPOINT       string // hostname of the exposed API server (i.e: captainmetrics.mybusiness.com)
-	COLLECTOR_ENDPOINT string // hostname of the exposed COLLECTOR server (i.e: collector.mybusiness.com)
+	API_ENDPOINT       string // hostname of the exposed API server (i.e: rimdian.mybusiness.com)
+	COLLECTOR_ENDPOINT string // hostname of the exposed COLLECTOR server (i.e: go.mybusiness.com)
 	SECRET_KEY         string // secret key for signing tokens & data
 	LICENSE_PUBLIC_KEY string // public key for verifying tokens
+	CUBEJS_API_SECRET  string // secret key for cube.js
 	ORGANIZATION_ID    string // default organization id created on install
 	ORGANIZATION_NAME  string // default organization name created on install
 	ROOT_EMAIL         string // root account account login
@@ -44,7 +45,7 @@ type Config struct {
 	CUBEJS_ENDPOINT         string // Cube.js endpoint
 	DEV_SSL_CERT            string // ssl certificate for dev server
 	DEV_SSL_KEY             string // ssl certificate for dev server
-	MANAGED_CM              bool
+	MANAGED_RMD             bool
 	OPEN_CENSUS_EXPORTER    string
 }
 
@@ -84,6 +85,10 @@ func ValidateConfig(cfg *Config) error {
 
 	if cfg.LICENSE_PUBLIC_KEY == "" {
 		return eris.New("LICENSE_PUBLIC_KEY is required")
+	}
+
+	if cfg.CUBEJS_API_SECRET == "" {
+		return eris.New("CUBEJS_API_SECRET is required")
 	}
 
 	if cfg.ORGANIZATION_ID == "" {

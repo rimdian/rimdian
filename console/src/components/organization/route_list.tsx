@@ -13,7 +13,7 @@ import CSS from 'utils/css'
 const RouteOrganizations = () => {
   const orgsCtx = useOrganizationsCtx()
 
-  if (orgsCtx.organizations.length === 1 && !window.Config.MANAGED_CM) {
+  if (orgsCtx.organizations.length === 1 && !window.Config.MANAGED_RMD) {
     return <Navigate to={'/orgs/' + orgsCtx.organizations[0].id} />
   }
 
@@ -77,79 +77,81 @@ const AddOrganizationButton = ({ onComplete }: any) => {
     setModalVisible(true)
   }
 
-  return (<>
-    <Button type="primary" block onClick={onClicked}>
-      Create organization
-    </Button>
-    <Modal
-      open={modalVisible}
-      title="Add an organization"
-      okText="Confirm"
-      cancelText="Cancel"
-      onCancel={() => {
-        setModalVisible(false)
-      }}
-      onOk={() => {
-        form
-          .validateFields()
-          .then((values: any) => {
-            form.resetFields()
-            setModalVisible(false)
-            onComplete(values)
-          })
-          .catch(console.error)
-      }}
-    >
-      <Form form={form} labelCol={{ span: 10 }} wrapperCol={{ span: 14 }} layout="horizontal">
-        <Form.Item
-          name="id"
-          label="ID"
-          rules={[
-            {
-              required: true,
-              type: 'string',
-              pattern: /^([a-z0-9])+$/,
-              message: Messages.InvalidOrganizationIDFormat
-            }
-          ]}
-        >
-          <Input placeholder="a-z0-9" />
-        </Form.Item>
+  return (
+    <>
+      <Button type="primary" block onClick={onClicked}>
+        Create organization
+      </Button>
+      <Modal
+        open={modalVisible}
+        title="Add an organization"
+        okText="Confirm"
+        cancelText="Cancel"
+        onCancel={() => {
+          setModalVisible(false)
+        }}
+        onOk={() => {
+          form
+            .validateFields()
+            .then((values: any) => {
+              form.resetFields()
+              setModalVisible(false)
+              onComplete(values)
+            })
+            .catch(console.error)
+        }}
+      >
+        <Form form={form} labelCol={{ span: 10 }} wrapperCol={{ span: 14 }} layout="horizontal">
+          <Form.Item
+            name="id"
+            label="ID"
+            rules={[
+              {
+                required: true,
+                type: 'string',
+                pattern: /^([a-z0-9])+$/,
+                message: Messages.InvalidOrganizationIDFormat
+              }
+            ]}
+          >
+            <Input placeholder="a-z0-9" />
+          </Form.Item>
 
-        <Form.Item
-          name="name"
-          label="Name"
-          rules={[
-            {
-              required: false,
-              type: 'string',
-              message: Messages.RequiredField
-            }
-          ]}
-        >
-          <Input />
-        </Form.Item>
+          <Form.Item
+            name="name"
+            label="Name"
+            rules={[
+              {
+                required: false,
+                type: 'string',
+                message: Messages.RequiredField
+              }
+            ]}
+          >
+            <Input />
+          </Form.Item>
 
-        <Form.Item
-          name="currency"
-          label="Main currency"
-          rules={[{ required: true, message: Messages.RequiredField }]}
-        >
-          <Select
-            showSearch
-            placeholder="Select a currency"
-            optionFilterProp="children"
-            filterOption={(input: any, option: any) =>
-              option.value.toLowerCase().includes(input.toLowerCase())
-            }
-            options={Currencies.map((c: Currency) => {
-              return { value: c.code, label: c.code + ' - ' + c.currency }
-            })}
-          />
-        </Form.Item>
-      </Form>
-    </Modal>
-  </>);
+          <Form.Item
+            name="currency"
+            label="Main currency"
+            rules={[{ required: true, message: Messages.RequiredField }]}
+          >
+            <Select
+              showSearch
+              placeholder="Select a currency"
+              optionFilterProp="children"
+              filterOption={(input: any, option: any) =>
+                option.value.toLowerCase().includes(input.toLowerCase())
+              }
+              options={Currencies.map((c: Currency) => {
+                return { value: c.code, label: c.code + ' - ' + c.currency }
+              })}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  )
 }
 
 export default RouteOrganizations

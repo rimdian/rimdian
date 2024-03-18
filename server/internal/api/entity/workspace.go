@@ -139,7 +139,7 @@ func (w *Workspace) AttachMetadatas(ctx context.Context, cfg *Config) (err error
 		schemaURL,
 	})
 
-	w.CubeJSToken, err = tokenToSign.SignedString([]byte(cfg.SECRET_KEY))
+	w.CubeJSToken, err = tokenToSign.SignedString([]byte(cfg.CUBEJS_API_SECRET))
 
 	if err != nil {
 		return err

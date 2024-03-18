@@ -60,6 +60,7 @@ func NewRepository(ctx context.Context, log *logrus.Logger) (repository.Reposito
 		COLLECTOR_ENDPOINT: viper.GetString("COLLECTOR_ENDPOINT"),
 		SECRET_KEY:         viper.GetString("SECRET_KEY"),
 		LICENSE_PUBLIC_KEY: viper.GetString("LICENSE_PUBLIC_KEY"),
+		CUBEJS_API_SECRET:  viper.GetString("CUBEJS_API_SECRET"),
 		ORGANIZATION_ID:    viper.GetString("ORGANIZATION_ID"),
 		ORGANIZATION_NAME:  viper.GetString("ORGANIZATION_NAME"),
 		ROOT_EMAIL:         viper.GetString("ROOT_EMAIL"),
@@ -84,7 +85,7 @@ func NewRepository(ctx context.Context, log *logrus.Logger) (repository.Reposito
 		CUBEJS_ENDPOINT:         viper.GetString("CUBEJS_ENDPOINT"),
 		DEV_SSL_CERT:            viper.GetString("DEV_SSL_CERT"),
 		DEV_SSL_KEY:             viper.GetString("DEV_SSL_KEY"),
-		MANAGED_CM:              viper.GetBool("MANAGED_CM"),
+		MANAGED_RMD:             viper.GetBool("MANAGED_RMD"),
 		OPEN_CENSUS_EXPORTER:    viper.GetString("OPEN_CENSUS_EXPORTER"),
 	}
 

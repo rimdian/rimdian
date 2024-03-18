@@ -167,6 +167,7 @@ export const CurrentWorkspaceCtx = () => {
   let isReady = true
   if (workspace.domains.length === 0) isReady = false
   if (workspace.has_orders === false && workspace.has_leads === false) isReady = false
+  if (!cubejsApiRef.current) isReady = false
 
   if (!isReady) {
     return (

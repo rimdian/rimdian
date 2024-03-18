@@ -207,13 +207,13 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 				API_ENDPOINT       string `json:"API_ENDPOINT"`
 				COLLECTOR_ENDPOINT string `json:"COLLECTOR_ENDPOINT"`
 				CUBEJS_ENDPOINT    string `json:"CUBEJS_ENDPOINT"`
-				MANAGED_CM         bool   `json:"MANAGED_CM"`
+				MANAGED_RMD        bool   `json:"MANAGED_RMD"`
 			}{
 				ENV:                cfg.ENV,
 				API_ENDPOINT:       cfg.API_ENDPOINT + "/api",
 				COLLECTOR_ENDPOINT: cfg.COLLECTOR_ENDPOINT,
 				CUBEJS_ENDPOINT:    cfg.CUBEJS_ENDPOINT,
-				MANAGED_CM:         cfg.MANAGED_CM,
+				MANAGED_RMD:        cfg.MANAGED_RMD,
 			}
 
 			jsonConfig, _ := json.Marshal(consoleConfig)

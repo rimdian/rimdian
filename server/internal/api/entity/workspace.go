@@ -117,6 +117,7 @@ type Workspace struct {
 	FxRates                        *FxRates               `db:"fx_rates" json:"fx_rates"`
 	DataHooks                      DataHooks              `db:"data_hooks" json:"data_hooks"`
 	LicenseKey                     *string                `db:"license_key" json:"license_key,omitempty"`
+	FoldersTree                    *FoldersTree           `db:"folders_tree" json:"folders_tree"`
 
 	// Attached server-side
 	CubeJSToken string       `json:"cubejs_token,omitempty"`
@@ -359,6 +360,10 @@ func (p *Workspace) Validate() error {
 	if p.LicenseKey != nil {
 		sanitized := strings.TrimSpace(*p.LicenseKey)
 		p.LicenseKey = &sanitized
+	}
+
+	if p.FoldersTree == nil {
+		p.FoldersTree = &FoldersTree{}
 	}
 
 	return nil
@@ -847,6 +852,7 @@ var WorkspaceSchema string = `CREATE ROWSTORE TABLE IF NOT EXISTS workspace (
 	fx_rates JSON,
 	data_hooks JSON,
 	license_key VARCHAR(1024),
+	folders_tree JSON NOT NULL,
 	
 	PRIMARY KEY (id),
     SHARD KEY (id)
@@ -884,6 +890,7 @@ var WorkspaceSchemaMYSQL string = `CREATE TABLE IF NOT EXISTS workspace (
 	fx_rates JSON,
 	data_hooks JSON,
 	license_key VARCHAR(1024),
+	folders_tree JSON NOT NULL,
 	
 	PRIMARY KEY (id)
     -- SHARD KEY (id)

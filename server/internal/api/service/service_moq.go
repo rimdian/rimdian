@@ -127,6 +127,9 @@ var _ Service = &ServiceMock{}
 //			ExecuteMigrationFunc: func(ctx context.Context, installedVersion float64, codeVersion float64) error {
 //				panic("mock out the ExecuteMigration method")
 //			},
+//			FolderFilesFunc: func(ctx context.Context, accountID string, params *dto.FolderFilesParams) (*dto.FolderFilesResult, int, error) {
+//				panic("mock out the FolderFiles method")
+//			},
 //			GetConfigFunc: func() *entity.Config {
 //				panic("mock out the GetConfig method")
 //			},
@@ -361,6 +364,9 @@ type ServiceMock struct {
 
 	// ExecuteMigrationFunc mocks the ExecuteMigration method.
 	ExecuteMigrationFunc func(ctx context.Context, installedVersion float64, codeVersion float64) error
+
+	// FolderFilesFunc mocks the FolderFiles method.
+	FolderFilesFunc func(ctx context.Context, accountID string, params *dto.FolderFilesParams) (*dto.FolderFilesResult, int, error)
 
 	// GetConfigFunc mocks the GetConfig method.
 	GetConfigFunc func() *entity.Config
@@ -778,6 +784,15 @@ type ServiceMock struct {
 			// CodeVersion is the codeVersion argument value.
 			CodeVersion float64
 		}
+		// FolderFiles holds details about calls to the FolderFiles method.
+		FolderFiles []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AccountID is the accountID argument value.
+			AccountID string
+			// Params is the params argument value.
+			Params *dto.FolderFilesParams
+		}
 		// GetConfig holds details about calls to the GetConfig method.
 		GetConfig []struct {
 		}
@@ -1159,6 +1174,7 @@ type ServiceMock struct {
 	lockDomainDelete                            sync.RWMutex
 	lockDomainUpsert                            sync.RWMutex
 	lockExecuteMigration                        sync.RWMutex
+	lockFolderFiles                             sync.RWMutex
 	lockGetConfig                               sync.RWMutex
 	lockGetWorkspaceForAccount                  sync.RWMutex
 	lockInstallOrVerifyServer                   sync.RWMutex
@@ -2551,6 +2567,46 @@ func (mock *ServiceMock) ExecuteMigrationCalls() []struct {
 	mock.lockExecuteMigration.RLock()
 	calls = mock.calls.ExecuteMigration
 	mock.lockExecuteMigration.RUnlock()
+	return calls
+}
+
+// FolderFiles calls FolderFilesFunc.
+func (mock *ServiceMock) FolderFiles(ctx context.Context, accountID string, params *dto.FolderFilesParams) (*dto.FolderFilesResult, int, error) {
+	if mock.FolderFilesFunc == nil {
+		panic("ServiceMock.FolderFilesFunc: method is nil but Service.FolderFiles was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.FolderFilesParams
+	}{
+		Ctx:       ctx,
+		AccountID: accountID,
+		Params:    params,
+	}
+	mock.lockFolderFiles.Lock()
+	mock.calls.FolderFiles = append(mock.calls.FolderFiles, callInfo)
+	mock.lockFolderFiles.Unlock()
+	return mock.FolderFilesFunc(ctx, accountID, params)
+}
+
+// FolderFilesCalls gets all the calls that were made to FolderFiles.
+// Check the length with:
+//
+//	len(mockedService.FolderFilesCalls())
+func (mock *ServiceMock) FolderFilesCalls() []struct {
+	Ctx       context.Context
+	AccountID string
+	Params    *dto.FolderFilesParams
+} {
+	var calls []struct {
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.FolderFilesParams
+	}
+	mock.lockFolderFiles.RLock()
+	calls = mock.calls.FolderFiles
+	mock.lockFolderFiles.RUnlock()
 	return calls
 }
 

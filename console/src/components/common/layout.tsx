@@ -31,7 +31,8 @@ import {
   faGear,
   faBorderAll,
   faDatabase,
-  faAnglesDown
+  faAnglesDown,
+  faFolderOpen
 } from '@fortawesome/free-solid-svg-icons'
 import { faSquareCheck } from '@fortawesome/free-regular-svg-icons'
 import { Timezones } from 'utils/countries_timezones'
@@ -378,6 +379,21 @@ const Topbar = (props: TopbarProps) => {
               }
               title="Users"
               route="/orgs/:organizationId/workspaces/:workspaceId/users"
+            />
+            {spacer}
+            <AppItem
+              icon={
+                <div
+                  style={{
+                    color: '#FFF',
+                    background: 'linear-gradient(to top, #FF5F6D, #FFC371)'
+                  }}
+                >
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </div>
+              }
+              title="Files"
+              route="/orgs/:organizationId/workspaces/:workspaceId/files"
             />
             {spacer}
             <div className={appItemCss.self}>

@@ -13,8 +13,9 @@ import (
 var (
 	migrations = map[float64]entity.MajorMigrationInterface{
 		// add new migrations here
-		36.0: migration.NewMigration37(),
-		35.0: migration.NewMigration36(),
+		37: migration.NewMigration38(),
+		36: migration.NewMigration37(),
+		35: migration.NewMigration36(),
 	}
 )
 
@@ -28,6 +29,8 @@ func (svc *ServiceImpl) ExecuteMigration(ctx context.Context, installedVersion f
 	}
 	defer sysConn.Close()
 
+	installedMajorVersion := math.Trunc(installedVersion)
+
 	// bump version on minor version change
 	if math.Trunc(installedVersion) == math.Trunc(codeVersion) {
 		if _, err = sysConn.ExecContext(ctx, "UPDATE setting SET installed_version = ?", codeVersion); err != nil {
@@ -39,7 +42,7 @@ func (svc *ServiceImpl) ExecuteMigration(ctx context.Context, installedVersion f
 	}
 
 	// get migrations to run
-	migration, found := migrations[installedVersion]
+	migration, found := migrations[installedMajorVersion]
 
 	if !found {
 		return eris.Errorf("no migration found for version %v", codeVersion)
@@ -83,18 +86,16 @@ func (svc *ServiceImpl) ExecuteMigration(ctx context.Context, installedVersion f
 
 			conn.Close()
 		}
-
-		toVersion := migration.GetMajorVersion()
-
-		// bump version
-		if _, err = sysConn.ExecContext(ctx, "UPDATE setting SET installed_version = ?", toVersion); err != nil {
-			svc.Logger.Printf("error updating setting table: %v", err)
-			return err
-		}
-		svc.Logger.Printf("bumped version to %v", toVersion)
-
-		return nil
 	}
+
+	toVersion := migration.GetMajorVersion()
+
+	// bump version
+	if _, err = sysConn.ExecContext(ctx, "UPDATE setting SET installed_version = ?", toVersion); err != nil {
+		svc.Logger.Printf("error updating setting table: %v", err)
+		return err
+	}
+	svc.Logger.Printf("bumped version to %v", toVersion)
 
 	return nil
 }

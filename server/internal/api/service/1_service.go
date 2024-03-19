@@ -128,6 +128,9 @@ type Service interface {
 	AppFromToken(ctx context.Context, params *dto.AppFromTokenParams) (result *dto.AppFromToken, code int, err error)
 	AppExecQuery(ctx context.Context, accountID string, params *dto.AppExecQuery) (result *dto.AppExecQueryResult, code int, err error)
 
+	// files
+	FolderFiles(ctx context.Context, accountID string, params *dto.FolderFilesParams) (result *dto.FolderFilesResult, code int, err error)
+
 	// cubejs
 	CubeJSSchemas(ctx context.Context, accountID string, workspaceID string) (schemas dto.CubeJSSchemas, code int, err error)
 }

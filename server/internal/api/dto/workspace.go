@@ -1,6 +1,8 @@
 package dto
 
-import "github.com/rimdian/rimdian/internal/api/entity"
+import (
+	"github.com/rimdian/rimdian/internal/api/entity"
+)
 
 // create / update workspace "Data Transfer Object"
 type WorkspaceCreate struct {
@@ -18,14 +20,15 @@ type WorkspaceCreate struct {
 
 type WorkspaceUpdate struct {
 	*WorkspaceCreate
-	DataProtectionOfficerID string       `json:"dpo_id"`
-	UserReconciliationKeys  []string     `json:"user_reconciliation_keys"`
-	UserIDSigning           string       `json:"user_id_signing"`
-	SessionTimeout          int          `json:"session_timeout"`
-	HasOrders               bool         `json:"has_orders"`
-	HasLeads                bool         `json:"has_leads"`
-	LeadStages              []*LeadStage `json:"lead_stages"`
-	LicenseKey              *string      `json:"license_key,omitempty"`
+	DataProtectionOfficerID string               `json:"dpo_id"`
+	UserReconciliationKeys  []string             `json:"user_reconciliation_keys"`
+	UserIDSigning           string               `json:"user_id_signing"`
+	SessionTimeout          int                  `json:"session_timeout"`
+	HasOrders               bool                 `json:"has_orders"`
+	HasLeads                bool                 `json:"has_leads"`
+	LeadStages              []*LeadStage         `json:"lead_stages"`
+	LicenseKey              *string              `json:"license_key,omitempty"`
+	FilesSettings           entity.FilesSettings `json:"files_settings"`
 }
 
 type WorkspaceListResult struct {

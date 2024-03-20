@@ -8,6 +8,7 @@ export type BlockProps = {
   small?: boolean
   grid?: boolean
   classNames?: CSSInterpolation[]
+  style?: React.CSSProperties
   children: React.ReactNode
 }
 
@@ -77,7 +78,7 @@ const Block = (props: BlockProps) => {
   const hasHeader = props.title || props.extra
 
   return (
-    <div className={css([blockCss.self, ...(props.classNames || [])])}>
+    <div className={css([blockCss.self, ...(props.classNames || [])])} style={props.style}>
       {hasHeader && (
         <div className={css([blockCss.head, props.small && blockCss.headSmall])}>
           <div className={blockCss.headWrapper}>

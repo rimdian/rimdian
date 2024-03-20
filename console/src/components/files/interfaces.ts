@@ -1,5 +1,5 @@
 export interface FileManagerProps {
-  foldersTree: FoldersTree
+  // foldersTree: FoldersTree
   currentPath?: string
   itemFilters?: ItemFilter[]
   onError: (error: any) => void
@@ -7,16 +7,28 @@ export interface FileManagerProps {
   height: number
   acceptFileType: string
   acceptItem: (item: Item) => boolean
+  withSelection?: boolean
   multiple?: boolean
 }
 
-export interface FoldersTree {
-  id: string
-  path: string
-  name: string
-  files_loaded: boolean
-  children: FoldersTree[]
+export interface FilesSettings {
+  endpoint: string
+  access_key: string
+  encrypted_secret_key: string
+  secret_key: string
+  bucket: string
+  location: string
+  cdn_endpoint: string
+  // folders_tree: FoldersTree
 }
+
+// export interface FoldersTree {
+//   id: string
+//   path: string
+//   name: string
+//   files_loaded: boolean
+//   children: FoldersTree[]
+// }
 
 export interface Item {
   id: string

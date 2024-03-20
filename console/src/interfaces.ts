@@ -1,4 +1,4 @@
-import { FoldersTree } from 'components/files/interfaces'
+import { FilesSettings } from 'components/files/interfaces'
 
 export interface MapOfStrings {
   [key: string]: string
@@ -732,7 +732,7 @@ export interface Workspace {
   outdated_conversions_attribution: boolean
   data_hooks: DataHook[]
   license_key?: string
-  folders_tree: FoldersTree
+  files_settings: FilesSettings
 
   // joined
   cubejs_token: string

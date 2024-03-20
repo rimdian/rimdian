@@ -30,8 +30,8 @@ func (m *Migration38) UpdateSystem(ctx context.Context, cfg *entity.Config, syst
 
 	// singlestore migration queries here
 	queries := []string{
-		"ALTER TABLE `workspace` ADD COLUMN folders_tree JSON NOT NULL AFTER license_key;",
-		"UPDATE `workspace` SET folders_tree = '{\"id\":\"home\",\"path\":\"/\",\"name\":\"home\",\"children\":[]}';",
+		"ALTER TABLE `workspace` ADD COLUMN files_settings JSON NOT NULL AFTER license_key;",
+		"UPDATE `workspace` SET files_settings = '{\"endpoint\": \"\", \"access_key\": \"\", \"encrypted_secret_key\":\"\", \"bucket\": \"\", \"region\": \"\", \"cdn_endpoint\": \"\"}';",
 	}
 
 	// mysql migration queries here

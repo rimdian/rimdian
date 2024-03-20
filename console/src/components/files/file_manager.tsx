@@ -1,16 +1,38 @@
-import { Col, Dropdown, Menu, Modal, Popover, Row, Table, Tooltip, message } from 'antd'
-import { FileManagerProps, FoldersTree, Item } from './interfaces'
+import {
+  Alert,
+  Button,
+  Col,
+  Dropdown,
+  Menu,
+  Modal,
+  Popover,
+  Row,
+  Space,
+  Table,
+  Tooltip,
+  message
+} from 'antd'
+import { FileManagerProps, Item } from './interfaces'
 import CSS from 'utils/css'
 import Block from 'components/common/block'
-import { ReactNode, useCallback, useMemo, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolder, faFolderOpen, faTrashAlt, faTrashCan } from '@fortawesome/free-regular-svg-icons'
-import { faArrowUpRightFromSquare, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
+import {
+  faArrowUpFromBracket,
+  faArrowUpRightFromSquare,
+  faEllipsisVertical,
+  faRefresh
+} from '@fortawesome/free-solid-svg-icons'
 import { css } from '@emotion/css'
 import dayjs from 'dayjs'
 import filesize from 'filesize'
+import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
+import ButtonFilesSettings from './button_settings'
+import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3'
 
 const folderItem = css({
+  margin: '8px',
   padding: '8px 0',
   cursor: 'pointer',
   borderRadius: '4px',
@@ -39,8 +61,44 @@ const actionIcon = css({
   }
 })
 
+const filesContainer = css({
+  position: 'relative',
+  overflow: 'auto',
+  paddingBottom: '40px'
+})
+
+const bottomToolbar = css({
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  padding: '16px 16px',
+  textAlign: 'right'
+})
+
 export const FileManager = (props: FileManagerProps) => {
+  const workspaceCtx = useCurrentWorkspaceCtx()
   const [selectedPath, setSelectedPath] = useState(props.currentPath || '/')
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
+  const [items, setItems] = useState<Item[] | undefined>(undefined)
+  const [isLoading, setIsLoading] = useState(false)
+  const s3ClientRef = useRef<S3Client | undefined>(undefined)
+
+  useEffect(() => {
+    if (workspaceCtx.workspace.files_settings.endpoint === '') {
+      return
+    }
+    if (s3ClientRef.current) return
+
+    s3ClientRef.current = new S3Client({
+      endpoint: workspaceCtx.workspace.files_settings.endpoint,
+      credentials: {
+        accessKeyId: workspaceCtx.workspace.files_settings.access_key,
+        secretAccessKey: workspaceCtx.workspace.files_settings.secret_key
+      },
+      region: 'REGION'
+    })
+  }, [workspaceCtx.workspace.files_settings])
 
   const goToFolder = useCallback((path: string) => {
     console.log('go to folder', path)
@@ -51,117 +109,6 @@ export const FileManager = (props: FileManagerProps) => {
     console.log('delete')
   }
 
-  const renderTree = useCallback(
-    (folder: FoldersTree, selectedPath: string, level: number): ReactNode => {
-      const selected = folder.path === selectedPath
-
-      return (
-        <div key={folder.path}>
-          <div
-            onClick={goToFolder.bind(null, folder.path)}
-            className={folderItem + (selected ? ' selected' : '')}
-            style={{ paddingLeft: 16 * level + 'px' }}
-          >
-            {level > 0 && (
-              <Dropdown
-                trigger={['click']}
-                overlay={
-                  <Menu>
-                    <Menu.Item
-                      icon={<FontAwesomeIcon icon={faTrashAlt} />}
-                      danger
-                      onClick={onDelete}
-                    >
-                      Delete
-                    </Menu.Item>
-                  </Menu>
-                }
-              >
-                <FontAwesomeIcon icon={faEllipsisVertical} />
-              </Dropdown>
-            )}
-            <span className={folderIcon}>
-              {selected ? (
-                <FontAwesomeIcon icon={faFolderOpen} />
-              ) : (
-                <FontAwesomeIcon icon={faFolder} />
-              )}
-            </span>{' '}
-            {folder.name}
-          </div>
-
-          {folder.children.map((sub) => renderTree(sub, selectedPath, level + 1))}
-        </div>
-      )
-    },
-    [goToFolder]
-  )
-
-  const folders = useMemo(() => {
-    return renderTree(props.foldersTree, selectedPath, 0)
-  }, [props.foldersTree, selectedPath, renderTree])
-
-  const findCurrentFolder = useCallback((f: FoldersTree, path: string): FoldersTree | undefined => {
-    if (f.path === path) {
-      return f
-    }
-
-    return f.children.find((child) => {
-      return findCurrentFolder(child, path)
-    })
-  }, [])
-
-  const currentFolder = useMemo(() => {
-    return findCurrentFolder(props.foldersTree, selectedPath)
-  }, [props.foldersTree, selectedPath, findCurrentFolder])
-
-  return (
-    <div>
-      <Row gutter={24}>
-        <Col span={8}>
-          <Block classNames={[CSS.padding_a_m]}>
-            <div style={{ height: props.height, overflow: 'auto' }}>{folders}</div>
-          </Block>
-        </Col>
-        <Col span={16}>
-          <Block classNames={[CSS.padding_a_m]}>
-            <div style={{ height: props.height - 40, overflow: 'auto' }}>
-              <RenderFiles
-                folder={currentFolder}
-                acceptFileType={props.acceptFileType}
-                acceptItem={props.acceptItem}
-                onSelect={props.onSelect}
-              />
-            </div>
-          </Block>
-        </Col>
-      </Row>
-    </div>
-  )
-}
-
-type RenderFilesProps = {
-  folder?: FoldersTree
-  withSelection?: boolean
-  multiple?: boolean
-  acceptFileType: string
-  acceptItem: (item: Item) => boolean
-  onSelect: (items: Item[]) => void
-}
-
-const isImage = (contentType: string): boolean => {
-  return contentType.includes('image')
-}
-
-const RenderFiles = (props: RenderFilesProps) => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
-
-  if (!props.folder) {
-    return <div>&larr; Please select a folder</div>
-  }
-
-  const items: Item[] = []
-
   const selectItem = (items: Item[]) => {
     console.log('selected items', items)
   }
@@ -169,6 +116,10 @@ const RenderFiles = (props: RenderFilesProps) => {
   const deleteItem = (item: Item) => {
     console.log('delete item', item)
     return Promise.resolve()
+  }
+
+  const refresh = () => {
+    console.log('refresh')
   }
 
   const toggleSelectionForItem = (item: Item) => {
@@ -184,130 +135,192 @@ const RenderFiles = (props: RenderFilesProps) => {
         newKeys.push(item.id)
       }
       setSelectedRowKeys(newKeys)
-      props.onSelect(items.filter((x) => newKeys.includes(x.id)))
+      props.onSelect(items ? items.filter((x) => newKeys.includes(x.id)) : [])
     } else {
       setSelectedRowKeys([item.id])
       props.onSelect([item])
     }
   }
 
-  const loading = true
-
   return (
-    <div>
-      <Table
-        dataSource={items}
-        loading={loading}
-        pagination={false}
-        // scroll={{ y: props.height - 80 }}
-        size="small"
-        rowKey="id"
-        locale={{ emptyText: 'No files found' }}
-        rowSelection={
-          props.withSelection
-            ? {
-                type: props.multiple ? 'checkbox' : 'radio',
-                selectedRowKeys: selectedRowKeys,
-                onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
-                  // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-                  setSelectedRowKeys(selectedRowKeys)
-                  selectItem(selectedRows)
-                },
-                getCheckboxProps: (record: any) => ({
-                  disabled: !props.acceptItem(record as Item)
-                  // name: record.name,
-                })
-              }
-            : undefined
-        }
-        columns={[
-          {
-            title: '',
-            key: 'preview',
-            width: 70,
-            render: (item) => (
-              <div onClick={toggleSelectionForItem.bind(null, item)}>
-                {isImage(item.contentType) && (
-                  <Popover placement="right" content={<img src={item.url} alt="" height="400" />}>
-                    <img src={item.url} alt="" height="30" />
-                  </Popover>
-                )}
-              </div>
-            )
-          },
-          {
-            title: 'Name',
-            key: 'name',
-            render: (item) => {
-              return (
-                <div className={CSS.font_size_xs} onClick={toggleSelectionForItem.bind(null, item)}>
-                  {item.name}
-                </div>
-              )
-            }
-          },
-          {
-            title: 'Size',
-            key: 'size',
-            width: 100,
-            render: (item) => {
-              return (
-                <div className={CSS.font_size_xs} onClick={toggleSelectionForItem.bind(null, item)}>
-                  {filesize(item.size, { round: 0 })}
-                </div>
-              )
-            }
-          },
-          {
-            title: 'Uploaded at',
-            key: 'uploaded',
-            width: 120,
-            render: (item) => {
-              return (
-                <Tooltip title={dayjs.unix(item.uploadedAt).format('llll')}>
-                  <div
-                    className={CSS.font_size_xs}
-                    onClick={toggleSelectionForItem.bind(null, item)}
-                  >
-                    {dayjs.unix(item.uploadedAt).format('ll')}
-                  </div>
-                </Tooltip>
-              )
-            }
-          },
-          {
-            title: 'Last modified',
-            key: 'lastModified',
-            width: 120,
-            render: (item) => {
-              return (
-                <Tooltip title={dayjs.unix(item.lastModifiedAt).format('llll')}>
-                  <div
-                    className="fm-table-content"
-                    onClick={toggleSelectionForItem.bind(null, item)}
-                  >
-                    {dayjs.unix(item.lastModifiedAt).format('ll')}
-                  </div>
-                </Tooltip>
-              )
-            }
-          },
-          {
-            title: '',
-            key: 'actions',
-            width: 40,
-            render: (item) => {
-              return (
-                <div style={{ textAlign: 'right' }}>
-                  <ItemMenu item={item} deleteItem={deleteItem} />
-                </div>
-              )
-            }
+    <Block classNames={[filesContainer]} style={{ height: props.height }}>
+      {workspaceCtx.workspace.files_settings.endpoint === '' && (
+        <Alert
+          className={CSS.margin_b_l}
+          message={
+            <>
+              File storage is not configured.
+              <ButtonFilesSettings>
+                <Button type="link">Configure now</Button>
+              </ButtonFilesSettings>
+            </>
           }
-        ]}
-      />
-    </div>
+          type="warning"
+          showIcon
+        />
+      )}
+      {workspaceCtx.workspace.files_settings.endpoint !== '' && (
+        <>
+          <Table
+            dataSource={items}
+            loading={isLoading}
+            pagination={false}
+            // scroll={{ y: props.height - 80 }}
+            size="small"
+            rowKey="id"
+            locale={{ emptyText: 'Folder is empty' }}
+            rowSelection={
+              props.withSelection
+                ? {
+                    type: props.multiple ? 'checkbox' : 'radio',
+                    selectedRowKeys: selectedRowKeys,
+                    onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
+                      // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+                      setSelectedRowKeys(selectedRowKeys)
+                      selectItem(selectedRows)
+                    },
+                    getCheckboxProps: (record: any) => ({
+                      disabled: !props.acceptItem(record as Item)
+                      // name: record.name,
+                    })
+                  }
+                : undefined
+            }
+            columns={[
+              {
+                title: '',
+                key: 'preview',
+                width: 70,
+                render: (item) => (
+                  <div onClick={toggleSelectionForItem.bind(null, item)}>
+                    {isImage(item.contentType) && (
+                      <Popover
+                        placement="right"
+                        content={<img src={item.url} alt="" height="400" />}
+                      >
+                        <img src={item.url} alt="" height="30" />
+                      </Popover>
+                    )}
+                  </div>
+                )
+              },
+              {
+                title: 'Name',
+                key: 'name',
+                render: (item) => {
+                  return (
+                    <div
+                      className={CSS.font_size_xs}
+                      onClick={toggleSelectionForItem.bind(null, item)}
+                    >
+                      {item.name}
+                    </div>
+                  )
+                }
+              },
+              {
+                title: 'Size',
+                key: 'size',
+                width: 100,
+                render: (item) => {
+                  return (
+                    <div
+                      className={CSS.font_size_xs}
+                      onClick={toggleSelectionForItem.bind(null, item)}
+                    >
+                      {filesize(item.size, { round: 0 })}
+                    </div>
+                  )
+                }
+              },
+              {
+                title: 'Uploaded at',
+                key: 'uploaded',
+                width: 120,
+                render: (item) => {
+                  return (
+                    <Tooltip title={dayjs.unix(item.uploadedAt).format('llll')}>
+                      <div
+                        className={CSS.font_size_xs}
+                        onClick={toggleSelectionForItem.bind(null, item)}
+                      >
+                        {dayjs.unix(item.uploadedAt).format('ll')}
+                      </div>
+                    </Tooltip>
+                  )
+                }
+              },
+              {
+                title: 'Last modified',
+                key: 'lastModified',
+                width: 120,
+                render: (item) => {
+                  return (
+                    <Tooltip title={dayjs.unix(item.lastModifiedAt).format('llll')}>
+                      <div
+                        className={CSS.font_size_xs}
+                        onClick={toggleSelectionForItem.bind(null, item)}
+                      >
+                        {dayjs.unix(item.lastModifiedAt).format('ll')}
+                      </div>
+                    </Tooltip>
+                  )
+                }
+              },
+              {
+                title: (
+                  <Tooltip title="Refresh the list">
+                    <Button
+                      size="small"
+                      type="text"
+                      onClick={() => refresh()}
+                      icon={<FontAwesomeIcon icon={faRefresh} />}
+                    />
+                  </Tooltip>
+                ),
+                key: 'actions',
+                width: 40,
+                render: (item) => {
+                  return (
+                    <div style={{ textAlign: 'right' }}>
+                      <ItemMenu item={item} deleteItem={deleteItem} />
+                    </div>
+                  )
+                }
+              }
+            ]}
+          />
+        </>
+      )}
+
+      <div className={bottomToolbar}>
+        <Space>
+          <Button
+            type="primary"
+            ghost
+            onClick={() => {
+              console.log('create folder')
+            }}
+          >
+            New folder
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => {
+              console.log('upload')
+            }}
+          >
+            <FontAwesomeIcon icon={faArrowUpFromBracket} className={CSS.padding_r_s} />
+            Upload
+          </Button>
+        </Space>
+      </div>
+    </Block>
   )
+}
+
+const isImage = (contentType: string): boolean => {
+  return contentType.includes('image')
 }
 
 export interface ItemMenuProps {

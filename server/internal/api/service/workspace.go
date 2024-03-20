@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/rimdian/rimdian/internal/api/common"
 	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/api/entity"
@@ -134,6 +136,8 @@ func (svc *ServiceImpl) WorkspaceCreate(ctx context.Context, accountID string, w
 		// LeadStages:             workspaceDTO.LeadStages,
 		InstalledApps: entity.InstalledApps{},
 		DataHooks:     entity.DataHooks{},
+
+		FilesSettings: entity.FilesSettings{},
 	}
 
 	// append organization ID to the workspace ID
@@ -312,6 +316,10 @@ func (svc *ServiceImpl) WorkspaceShow(ctx context.Context, accountID string, wor
 
 func (svc *ServiceImpl) WorkspaceUpdate(ctx context.Context, accountID string, payload *dto.WorkspaceUpdate) (workspace *entity.Workspace, code int, err error) {
 
+	if payload == nil || payload.WorkspaceCreate == nil {
+		return nil, 400, eris.New("workspace update payload is missing")
+	}
+
 	// fetch workspace
 	workspace, err = svc.Repo.GetWorkspace(ctx, payload.ID)
 
@@ -370,6 +378,57 @@ func (svc *ServiceImpl) WorkspaceUpdate(ctx context.Context, accountID string, p
 				workspace.LeadStages = append(workspace.LeadStages, stage)
 			}
 		}
+	}
+
+	// check S3 settings if they are set
+	if payload.FilesSettings.Endpoint != "" {
+
+		if err := payload.FilesSettings.Validate(); err != nil {
+			return nil, 400, eris.Wrap(err, "WorkspaceUpdate")
+		}
+
+		secretKey := ""
+
+		// if secret key is not provided, use existing one
+		if payload.FilesSettings.SecretKey == nil {
+			// decrypt existing secret key
+			if secretKey, err = common.DecryptFromHexString(workspace.FilesSettings.EncryptedSecretKey, svc.Config.SECRET_KEY); err != nil {
+				return nil, 500, eris.Wrap(err, "WorkspaceUpdate")
+			}
+		} else {
+			secretKey = *payload.FilesSettings.SecretKey
+
+			// encrypt secret key
+			if payload.FilesSettings.EncryptedSecretKey, err = common.EncryptString(secretKey, svc.Config.SECRET_KEY); err != nil {
+				return nil, 500, eris.Wrap(err, "WorkspaceUpdate")
+			}
+
+			// don't keep clear secret key
+			payload.FilesSettings.SecretKey = nil
+		}
+
+		minioClient, err := minio.New(payload.FilesSettings.Endpoint, &minio.Options{
+			Creds:  credentials.NewStaticV4(payload.FilesSettings.AccessKey, secretKey, ""),
+			Region: payload.FilesSettings.Region,
+			Secure: true,
+		})
+
+		if err != nil {
+			return nil, 400, eris.Wrap(err, "WorkspaceUpdate")
+		}
+
+		// ensure bucket exists
+		exists, err := minioClient.BucketExists(ctx, payload.FilesSettings.Bucket)
+		if err != nil {
+			return nil, 400, eris.Wrap(err, "WorkspaceUpdate")
+		}
+
+		if !exists {
+			return nil, 400, eris.Errorf("bucket %v does not exist", payload.FilesSettings.Bucket)
+		}
+
+		// update workspace settings
+		workspace.FilesSettings = payload.FilesSettings
 	}
 
 	if err := workspace.Validate(); err != nil {

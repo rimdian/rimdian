@@ -2,6 +2,8 @@ import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_wor
 import Layout from 'components/common/layout'
 import CSS from 'utils/css'
 import { FileManager } from './file_manager'
+import ButtonFilesSettings from './button_settings'
+import { Button } from 'antd'
 
 const RouteFiles = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -13,10 +15,20 @@ const RouteFiles = () => {
     >
       <div className={CSS.top}>
         <h1>Files</h1>
+        <div className={CSS.topSeparator}></div>
+        <div>
+          {workspaceCtx.workspace.files_settings.endpoint !== '' && (
+            <ButtonFilesSettings>
+              <Button type="primary" ghost>
+                Settings
+              </Button>
+            </ButtonFilesSettings>
+          )}
+        </div>
       </div>
 
       <FileManager
-        foldersTree={workspaceCtx.workspace.folders_tree}
+        // foldersTree={workspaceCtx.workspace.files_settings.folders_tree}
         onError={console.error}
         height={500}
         acceptFileType="*"

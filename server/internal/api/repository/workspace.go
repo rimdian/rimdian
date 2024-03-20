@@ -127,7 +127,7 @@ func (repo *RepositoryImpl) InsertWorkspace(ctx context.Context, workspace *enti
 		"fx_rates",
 		"data_hooks",
 		"license_key",
-		"folders_tree",
+		"files_settings",
 	).Values(
 		workspace.ID,
 		workspace.Name,
@@ -157,7 +157,7 @@ func (repo *RepositoryImpl) InsertWorkspace(ctx context.Context, workspace *enti
 		workspace.FxRates,
 		workspace.DataHooks,
 		workspace.LicenseKey,
-		workspace.FoldersTree,
+		workspace.FilesSettings,
 	).ToSql()
 
 	if err != nil {
@@ -252,7 +252,7 @@ func (repo *RepositoryImpl) UpdateWorkspace(ctx context.Context, workspace *enti
 		Set("fx_rates", workspace.FxRates).
 		Set("data_hooks", workspace.DataHooks).
 		Set("license_key", workspace.LicenseKey).
-		Set("folders_tree", workspace.FoldersTree).
+		Set("files_settings", workspace.FilesSettings).
 		Where(sq.Eq{"id": workspace.ID}).
 		ToSql()
 

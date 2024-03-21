@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/rimdian/rimdian/internal/api/common"
 	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/api/entity"
@@ -387,48 +385,19 @@ func (svc *ServiceImpl) WorkspaceUpdate(ctx context.Context, accountID string, p
 			return nil, 400, eris.Wrap(err, "WorkspaceUpdate")
 		}
 
-		secretKey := ""
-
-		// if secret key is not provided, use existing one
-		if payload.FilesSettings.SecretKey == nil {
-			// decrypt existing secret key
-			if secretKey, err = common.DecryptFromHexString(workspace.FilesSettings.EncryptedSecretKey, svc.Config.SECRET_KEY); err != nil {
-				return nil, 500, eris.Wrap(err, "WorkspaceUpdate")
-			}
-		} else {
-			secretKey = *payload.FilesSettings.SecretKey
-
-			// encrypt secret key
-			if payload.FilesSettings.EncryptedSecretKey, err = common.EncryptString(secretKey, svc.Config.SECRET_KEY); err != nil {
-				return nil, 500, eris.Wrap(err, "WorkspaceUpdate")
-			}
-
-			// don't keep clear secret key
-			payload.FilesSettings.SecretKey = nil
-		}
-
-		minioClient, err := minio.New(payload.FilesSettings.Endpoint, &minio.Options{
-			Creds:  credentials.NewStaticV4(payload.FilesSettings.AccessKey, secretKey, ""),
-			Region: payload.FilesSettings.Region,
-			Secure: true,
-		})
-
-		if err != nil {
-			return nil, 400, eris.Wrap(err, "WorkspaceUpdate")
-		}
-
-		// ensure bucket exists
-		exists, err := minioClient.BucketExists(ctx, payload.FilesSettings.Bucket)
-		if err != nil {
-			return nil, 400, eris.Wrap(err, "WorkspaceUpdate")
-		}
-
-		if !exists {
-			return nil, 400, eris.Errorf("bucket %v does not exist", payload.FilesSettings.Bucket)
-		}
-
 		// update workspace settings
-		workspace.FilesSettings = payload.FilesSettings
+		workspace.FilesSettings.Endpoint = payload.FilesSettings.Endpoint
+		workspace.FilesSettings.AccessKey = payload.FilesSettings.AccessKey
+		workspace.FilesSettings.Bucket = payload.FilesSettings.Bucket
+		workspace.FilesSettings.Region = payload.FilesSettings.Region
+		workspace.FilesSettings.CDNEndpoint = payload.FilesSettings.CDNEndpoint
+
+		// encrypt secret key
+		if payload.FilesSettings.SecretKey != "" {
+			if workspace.FilesSettings.EncryptedSecretKey, err = common.EncryptString(payload.FilesSettings.SecretKey, svc.Config.SECRET_KEY); err != nil {
+				return nil, 500, eris.Wrap(err, "WorkspaceUpdate")
+			}
+		}
 	}
 
 	if err := workspace.Validate(); err != nil {

@@ -84,6 +84,40 @@ type LicenseInfo struct {
 	HasAdminRoles      bool  `json:"ar"`
 }
 
+type FilesSettings struct {
+	Endpoint           string `json:"endpoint"`
+	AccessKey          string `json:"access_key"`
+	EncryptedSecretKey string `json:"encrypted_secret_key,omitempty"`
+	Bucket             string `json:"bucket"`
+	Region             string `json:"region"`
+	CDNEndpoint        string `json:"cdn_endpoint"`
+
+	// temporary fields for console
+	SecretKey *string `json:"secret_key,omitempty"`
+}
+
+func (x *FilesSettings) Scan(val interface{}) error {
+
+	var data []byte
+
+	if b, ok := val.([]byte); ok {
+		// VERY IMPORTANT: we need to clone the bytes here
+		// The sql driver will reuse the same bytes RAM slots for future queries
+		// Thank you St Antoine De Padoue for helping me find this bug
+		data = bytes.Clone(b)
+	} else if s, ok := val.(string); ok {
+		data = []byte(s)
+	} else if val == nil {
+		return nil
+	}
+
+	return json.Unmarshal(data, x)
+}
+
+func (x FilesSettings) Value() (driver.Value, error) {
+	return json.Marshal(x)
+}
+
 type Workspace struct {
 	ID               string     `db:"id" json:"id"`
 	Name             string     `db:"name" json:"name"`
@@ -125,6 +159,15 @@ type Workspace struct {
 }
 
 func (w *Workspace) AttachMetadatas(ctx context.Context, cfg *Config) (err error) {
+
+	// S3 decrypt secret for web client
+	if w.FilesSettings.EncryptedSecretKey != "" {
+		decryptedKey, err := common.DecryptFromHexString(w.FilesSettings.EncryptedSecretKey, cfg.SECRET_KEY)
+		if err != nil {
+			return err
+		}
+		w.FilesSettings.SecretKey = &decryptedKey
+	}
 
 	// CubeJS token
 	accountToken := auth.GetAccountRawTokenFromContext(ctx)
@@ -362,7 +405,7 @@ func (p *Workspace) Validate() error {
 		p.LicenseKey = &sanitized
 	}
 
-	return p.FilesSettings.Validate()
+	return nil
 }
 
 // verify a user HMAC signature against workspace secret keys

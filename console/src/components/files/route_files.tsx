@@ -13,28 +13,29 @@ const RouteFiles = () => {
       currentOrganization={workspaceCtx.organization}
       currentWorkspace={workspaceCtx.workspace}
     >
-      <div className={CSS.top}>
-        <h1>Files</h1>
-        <div className={CSS.topSeparator}></div>
-        <div>
-          {workspaceCtx.workspace.files_settings.endpoint !== '' && (
-            <ButtonFilesSettings>
-              <Button type="primary" ghost>
-                Settings
-              </Button>
-            </ButtonFilesSettings>
-          )}
+      <div className={CSS.container}>
+        <div className={CSS.top}>
+          <h1>Files</h1>
+          <div className={CSS.topSeparator}></div>
+          <div>
+            {workspaceCtx.workspace.files_settings.endpoint !== '' && (
+              <ButtonFilesSettings>
+                <Button type="primary" ghost>
+                  Settings
+                </Button>
+              </ButtonFilesSettings>
+            )}
+          </div>
         </div>
-      </div>
 
-      <FileManager
-        // foldersTree={workspaceCtx.workspace.files_settings.folders_tree}
-        onError={console.error}
-        height={500}
-        acceptFileType="*"
-        acceptItem={() => true}
-        onSelect={() => {}}
-      />
+        <FileManager
+          onError={console.error}
+          height={500}
+          acceptFileType="*"
+          acceptItem={() => true}
+          onSelect={() => {}}
+        />
+      </div>
     </Layout>
   )
 }

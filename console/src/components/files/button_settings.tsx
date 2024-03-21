@@ -3,6 +3,7 @@ import CSS from 'utils/css'
 import { useState } from 'react'
 import { useForm } from 'antd/lib/form/Form'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
+import { ListObjectsV2Command, ListObjectsV2CommandInput, S3Client } from '@aws-sdk/client-s3'
 
 const ButtonFilesSettings = (props: { children: JSX.Element }) => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -22,32 +23,58 @@ const ButtonFilesSettings = (props: { children: JSX.Element }) => {
 
         setLoading(true)
 
-        const updatedWorkspace = Object.assign({}, workspaceCtx.workspace)
-        updatedWorkspace.files_settings = Object.assign(
-          {},
-          workspaceCtx.workspace.files_settings,
-          values
-        )
+        // check if the bucket can be reached
+        const input: ListObjectsV2CommandInput = {
+          Bucket: workspaceCtx.workspace.files_settings.bucket
+        }
+        const command = new ListObjectsV2Command(input)
 
-        workspaceCtx
-          .apiPOST('/workspace.update', updatedWorkspace)
+        const s3Client = new S3Client({
+          endpoint: values.endpoint,
+          credentials: {
+            accessKeyId: values.access_key,
+            secretAccessKey: values.secret_key
+          },
+          region: values.region || 'us-east-1'
+        })
+
+        s3Client
+          .send(command)
           .then(() => {
+            // console.log('response', response)
+
+            const updatedWorkspace = Object.assign({}, workspaceCtx.workspace)
+            updatedWorkspace.files_settings = Object.assign(
+              {},
+              workspaceCtx.workspace.files_settings,
+              values
+            )
+
             workspaceCtx
-              .refreshWorkspace()
+              .apiPOST('/workspace.update', updatedWorkspace)
               .then(() => {
-                message.success('The workspace settings have been updated!')
-                setLoading(false)
-                toggleSettings()
+                workspaceCtx
+                  .refreshWorkspace()
+                  .then(() => {
+                    message.success('The workspace settings have been updated!')
+                    setLoading(false)
+                    toggleSettings()
+                  })
+                  .catch(() => {
+                    setLoading(false)
+                  })
               })
               .catch(() => {
                 setLoading(false)
               })
           })
-          .catch(() => {
-            setLoading(false)
-          })
+          .catch(console.error)
       })
-      .catch(console.error)
+      .catch((e: any) => {
+        console.error(e)
+        message.error(e.message)
+        setLoading(false)
+      })
   }
 
   return (
@@ -88,7 +115,7 @@ const ButtonFilesSettings = (props: { children: JSX.Element }) => {
             name="endpoint"
             rules={[{ type: 'string', required: true }]}
           >
-            <Input placeholder="storage.googleapis.com" prefix="https://" />
+            <Input placeholder="https://storage.googleapis.com" />
           </Form.Item>
           <Form.Item
             label="S3 access key"

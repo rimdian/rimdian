@@ -1,27 +1,25 @@
 import {
   Alert,
   Button,
-  Col,
-  Dropdown,
-  Menu,
+  Form,
+  Input,
   Modal,
+  Popconfirm,
   Popover,
-  Row,
   Space,
   Table,
   Tooltip,
   message
 } from 'antd'
-import { FileManagerProps, Item } from './interfaces'
-import CSS from 'utils/css'
+import { FileManagerProps, StorageObject } from './interfaces'
+import CSS, { colorPrimary } from 'utils/css'
 import Block from 'components/common/block'
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFolder, faFolderOpen, faTrashAlt, faTrashCan } from '@fortawesome/free-regular-svg-icons'
+import { faFolder, faTrashAlt, faTrashCan } from '@fortawesome/free-regular-svg-icons'
 import {
   faArrowUpFromBracket,
   faArrowUpRightFromSquare,
-  faEllipsisVertical,
   faRefresh
 } from '@fortawesome/free-solid-svg-icons'
 import { css } from '@emotion/css'
@@ -29,36 +27,18 @@ import dayjs from 'dayjs'
 import filesize from 'filesize'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import ButtonFilesSettings from './button_settings'
-import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3'
+import {
+  S3Client,
+  ListObjectsV2Command,
+  ListObjectsV2CommandInput,
+  PutObjectCommand,
+  PutObjectCommandInput
+} from '@aws-sdk/client-s3'
+import GetContentType from 'utils/file_extension'
 
-const folderItem = css({
-  margin: '8px',
-  padding: '8px 0',
-  cursor: 'pointer',
-  borderRadius: '4px',
-  '&:hover, &.selected': {
-    backgroundColor: '#f0f4ff'
-  }
-})
-
-const folderIcon = css({
-  padding: '0px 8px',
-  color: '#4e6cff'
-})
-
-const itemIcon = css({
-  padding: '4px',
-  lineHeight: '12px',
-  borderRadius: '50%'
-})
-
-const actionIcon = css({
-  padding: '4px 6px',
-  color: 'inherit !important',
-  '&:hover': {
-    color: '#4e6cff',
-    cursor: 'pointer'
-  }
+const folderRow = css({
+  fontWeight: 'bold',
+  cursor: 'pointer'
 })
 
 const filesContainer = css({
@@ -67,23 +47,97 @@ const filesContainer = css({
   paddingBottom: '40px'
 })
 
-const bottomToolbar = css({
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  right: 0,
-  padding: '16px 16px',
-  textAlign: 'right'
-})
-
 export const FileManager = (props: FileManagerProps) => {
   const workspaceCtx = useCurrentWorkspaceCtx()
-  const [selectedPath, setSelectedPath] = useState(props.currentPath || '/')
+  const [currentPath, setCurrentPath] = useState('')
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
-  const [items, setItems] = useState<Item[] | undefined>(undefined)
+  const [items, setItems] = useState<StorageObject[] | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
+  const [newFolderModalVisible, setNewFolderModalVisible] = useState(false)
+  const [newFolderLoading, setNewFolderLoading] = useState(false)
   const s3ClientRef = useRef<S3Client | undefined>(undefined)
+  const [form] = Form.useForm()
 
+  const fetchObjects = useCallback(() => {
+    if (!s3ClientRef.current) return
+
+    setIsLoading(true)
+    const input: ListObjectsV2CommandInput = {
+      Bucket: workspaceCtx.workspace.files_settings.bucket
+    }
+
+    const command = new ListObjectsV2Command(input)
+    s3ClientRef.current.send(command).then((response) => {
+      // console.log('response', response)
+      if (!response.Contents) {
+        setItems([])
+        setIsLoading(false)
+        return
+      }
+
+      const newItems = response.Contents.map((x) => {
+        const key = x.Key as string
+        let endpoint = workspaceCtx.workspace.files_settings.endpoint
+
+        if (workspaceCtx.workspace.files_settings.cdn_endpoint !== '') {
+          endpoint = workspaceCtx.workspace.files_settings.cdn_endpoint
+        }
+
+        const isFolder = key.endsWith('/')
+        let name =
+          key
+            .split('/')
+            .filter((x) => x !== '')
+            .pop() || ''
+
+        if (!isFolder) {
+          name = key.split('/').pop() || ''
+        }
+
+        // console.log('item', x)
+
+        let itemPath = ''
+        const pathParts = key.split('/')
+
+        if (isFolder) {
+          itemPath = pathParts.slice(0, pathParts.length - 2).join('/')
+          // console.log('folder path', itemCurrentPath)
+        } else {
+          itemPath = pathParts.slice(0, pathParts.length - 1).join('/')
+          // console.log('file path', itemCurrentPath)
+        }
+
+        const item = {
+          key: key,
+          name: name,
+          path: itemPath,
+          is_folder: isFolder,
+          last_modified: x.LastModified
+        } as StorageObject
+
+        if (!isFolder) {
+          item.file_info = {
+            size: x.Size as number,
+            size_human: filesize(x.Size || 0, { round: 0 }),
+            content_type: GetContentType(key),
+            url: endpoint + '/' + key
+          }
+        }
+
+        return item
+      })
+
+      // console.log('new items', newItems)
+      setItems(newItems)
+      setIsLoading(false)
+    })
+  }, [
+    workspaceCtx.workspace.files_settings.bucket,
+    workspaceCtx.workspace.files_settings.cdn_endpoint,
+    workspaceCtx.workspace.files_settings.endpoint
+  ])
+
+  // init
   useEffect(() => {
     if (workspaceCtx.workspace.files_settings.endpoint === '') {
       return
@@ -96,51 +150,124 @@ export const FileManager = (props: FileManagerProps) => {
         accessKeyId: workspaceCtx.workspace.files_settings.access_key,
         secretAccessKey: workspaceCtx.workspace.files_settings.secret_key
       },
-      region: 'REGION'
+      region: workspaceCtx.workspace.files_settings.region || 'us-east-1'
     })
-  }, [workspaceCtx.workspace.files_settings])
 
-  const goToFolder = useCallback((path: string) => {
-    console.log('go to folder', path)
-    setSelectedPath(path)
-  }, [])
+    fetchObjects()
+  }, [
+    workspaceCtx.workspace.files_settings.endpoint,
+    workspaceCtx.workspace.files_settings.access_key,
+    workspaceCtx.workspace.files_settings.secret_key,
+    workspaceCtx.workspace.files_settings.region,
+    fetchObjects
+  ])
 
   const onDelete = () => {
     console.log('delete')
   }
 
-  const selectItem = (items: Item[]) => {
+  const selectItem = (items: StorageObject[]) => {
     console.log('selected items', items)
   }
 
-  const deleteItem = (item: Item) => {
-    console.log('delete item', item)
-    return Promise.resolve()
-  }
-
-  const refresh = () => {
-    console.log('refresh')
-  }
-
-  const toggleSelectionForItem = (item: Item) => {
+  const toggleSelectionForItem = (item: StorageObject) => {
     // ignore items not accepted
     if (!props.acceptItem(item)) return
 
     if (props.multiple) {
       let newKeys = [...selectedRowKeys]
       // remove if exists
-      if (newKeys.includes(item.id)) {
-        newKeys = selectedRowKeys.filter((k) => k !== item.id)
+      if (newKeys.includes(item.key)) {
+        newKeys = selectedRowKeys.filter((k) => k !== item.key)
       } else {
-        newKeys.push(item.id)
+        newKeys.push(item.key)
       }
       setSelectedRowKeys(newKeys)
-      props.onSelect(items ? items.filter((x) => newKeys.includes(x.id)) : [])
+      props.onSelect(items ? items.filter((x) => newKeys.includes(x.key)) : [])
     } else {
-      setSelectedRowKeys([item.id])
+      setSelectedRowKeys([item.key])
       props.onSelect([item])
     }
   }
+
+  const toggleNewFolderModal = () => {
+    setNewFolderModalVisible(!newFolderModalVisible)
+  }
+
+  const onSubmitNewFolder = () => {
+    if (!s3ClientRef.current) {
+      message.error('S3 client is not initialized.')
+      return
+    }
+
+    if (newFolderLoading) return
+
+    const s3Client = s3ClientRef.current
+
+    form.validateFields().then((values) => {
+      setNewFolderLoading(true)
+
+      // create folder in S3
+      const folderName = values.name
+      const key = currentPath === '' ? folderName + '/' : currentPath + '/' + folderName + '/'
+
+      const input: ListObjectsV2CommandInput = {
+        Bucket: workspaceCtx.workspace.files_settings.bucket,
+        Prefix: key
+      }
+
+      s3Client
+        .send(new ListObjectsV2Command(input))
+        .then((response) => {
+          // console.log('response', response)
+          if (response.Contents && response.Contents.length > 0) {
+            message.error('Folder already exists.')
+            return
+          }
+
+          const input: PutObjectCommandInput = {
+            Bucket: workspaceCtx.workspace.files_settings.bucket,
+            Key: key,
+            Body: ''
+          }
+
+          s3Client
+            .send(new PutObjectCommand(input))
+            .then(() => {
+              message.success('Folder created successfully.')
+              setNewFolderLoading(false)
+              fetchObjects()
+            })
+            .catch((error) => {
+              message.error('Failed to create folder: ' + error)
+              setNewFolderLoading(false)
+            })
+        })
+        .catch((error) => {
+          message.error('Failed to create folder: ' + error)
+          setNewFolderLoading(false)
+        })
+
+      form.resetFields()
+      toggleNewFolderModal()
+    })
+  }
+
+  const onDeleteFolder = () => {}
+
+  const itemsAtPath = useMemo(() => {
+    if (!items) return []
+    return items
+      .filter((x) => x.path === currentPath)
+      .sort((a, b) => {
+        // by folders first, then by last_modified
+        if (a.is_folder && !b.is_folder) return -1
+        if (!a.is_folder && b.is_folder) return 1
+        if (a.last_modified > b.last_modified) return -1
+        if (a.last_modified < b.last_modified) return 1
+        return 0
+      })
+  }, [items, currentPath])
 
   return (
     <Block classNames={[filesContainer]} style={{ height: props.height }}>
@@ -161,14 +288,90 @@ export const FileManager = (props: FileManagerProps) => {
       )}
       {workspaceCtx.workspace.files_settings.endpoint !== '' && (
         <>
+          <div className={CSS.padding_a_m} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+            <div className={CSS.pull_right}>
+              <Space>
+                <Tooltip title="Refresh the list">
+                  <Button
+                    size="small"
+                    type="primary"
+                    ghost
+                    onClick={() => fetchObjects()}
+                    icon={<FontAwesomeIcon icon={faRefresh} />}
+                  />
+                </Tooltip>
+                {currentPath !== '' && (
+                  <Tooltip title="Delete folder" placement="bottom">
+                    <Popconfirm
+                      placement="topRight"
+                      title={
+                        <>
+                          Do you want to delete the <b>{currentPath}</b> folder with all its
+                          content?
+                        </>
+                      }
+                      onConfirm={onDeleteFolder}
+                      okText="Delete folder"
+                      cancelText="Cancel"
+                      okButtonProps={{
+                        danger: true
+                      }}
+                    >
+                      <Button
+                        size="small"
+                        type="primary"
+                        ghost
+                        onClick={() => fetchObjects()}
+                        icon={<FontAwesomeIcon icon={faTrashAlt} />}
+                      />
+                    </Popconfirm>
+                  </Tooltip>
+                )}
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={() => {
+                    console.log('upload')
+                  }}
+                  className={CSS.pull_right}
+                >
+                  <FontAwesomeIcon icon={faArrowUpFromBracket} className={CSS.padding_r_s} />
+                  Upload
+                </Button>
+              </Space>
+            </div>
+
+            <Space>
+              <b>Current path:</b>
+              <Button type="text" size="small" onClick={() => setCurrentPath('')}>
+                {workspaceCtx.workspace.files_settings.bucket}
+              </Button>
+              {currentPath}
+              <Button type="primary" size="small" ghost onClick={toggleNewFolderModal}>
+                New folder
+              </Button>
+            </Space>
+          </div>
           <Table
-            dataSource={items}
+            dataSource={itemsAtPath}
             loading={isLoading}
             pagination={false}
+            size="middle"
             // scroll={{ y: props.height - 80 }}
-            size="small"
-            rowKey="id"
+            rowKey="key"
             locale={{ emptyText: 'Folder is empty' }}
+            rowClassName={(record: StorageObject) => {
+              return record.is_folder ? folderRow : ''
+            }}
+            onRow={(record: StorageObject) => {
+              return {
+                onClick: () => {
+                  if (record.is_folder) {
+                    setCurrentPath(record.path + record.name)
+                  }
+                }
+              }
+            }}
             rowSelection={
               props.withSelection
                 ? {
@@ -180,7 +383,7 @@ export const FileManager = (props: FileManagerProps) => {
                       selectItem(selectedRows)
                     },
                     getCheckboxProps: (record: any) => ({
-                      disabled: !props.acceptItem(record as Item)
+                      disabled: !props.acceptItem(record as StorageObject)
                       // name: record.name,
                     })
                   }
@@ -191,62 +394,48 @@ export const FileManager = (props: FileManagerProps) => {
                 title: '',
                 key: 'preview',
                 width: 70,
-                render: (item) => (
-                  <div onClick={toggleSelectionForItem.bind(null, item)}>
-                    {isImage(item.contentType) && (
-                      <Popover
-                        placement="right"
-                        content={<img src={item.url} alt="" height="400" />}
-                      >
-                        <img src={item.url} alt="" height="30" />
-                      </Popover>
-                    )}
-                  </div>
-                )
+                render: (item: StorageObject) => {
+                  if (item.is_folder) {
+                    return (
+                      <div onClick={toggleSelectionForItem.bind(null, item)}>
+                        <FontAwesomeIcon
+                          icon={faFolder}
+                          className={CSS.font_size_m}
+                          style={{ color: colorPrimary }}
+                        />
+                      </div>
+                    )
+                  }
+                  return (
+                    <div onClick={toggleSelectionForItem.bind(null, item)}>
+                      {item.file_info.content_type.includes('image') && (
+                        <Popover
+                          placement="right"
+                          content={<img src={item.file_info.url} alt="" height="400" />}
+                        >
+                          <img src={item.file_info.url} alt="" height="30" />
+                        </Popover>
+                      )}
+                    </div>
+                  )
+                }
               },
               {
                 title: 'Name',
                 key: 'name',
-                render: (item) => {
-                  return (
-                    <div
-                      className={CSS.font_size_xs}
-                      onClick={toggleSelectionForItem.bind(null, item)}
-                    >
-                      {item.name}
-                    </div>
-                  )
+                render: (item: StorageObject) => {
+                  return <div onClick={toggleSelectionForItem.bind(null, item)}>{item.name}</div>
                 }
               },
               {
                 title: 'Size',
                 key: 'size',
                 width: 100,
-                render: (item) => {
+                render: (item: StorageObject) => {
                   return (
-                    <div
-                      className={CSS.font_size_xs}
-                      onClick={toggleSelectionForItem.bind(null, item)}
-                    >
-                      {filesize(item.size, { round: 0 })}
+                    <div onClick={toggleSelectionForItem.bind(null, item)}>
+                      {item.is_folder ? '-' : item.file_info.size_human}
                     </div>
-                  )
-                }
-              },
-              {
-                title: 'Uploaded at',
-                key: 'uploaded',
-                width: 120,
-                render: (item) => {
-                  return (
-                    <Tooltip title={dayjs.unix(item.uploadedAt).format('llll')}>
-                      <div
-                        className={CSS.font_size_xs}
-                        onClick={toggleSelectionForItem.bind(null, item)}
-                      >
-                        {dayjs.unix(item.uploadedAt).format('ll')}
-                      </div>
-                    </Tooltip>
                   )
                 }
               },
@@ -254,37 +443,43 @@ export const FileManager = (props: FileManagerProps) => {
                 title: 'Last modified',
                 key: 'lastModified',
                 width: 120,
-                render: (item) => {
+                render: (item: StorageObject) => {
                   return (
-                    <Tooltip title={dayjs.unix(item.lastModifiedAt).format('llll')}>
-                      <div
-                        className={CSS.font_size_xs}
-                        onClick={toggleSelectionForItem.bind(null, item)}
-                      >
-                        {dayjs.unix(item.lastModifiedAt).format('ll')}
+                    <Tooltip title={dayjs(item.last_modified).format('llll')}>
+                      <div onClick={toggleSelectionForItem.bind(null, item)}>
+                        {dayjs(item.last_modified).format('ll')}
                       </div>
                     </Tooltip>
                   )
                 }
               },
               {
-                title: (
-                  <Tooltip title="Refresh the list">
-                    <Button
-                      size="small"
-                      type="text"
-                      onClick={() => refresh()}
-                      icon={<FontAwesomeIcon icon={faRefresh} />}
-                    />
-                  </Tooltip>
-                ),
+                title: '',
                 key: 'actions',
                 width: 40,
-                render: (item) => {
+                className: CSS.text_right,
+                render: (item: StorageObject) => {
+                  if (item.is_folder) return null
                   return (
-                    <div style={{ textAlign: 'right' }}>
-                      <ItemMenu item={item} deleteItem={deleteItem} />
-                    </div>
+                    <Space>
+                      <Tooltip title="Open in a window">
+                        <a href={item.file_info.url} target="_blank" rel="noreferrer">
+                          <Button type="text" size="small">
+                            <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                          </Button>
+                        </a>
+                      </Tooltip>
+                      <Popconfirm
+                        title="Do you want to delete this file from your storage?"
+                        onConfirm={onDelete}
+                        okText="Delete"
+                        cancelText="Cancel"
+                      >
+                        <Button type="text" size="small">
+                          <FontAwesomeIcon icon={faTrashCan} />
+                        </Button>
+                      </Popconfirm>
+                    </Space>
                   )
                 }
               }
@@ -292,91 +487,46 @@ export const FileManager = (props: FileManagerProps) => {
           />
         </>
       )}
-
-      <div className={bottomToolbar}>
-        <Space>
-          <Button
-            type="primary"
-            ghost
-            onClick={() => {
-              console.log('create folder')
-            }}
-          >
-            New folder
-          </Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              console.log('upload')
-            }}
-          >
-            <FontAwesomeIcon icon={faArrowUpFromBracket} className={CSS.padding_r_s} />
-            Upload
-          </Button>
-        </Space>
-      </div>
+      {newFolderModalVisible && (
+        <Modal
+          title="Create new folder"
+          open={newFolderModalVisible}
+          onOk={onSubmitNewFolder}
+          onCancel={toggleNewFolderModal}
+          confirmLoading={newFolderLoading}
+        >
+          <Form form={form}>
+            <Form.Item
+              label="Folder name"
+              name="name"
+              rules={[
+                {
+                  required: true,
+                  type: 'string',
+                  validator(_rule, value, callback) {
+                    // alphanumeric, lowercase, underscore, dash
+                    if (!/^[a-z0-9_-]+$/.test(value)) {
+                      callback(
+                        'Only lowercase alphanumeric characters, underscore, and dash are allowed.'
+                      )
+                      return
+                    }
+                    callback()
+                  }
+                }
+              ]}
+            >
+              <Input
+                addonBefore={currentPath !== '/' ? currentPath + '/' : '/'}
+                onChange={(e) => {
+                  // trim spaces
+                  form.setFieldsValue({ folderName: e.target.value.trim() })
+                }}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
     </Block>
-  )
-}
-
-const isImage = (contentType: string): boolean => {
-  return contentType.includes('image')
-}
-
-export interface ItemMenuProps {
-  // fileProvider: FileProvider
-  item: Item
-  deleteItem: (node: Item) => Promise<any>
-}
-
-const ItemMenu = (props: ItemMenuProps) => {
-  const [loading, setLoading] = useState(false)
-
-  const onDelete = () => {
-    Modal.confirm({
-      title: 'Do you want to delete this item?',
-      //   icon: <ExclamationCircleOutlined />,
-      content:
-        'Deleting "' + props.item.name + '" will remove it from the list but keep it online.',
-      okButtonProps: { danger: true, loading: loading },
-      cancelButtonProps: { loading: loading },
-      okText: 'Delete',
-      closable: !loading,
-      onOk() {
-        setLoading(true)
-        props
-          .deleteItem(props.item)
-          .then(() => {
-            setLoading(false)
-          })
-          .catch((e) => {
-            setLoading(false)
-            message.error(e)
-          })
-      }
-    })
-  }
-
-  return (
-    <span onClick={(e: any) => e.stopPropagation()}>
-      <Dropdown
-        className={itemIcon}
-        trigger={['click']}
-        overlay={
-          <Menu>
-            <Menu.Item icon={<FontAwesomeIcon icon={faArrowUpRightFromSquare} />}>
-              <a href={props.item.url} target="_blank" rel="noreferrer" className={actionIcon}>
-                Open in a window
-              </a>
-            </Menu.Item>
-            <Menu.Item icon={<FontAwesomeIcon icon={faTrashCan} />} danger onClick={onDelete}>
-              Delete
-            </Menu.Item>
-          </Menu>
-        }
-      >
-        <FontAwesomeIcon icon={faEllipsisVertical} />
-      </Dropdown>
-    </span>
   )
 }

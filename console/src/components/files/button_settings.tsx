@@ -25,7 +25,7 @@ const ButtonFilesSettings = (props: { children: JSX.Element }) => {
 
         // check if the bucket can be reached
         const input: ListObjectsV2CommandInput = {
-          Bucket: workspaceCtx.workspace.files_settings.bucket
+          Bucket: values.bucket
         }
         const command = new ListObjectsV2Command(input)
 
@@ -68,11 +68,15 @@ const ButtonFilesSettings = (props: { children: JSX.Element }) => {
                 setLoading(false)
               })
           })
-          .catch(console.error)
+          .catch((e: any) => {
+            console.error(e)
+            message.error(e.toString())
+            setLoading(false)
+          })
       })
       .catch((e: any) => {
         console.error(e)
-        message.error(e.message)
+        message.error(e.toString())
         setLoading(false)
       })
   }
@@ -84,12 +88,11 @@ const ButtonFilesSettings = (props: { children: JSX.Element }) => {
         title="File storage settings"
         open={settingsVisible}
         onCancel={toggleSettings}
-        confirmLoading={loading}
         footer={[
-          <Button key="cancel" onClick={toggleSettings}>
+          <Button key="cancel" loading={loading} onClick={toggleSettings}>
             Cancel
           </Button>,
-          <Button key="submit" type="primary" onClick={onFinish}>
+          <Button key="submit" loading={loading} type="primary" onClick={onFinish}>
             Save
           </Button>
         ]}
@@ -110,11 +113,7 @@ const ButtonFilesSettings = (props: { children: JSX.Element }) => {
             className={CSS.margin_b_l}
           />
 
-          <Form.Item
-            label="S3 Endpoint"
-            name="endpoint"
-            rules={[{ type: 'string', required: true }]}
-          >
+          <Form.Item label="S3 Endpoint" name="endpoint" rules={[{ type: 'url', required: true }]}>
             <Input placeholder="https://storage.googleapis.com" />
           </Form.Item>
           <Form.Item

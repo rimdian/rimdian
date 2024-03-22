@@ -336,23 +336,27 @@ export const FileManager = (props: FileManagerProps) => {
       inputFileRef.current.click()
     }
   }
+
+  if (workspaceCtx.workspace.files_settings.endpoint === '') {
+    return (
+      <Alert
+        className={CSS.margin_b_l}
+        message={
+          <>
+            File storage is not configured.
+            <ButtonFilesSettings>
+              <Button type="link">Configure now</Button>
+            </ButtonFilesSettings>
+          </>
+        }
+        type="warning"
+        showIcon
+      />
+    )
+  }
+
   return (
     <Block classNames={[filesContainer]} style={{ height: props.height }}>
-      {workspaceCtx.workspace.files_settings.endpoint === '' && (
-        <Alert
-          className={CSS.margin_b_l}
-          message={
-            <>
-              File storage is not configured.
-              <ButtonFilesSettings>
-                <Button type="link">Configure now</Button>
-              </ButtonFilesSettings>
-            </>
-          }
-          type="warning"
-          showIcon
-        />
-      )}
       {workspaceCtx.workspace.files_settings.endpoint !== '' && (
         <>
           <div className={CSS.padding_a_m} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>

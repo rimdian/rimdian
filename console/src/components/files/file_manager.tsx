@@ -14,9 +14,9 @@ import {
 import { FileManagerProps, StorageObject } from './interfaces'
 import CSS, { colorPrimary } from 'utils/css'
 import Block from 'components/common/block'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFolder, faTrashAlt, faTrashCan } from '@fortawesome/free-regular-svg-icons'
+import { faCopy, faFolder, faTrashAlt, faTrashCan } from '@fortawesome/free-regular-svg-icons'
 import {
   faArrowUpFromBracket,
   faArrowUpRightFromSquare,
@@ -32,7 +32,9 @@ import {
   ListObjectsV2Command,
   ListObjectsV2CommandInput,
   PutObjectCommand,
-  PutObjectCommandInput
+  PutObjectCommandInput,
+  DeleteObjectCommand,
+  DeleteObjectCommandInput
 } from '@aws-sdk/client-s3'
 import GetContentType from 'utils/file_extension'
 
@@ -56,6 +58,8 @@ export const FileManager = (props: FileManagerProps) => {
   const [newFolderModalVisible, setNewFolderModalVisible] = useState(false)
   const [newFolderLoading, setNewFolderLoading] = useState(false)
   const s3ClientRef = useRef<S3Client | undefined>(undefined)
+  const inputFileRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const [form] = Form.useForm()
 
   const fetchObjects = useCallback(() => {
@@ -100,12 +104,14 @@ export const FileManager = (props: FileManagerProps) => {
         const pathParts = key.split('/')
 
         if (isFolder) {
-          itemPath = pathParts.slice(0, pathParts.length - 2).join('/')
+          itemPath = pathParts.slice(0, pathParts.length - 2).join('/') + '/'
           // console.log('folder path', itemCurrentPath)
         } else {
-          itemPath = pathParts.slice(0, pathParts.length - 1).join('/')
+          itemPath = pathParts.slice(0, pathParts.length - 1).join('/') + '/'
           // console.log('file path', itemCurrentPath)
         }
+
+        if (itemPath === '/') itemPath = ''
 
         const item = {
           key: key,
@@ -162,8 +168,34 @@ export const FileManager = (props: FileManagerProps) => {
     fetchObjects
   ])
 
-  const onDelete = () => {
-    console.log('delete')
+  const deleteObject = (key: string, isFolder: boolean) => {
+    if (!s3ClientRef.current) {
+      message.error('S3 client is not initialized.')
+      return
+    }
+
+    const s3Client = s3ClientRef.current
+
+    const input: DeleteObjectCommandInput = {
+      Bucket: workspaceCtx.workspace.files_settings.bucket,
+      Key: key
+    }
+
+    s3Client
+      .send(new DeleteObjectCommand(input))
+      .then(() => {
+        if (isFolder) {
+          fetchObjects()
+          message.success('Folder deleted successfully.')
+          // go to previous path
+          setCurrentPath(key.split('/').slice(0, -2).join('/') + '/')
+        } else {
+          message.success('File deleted successfully.')
+        }
+      })
+      .catch((error) => {
+        message.error('Failed to delete file: ' + error)
+      })
   }
 
   const selectItem = (items: StorageObject[]) => {
@@ -209,7 +241,7 @@ export const FileManager = (props: FileManagerProps) => {
 
       // create folder in S3
       const folderName = values.name
-      const key = currentPath === '' ? folderName + '/' : currentPath + '/' + folderName + '/'
+      const key = currentPath === '' ? folderName + '/' : currentPath + folderName + '/'
 
       const input: ListObjectsV2CommandInput = {
         Bucket: workspaceCtx.workspace.files_settings.bucket,
@@ -253,8 +285,6 @@ export const FileManager = (props: FileManagerProps) => {
     })
   }
 
-  const onDeleteFolder = () => {}
-
   const itemsAtPath = useMemo(() => {
     if (!items) return []
     return items
@@ -269,6 +299,43 @@ export const FileManager = (props: FileManagerProps) => {
       })
   }, [items, currentPath])
 
+  const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
+    if (isUploading) return
+    if (!s3ClientRef.current) return
+
+    // console.log(e.target.files)
+
+    for (var i = 0; i < e.target.files.length; i++) {
+      setIsUploading(true)
+      const file = e.target.files.item(i) as File
+
+      s3ClientRef.current
+        .send(
+          new PutObjectCommand({
+            Bucket: workspaceCtx.workspace.files_settings.bucket,
+            Key: currentPath + file.name,
+            Body: file,
+            ContentType: file.type
+          })
+        )
+        .then(() => {
+          message.success('File' + file.name + ' uploaded successfully.')
+          setIsUploading(false)
+          fetchObjects()
+        })
+        .catch((error) => {
+          message.error('Failed to upload file: ' + error)
+          setIsUploading(false)
+        })
+    }
+  }
+
+  const onBrowseFiles = () => {
+    if (inputFileRef.current) {
+      inputFileRef.current.click()
+    }
+  }
   return (
     <Block classNames={[filesContainer]} style={{ height: props.height }}>
       {workspaceCtx.workspace.files_settings.endpoint === '' && (
@@ -310,7 +377,7 @@ export const FileManager = (props: FileManagerProps) => {
                           content?
                         </>
                       }
-                      onConfirm={onDeleteFolder}
+                      onConfirm={() => deleteObject(currentPath, true)}
                       okText="Delete folder"
                       cancelText="Cancel"
                       okButtonProps={{
@@ -327,26 +394,54 @@ export const FileManager = (props: FileManagerProps) => {
                     </Popconfirm>
                   </Tooltip>
                 )}
-                <Button
-                  type="primary"
-                  size="small"
-                  onClick={() => {
-                    console.log('upload')
-                  }}
-                  className={CSS.pull_right}
-                >
-                  <FontAwesomeIcon icon={faArrowUpFromBracket} className={CSS.padding_r_s} />
-                  Upload
-                </Button>
+                <span role="button" onClick={onBrowseFiles}>
+                  <input
+                    type="file"
+                    ref={inputFileRef}
+                    onChange={onFileChange}
+                    hidden
+                    accept={props.acceptFileType}
+                    multiple={false}
+                  />
+                  <Button
+                    type="primary"
+                    size="small"
+                    className={CSS.pull_right}
+                    loading={isUploading}
+                  >
+                    <FontAwesomeIcon icon={faArrowUpFromBracket} className={CSS.padding_r_s} />
+                    Upload
+                  </Button>
+                </span>
               </Space>
             </div>
 
             <Space>
-              <b>Current path:</b>
-              <Button type="text" size="small" onClick={() => setCurrentPath('')}>
-                {workspaceCtx.workspace.files_settings.bucket}
-              </Button>
-              {currentPath}
+              <div>
+                <Button type="text" size="small" onClick={() => setCurrentPath('')}>
+                  {workspaceCtx.workspace.files_settings.bucket}
+                </Button>
+                {currentPath
+                  .split('/')
+                  .filter((x) => x !== '')
+                  .map((part, index, array) => {
+                    const isLast = index === array.length - 1
+                    const fullPath = array.slice(0, index + 1).join('/') + '/'
+                    return (
+                      <>
+                        /
+                        <Button
+                          disabled={isLast}
+                          type="text"
+                          size="small"
+                          onClick={() => setCurrentPath(fullPath)}
+                        >
+                          {part}
+                        </Button>
+                      </>
+                    )
+                  })}
+              </div>
               <Button type="primary" size="small" ghost onClick={toggleNewFolderModal}>
                 New folder
               </Button>
@@ -367,7 +462,7 @@ export const FileManager = (props: FileManagerProps) => {
               return {
                 onClick: () => {
                   if (record.is_folder) {
-                    setCurrentPath(record.path + record.name)
+                    setCurrentPath(record.key)
                   }
                 }
               }
@@ -459,9 +554,21 @@ export const FileManager = (props: FileManagerProps) => {
                 width: 40,
                 className: CSS.text_right,
                 render: (item: StorageObject) => {
-                  if (item.is_folder) return null
+                  if (item.is_folder) return
                   return (
                     <Space>
+                      <Tooltip title="Copy URL">
+                        <Button
+                          type="text"
+                          size="small"
+                          onClick={() => {
+                            navigator.clipboard.writeText(item.file_info.url)
+                            message.success('URL copied to clipboard.')
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faCopy} />
+                        </Button>
+                      </Tooltip>
                       <Tooltip title="Open in a window">
                         <a href={item.file_info.url} target="_blank" rel="noreferrer">
                           <Button type="text" size="small">
@@ -470,10 +577,14 @@ export const FileManager = (props: FileManagerProps) => {
                         </a>
                       </Tooltip>
                       <Popconfirm
-                        title="Do you want to delete this file from your storage?"
-                        onConfirm={onDelete}
+                        title="Do you want to permanently delete this file from your storage?"
+                        onConfirm={() => deleteObject(item.key, false)}
+                        placement="topRight"
                         okText="Delete"
                         cancelText="Cancel"
+                        okButtonProps={{
+                          danger: true
+                        }}
                       >
                         <Button type="text" size="small">
                           <FontAwesomeIcon icon={faTrashCan} />
@@ -517,7 +628,7 @@ export const FileManager = (props: FileManagerProps) => {
               ]}
             >
               <Input
-                addonBefore={currentPath !== '/' ? currentPath + '/' : '/'}
+                addonBefore={currentPath !== '/' ? currentPath : '/'}
                 onChange={(e) => {
                   // trim spaces
                   form.setFieldsValue({ folderName: e.target.value.trim() })

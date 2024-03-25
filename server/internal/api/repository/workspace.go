@@ -33,8 +33,10 @@ func (repo *RepositoryImpl) CreateWorkspaceTables(ctx context.Context, workspace
 		entity.DataLogSchema,
 		entity.UserLockSchema,
 		entity.AppSchema,
-		// entity.Observability_CheckSchema,
-		// entity.Observability_IncidentSchema,
+		entity.MessageTemplateSchema,
+		entity.BroadcastCampaignSchema,
+		entity.SubscriptionListSchema,
+		entity.SubscriptionListUserSchema,
 	}
 
 	if repo.Config.DB_TYPE == "mysql" {
@@ -58,8 +60,10 @@ func (repo *RepositoryImpl) CreateWorkspaceTables(ctx context.Context, workspace
 			entity.DataLogSchemaMYSQL,
 			entity.UserLockSchemaMYSQL,
 			entity.AppSchemaMYSQL,
-			// entity.Observability_CheckSchemaMYSQL,
-			// entity.Observability_IncidentSchemaMYSQL,
+			entity.MessageTemplateSchemaMYSQL,
+			entity.BroadcastCampaignSchemaMYSQL,
+			entity.SubscriptionListSchemaMYSQL,
+			entity.SubscriptionListUserSchemaMYSQL,
 		}
 	}
 

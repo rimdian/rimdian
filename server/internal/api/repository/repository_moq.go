@@ -356,6 +356,9 @@ var _ Repository = &RepositoryMock{}
 //			ListInvitationsForOrganizationFunc: func(ctx context.Context, organizationID string) ([]*entity.OrganizationInvitation, error) {
 //				panic("mock out the ListInvitationsForOrganization method")
 //			},
+//			ListMessageTemplatesFunc: func(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) ([]*entity.MessageTemplate, error) {
+//				panic("mock out the ListMessageTemplates method")
+//			},
 //			ListOrdersForUserFunc: func(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.Order, error) {
 //				panic("mock out the ListOrdersForUser method")
 //			},
@@ -370,6 +373,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			ListSessionsForUserFunc: func(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.Session, error) {
 //				panic("mock out the ListSessionsForUser method")
+//			},
+//			ListSubscriptionListsFunc: func(ctx context.Context, workspaceID string, withUsersCount bool) ([]*entity.SubscriptionList, error) {
+//				panic("mock out the ListSubscriptionLists method")
 //			},
 //			ListTaskExecsFunc: func(ctx context.Context, workspaceID string, params *dto.TaskExecListParams) ([]*entity.TaskExec, string, string, int, error) {
 //				panic("mock out the ListTaskExecs method")
@@ -870,6 +876,9 @@ type RepositoryMock struct {
 	// ListInvitationsForOrganizationFunc mocks the ListInvitationsForOrganization method.
 	ListInvitationsForOrganizationFunc func(ctx context.Context, organizationID string) ([]*entity.OrganizationInvitation, error)
 
+	// ListMessageTemplatesFunc mocks the ListMessageTemplates method.
+	ListMessageTemplatesFunc func(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) ([]*entity.MessageTemplate, error)
+
 	// ListOrdersForUserFunc mocks the ListOrdersForUser method.
 	ListOrdersForUserFunc func(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.Order, error)
 
@@ -884,6 +893,9 @@ type RepositoryMock struct {
 
 	// ListSessionsForUserFunc mocks the ListSessionsForUser method.
 	ListSessionsForUserFunc func(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.Session, error)
+
+	// ListSubscriptionListsFunc mocks the ListSubscriptionLists method.
+	ListSubscriptionListsFunc func(ctx context.Context, workspaceID string, withUsersCount bool) ([]*entity.SubscriptionList, error)
 
 	// ListTaskExecsFunc mocks the ListTaskExecs method.
 	ListTaskExecsFunc func(ctx context.Context, workspaceID string, params *dto.TaskExecListParams) ([]*entity.TaskExec, string, string, int, error)
@@ -2193,6 +2205,15 @@ type RepositoryMock struct {
 			// OrganizationID is the organizationID argument value.
 			OrganizationID string
 		}
+		// ListMessageTemplates holds details about calls to the ListMessageTemplates method.
+		ListMessageTemplates []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// Params is the params argument value.
+			Params *dto.MessageTemplateListParams
+		}
 		// ListOrdersForUser holds details about calls to the ListOrdersForUser method.
 		ListOrdersForUser []struct {
 			// Ctx is the ctx argument value.
@@ -2247,6 +2268,15 @@ type RepositoryMock struct {
 			OrderBy string
 			// Tx is the tx argument value.
 			Tx *sql.Tx
+		}
+		// ListSubscriptionLists holds details about calls to the ListSubscriptionLists method.
+		ListSubscriptionLists []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// WithUsersCount is the withUsersCount argument value.
+			WithUsersCount bool
 		}
 		// ListTaskExecs holds details about calls to the ListTaskExecs method.
 		ListTaskExecs []struct {
@@ -2887,11 +2917,13 @@ type RepositoryMock struct {
 	lockListDataLogsToRespawn                 sync.RWMutex
 	lockListDevicesForUser                    sync.RWMutex
 	lockListInvitationsForOrganization        sync.RWMutex
+	lockListMessageTemplates                  sync.RWMutex
 	lockListOrdersForUser                     sync.RWMutex
 	lockListOrganizationsForAccount           sync.RWMutex
 	lockListPostviewsForUser                  sync.RWMutex
 	lockListSegments                          sync.RWMutex
 	lockListSessionsForUser                   sync.RWMutex
+	lockListSubscriptionLists                 sync.RWMutex
 	lockListTaskExecs                         sync.RWMutex
 	lockListTasks                             sync.RWMutex
 	lockListTasksToWakeUp                     sync.RWMutex
@@ -7683,6 +7715,46 @@ func (mock *RepositoryMock) ListInvitationsForOrganizationCalls() []struct {
 	return calls
 }
 
+// ListMessageTemplates calls ListMessageTemplatesFunc.
+func (mock *RepositoryMock) ListMessageTemplates(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) ([]*entity.MessageTemplate, error) {
+	if mock.ListMessageTemplatesFunc == nil {
+		panic("RepositoryMock.ListMessageTemplatesFunc: method is nil but Repository.ListMessageTemplates was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Params      *dto.MessageTemplateListParams
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		Params:      params,
+	}
+	mock.lockListMessageTemplates.Lock()
+	mock.calls.ListMessageTemplates = append(mock.calls.ListMessageTemplates, callInfo)
+	mock.lockListMessageTemplates.Unlock()
+	return mock.ListMessageTemplatesFunc(ctx, workspaceID, params)
+}
+
+// ListMessageTemplatesCalls gets all the calls that were made to ListMessageTemplates.
+// Check the length with:
+//
+//	len(mockedRepository.ListMessageTemplatesCalls())
+func (mock *RepositoryMock) ListMessageTemplatesCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	Params      *dto.MessageTemplateListParams
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Params      *dto.MessageTemplateListParams
+	}
+	mock.lockListMessageTemplates.RLock()
+	calls = mock.calls.ListMessageTemplates
+	mock.lockListMessageTemplates.RUnlock()
+	return calls
+}
+
 // ListOrdersForUser calls ListOrdersForUserFunc.
 func (mock *RepositoryMock) ListOrdersForUser(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.Order, error) {
 	if mock.ListOrdersForUserFunc == nil {
@@ -7900,6 +7972,46 @@ func (mock *RepositoryMock) ListSessionsForUserCalls() []struct {
 	mock.lockListSessionsForUser.RLock()
 	calls = mock.calls.ListSessionsForUser
 	mock.lockListSessionsForUser.RUnlock()
+	return calls
+}
+
+// ListSubscriptionLists calls ListSubscriptionListsFunc.
+func (mock *RepositoryMock) ListSubscriptionLists(ctx context.Context, workspaceID string, withUsersCount bool) ([]*entity.SubscriptionList, error) {
+	if mock.ListSubscriptionListsFunc == nil {
+		panic("RepositoryMock.ListSubscriptionListsFunc: method is nil but Repository.ListSubscriptionLists was just called")
+	}
+	callInfo := struct {
+		Ctx            context.Context
+		WorkspaceID    string
+		WithUsersCount bool
+	}{
+		Ctx:            ctx,
+		WorkspaceID:    workspaceID,
+		WithUsersCount: withUsersCount,
+	}
+	mock.lockListSubscriptionLists.Lock()
+	mock.calls.ListSubscriptionLists = append(mock.calls.ListSubscriptionLists, callInfo)
+	mock.lockListSubscriptionLists.Unlock()
+	return mock.ListSubscriptionListsFunc(ctx, workspaceID, withUsersCount)
+}
+
+// ListSubscriptionListsCalls gets all the calls that were made to ListSubscriptionLists.
+// Check the length with:
+//
+//	len(mockedRepository.ListSubscriptionListsCalls())
+func (mock *RepositoryMock) ListSubscriptionListsCalls() []struct {
+	Ctx            context.Context
+	WorkspaceID    string
+	WithUsersCount bool
+} {
+	var calls []struct {
+		Ctx            context.Context
+		WorkspaceID    string
+		WithUsersCount bool
+	}
+	mock.lockListSubscriptionLists.RLock()
+	calls = mock.calls.ListSubscriptionLists
+	mock.lockListSubscriptionLists.RUnlock()
 	return calls
 }
 

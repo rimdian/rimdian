@@ -193,6 +193,12 @@ type Repository interface {
 	ActivateSegment(ctx context.Context, workspaceID string, segmentID string, segmentVersion int) (didActivate bool, err error)
 	MergeUserDataLogs(ctx context.Context, workspace *entity.Workspace, fromUserID string, fromUserExternalID, toUserID string, tx *sql.Tx) (err error)
 
+	// subscription lists
+	ListSubscriptionLists(ctx context.Context, workspaceID string, withUsersCount bool) (lists []*entity.SubscriptionList, err error)
+
+	// message templates
+	ListMessageTemplates(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) (templates []*entity.MessageTemplate, err error)
+
 	// user segments
 	InsertUserSegment(ctx context.Context, userSegment *entity.UserSegment, tx *sql.Tx) (err error)
 	DeleteUserSegment(ctx context.Context, userID string, segmentID string, tx *sql.Tx) (err error)

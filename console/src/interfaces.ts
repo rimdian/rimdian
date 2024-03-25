@@ -733,6 +733,7 @@ export interface Workspace {
   data_hooks: DataHook[]
   license_key?: string
   files_settings: FilesSettings
+  emailBlocks: any // TODO
 
   // joined
   cubejs_token: string
@@ -744,6 +745,7 @@ export interface LicenseInfo {
   usq: number // user segments quota
   dlo90: number // data logs over 90 days
   ar: boolean // has admin role
+  uslq: number // user subscription lists quota
 }
 
 export interface Session {
@@ -1122,4 +1124,17 @@ export interface DataHook {
   enabled: boolean
   db_created_at: string
   db_updated_at: string
+}
+
+export interface SubscriptionList {
+  id: string
+  name: string
+  color: string
+  channel: 'email' // only email for now
+  double_opt_in: boolean
+  email_template_id?: string
+  email_template_version?: number
+  db_created_at: string
+  db_updated_at: string
+  users_count?: number
 }

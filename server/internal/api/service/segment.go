@@ -318,25 +318,10 @@ func (svc *ServiceImpl) SegmentPreview(ctx context.Context, accountID string, pa
 
 func (svc *ServiceImpl) SegmentList(ctx context.Context, accountID string, params *dto.SegmentListParams) (result *dto.SegmentListResult, code int, err error) {
 
-	// fetch workspace
-	workspace, err := svc.Repo.GetWorkspace(ctx, params.WorkspaceID)
-
-	if err != nil {
-		if sqlscan.NotFound(err) {
-			return nil, 400, err
-		}
-		return nil, 500, eris.Wrap(err, "SegmentList")
-	}
-
-	// verify that token is owner of its organization
-	isAccount, code, err := svc.IsAccountOfOrganization(ctx, accountID, workspace.OrganizationID)
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
 
 	if err != nil {
 		return nil, code, eris.Wrap(err, "SegmentList")
-	}
-
-	if !isAccount {
-		return nil, 400, eris.New("account is not part of the organization")
 	}
 
 	// fetch segments

@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Organization, Workspace, App, CubeSchema, DataLogBatch } from 'interfaces'
+import {
+  Organization,
+  Workspace,
+  App,
+  CubeSchema,
+  DataLogBatch,
+  SubscriptionList
+} from 'interfaces'
 import { Outlet, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
 import { useCurrentOrganizationCtx } from 'components/organization/context_current_organization'
 import RouteWorkspaceSetup from './route_setup'
@@ -34,6 +41,8 @@ export interface CurrentWorkspaceCtxValue {
   workspaces: Workspace[]
   segmentsMap: { [key: string]: Segment }
   refetchSegments: () => Promise<QueryObserverResult<SegmentList, unknown>>
+  subscriptionLists: SubscriptionList[]
+  refetchSubscriptionLists: () => Promise<QueryObserverResult<SubscriptionList[], unknown>>
   cubeSchemasMap: { [key: string]: CubeSchema }
   refetchApps: () => Promise<QueryObserverResult<App[], unknown>>
   // refreshWorkspaces: Promise<QueryObserverResult<Workspace[], unknown>>
@@ -47,7 +56,7 @@ export const CurrentWorkspaceCtx = () => {
   const accountCtx = useAccount()
   const params = useParams()
   const [searchParams] = useSearchParams()
-  const [segmentsMap, setSegmentsMap] = useState<{ [key: string]: Segment }>({})
+  // const [segmentsMap, setSegmentsMap] = useState<{ [key: string]: Segment }>({})
   const [cubeSchemasMap, setCubeSchemasMap] = useState<{ [key: string]: CubeSchema }>({})
   const cubejsApiRef = useRef<CubejsApi | null>(null)
 
@@ -69,20 +78,36 @@ export const CurrentWorkspaceCtx = () => {
   )
 
   // segments
-  const { isLoading: isLoadingSegments, refetch: refetchSegments } = useQuery<SegmentList>(
-    ['segments', params.workspaceId],
-    (): Promise<SegmentList> => {
+  const {
+    data: segments,
+    isLoading: isLoadingSegments,
+    refetch: refetchSegments
+  } = useQuery<SegmentList>(['segments', params.workspaceId], (): Promise<SegmentList> => {
+    return new Promise((resolve, reject) => {
+      currentOrgCtx
+        .apiGET('/segment.list?with_users_count=true&workspace_id=' + params.workspaceId)
+        .then((data: any) => {
+          resolve(data as SegmentList)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  })
+
+  // subscription lists
+  const {
+    data: subscriptionLists,
+    isLoading: isLoadingSubscriptionLists,
+    refetch: refetchSubscriptionLists
+  } = useQuery<SubscriptionList[]>(
+    ['subscriptionLists', params.workspaceId],
+    (): Promise<SubscriptionList[]> => {
       return new Promise((resolve, reject) => {
         currentOrgCtx
-          .apiGET('/segment.list?with_users_count=true&workspace_id=' + params.workspaceId)
+          .apiGET('/subscriptionList.list?with_users_count=true&workspace_id=' + params.workspaceId)
           .then((data: any) => {
-            // convert data.segments to segmentsMap
-            const segmentsMap: { [key: string]: Segment } = {}
-            forEach(data.segments, (segment: Segment) => {
-              segmentsMap[segment.id] = segment
-            })
-            setSegmentsMap(segmentsMap)
-            resolve(data as SegmentList)
+            resolve(data as SubscriptionList[])
           })
           .catch((e) => {
             reject(e)
@@ -137,6 +162,15 @@ export const CurrentWorkspaceCtx = () => {
     })
   })
 
+  const segmentsMap = useMemo(() => {
+    if (!segments) return {}
+    const map: { [key: string]: Segment } = {}
+    segments.segments.forEach((segment) => {
+      map[segment.id] = segment
+    })
+    return map
+  }, [segments])
+
   // merge apps into workspace data
   const workspace = useMemo(() => {
     if (!data) return null
@@ -151,7 +185,14 @@ export const CurrentWorkspaceCtx = () => {
     })
   }, [workspace])
 
-  if (isLoading || !workspace || isLoadingSegments || isLoadingCubeSchemas || isLoadingApps) {
+  if (
+    isLoading ||
+    !workspace ||
+    isLoadingSegments ||
+    isLoadingSubscriptionLists ||
+    isLoadingCubeSchemas ||
+    isLoadingApps
+  ) {
     return (
       <Layout currentOrganization={currentOrgCtx.organization} loadingText="Loading workspace..." />
     )
@@ -193,6 +234,8 @@ export const CurrentWorkspaceCtx = () => {
     workspaces: currentOrgCtx.workspaces,
     segmentsMap: segmentsMap,
     refetchSegments: refetchSegments,
+    subscriptionLists: subscriptionLists || [],
+    refetchSubscriptionLists: refetchSubscriptionLists,
     cubeSchemasMap: cubeSchemasMap,
     refetchApps: refetchApps,
     refreshWorkspace: refetch,

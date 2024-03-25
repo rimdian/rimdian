@@ -37,7 +37,7 @@ const ButtonUpsertSegment = (props: { segment?: Segment }) => {
         title: 'Quota reached',
         content: (
           <Alert
-            description={`You have reached your user segments quota of ${segmentsCount}/${segmentsCount}. Please upgrade your license to create more segments.`}
+            description={`You have reached your user segments quota of ${segmentsCount}/${max}. Please upgrade your license to create more segments.`}
             type="warning"
           />
         )
@@ -52,7 +52,7 @@ const ButtonUpsertSegment = (props: { segment?: Segment }) => {
       Edit segment
     </Button>
   ) : (
-    <Button type="primary" ghost block onClick={onNewSegment}>
+    <Button type="primary" block ghost onClick={onNewSegment}>
       New segment
     </Button>
   )

@@ -106,6 +106,29 @@ const CSS = {
       //     background: 'none'
       //   }
       // },
+
+      // .ant-drawer.with-tabs {
+      //   .ant-drawer-header {
+      //     padding: 0;
+      //     min-height: 55px;
+      //     overflow: hidden;
+      //     border: none !important;
+
+      //     .title {
+      //       position: absolute;
+      //       left: 24px;
+      //       top: 16px;
+      //     }
+
+      //     .ant-tabs-nav {
+      //       height: 55px;
+      //     }
+      //   }
+
+      //   .ant-drawer-body {
+      //     padding: 0;
+      //   }
+      // }
       '& .no-header .ant-drawer-header': {
         height: 0,
         overflow: 'hidden',
@@ -415,6 +438,9 @@ const CSS = {
   },
   borderRight: {
     solid1: css({ borderRight: `1px solid ${borderColorBase}` })
+  },
+  borderLeft: {
+    solid1: css({ borderLeft: `1px solid ${borderColorBase}` })
   },
 
   tableTotals: css({

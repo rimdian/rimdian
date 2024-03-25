@@ -10,7 +10,7 @@ import {
   Badge,
   Space
 } from 'antd'
-import { User } from 'interfaces'
+import { SubscriptionList, User } from 'interfaces'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import Layout from 'components/common/layout'
 import { useQuery } from '@tanstack/react-query'
@@ -37,6 +37,7 @@ import { forEach } from 'lodash'
 import { Segment } from 'components/segment/interfaces'
 import { useMemo } from 'react'
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons'
+import ButtonUpsertSubscriptionList from 'components/subscription_list/button_upsert'
 
 interface UserList {
   users: User[]
@@ -197,6 +198,16 @@ const RouteUsers = () => {
     return workspaceCtx.segmentsMap[searchParams.get('segment_id') as string]
   }, [workspaceCtx.segmentsMap, searchParams])
 
+  const currentList = useMemo(() => {
+    if (!searchParams.get('list_id')) {
+      return undefined
+    }
+
+    return workspaceCtx.subscriptionLists.find(
+      (list: SubscriptionList) => list.id === searchParams.get('list_id')
+    )
+  }, [searchParams, workspaceCtx.subscriptionLists])
+
   return (
     <Layout
       currentOrganization={workspaceCtx.organization}
@@ -250,6 +261,36 @@ const RouteUsers = () => {
             </ul>
           </Block>
           <ButtonUpsertSegment />
+
+          <div className={CSS.top + ' ' + CSS.margin_t_l}>
+            <h1>Subscription lists</h1>
+            <div className={CSS.topSeparator}></div>
+          </div>
+
+          {workspaceCtx.subscriptionLists.length > 0 && (
+            <Block>
+              <ul className={secondMenuCSS.list}>
+                {workspaceCtx.subscriptionLists.map((list: SubscriptionList) => {
+                  return (
+                    <li
+                      key={list.id}
+                      onClick={() => setSearchParams({ list_id: list.id })}
+                      className={currentList?.id === list.id ? 'active' : ''}
+                    >
+                      <Tag color={list.color}>{list.name}</Tag>
+                      <span className={secondMenuCSS.counter}>
+                        {numbro(list.users_count).format({
+                          totalLength: 3,
+                          trimMantissa: true
+                        })}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </Block>
+          )}
+          <ButtonUpsertSubscriptionList />
         </Col>
 
         <Col span={19}>

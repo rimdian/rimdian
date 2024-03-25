@@ -163,6 +163,10 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 		r.Post("/api/segment.update", api.SegmentUpdate)
 		r.Post("/api/segment.delete", api.SegmentDelete)
 
+		r.Get("/api/subscriptionList.list", api.SubscriptionListList)
+
+		r.Get("/api/messageTemplate.list", api.MessageTemplateList)
+
 		r.Get("/api/app.list", api.AppList)
 		r.Get("/api/app.get", api.AppGet)
 		r.Post("/api/app.install", api.AppInstall)

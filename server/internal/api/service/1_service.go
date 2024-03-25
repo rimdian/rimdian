@@ -107,12 +107,19 @@ type Service interface {
 	// user
 	UserList(ctx context.Context, accountID string, params *dto.UserListParams) (result *dto.UserListResult, code int, err error)
 	UserShow(ctx context.Context, workspaceID string, accountID string, userExternalID string) (result *dto.UserShowResult, code int, err error)
+
 	// segment
 	SegmentList(ctx context.Context, accountID string, params *dto.SegmentListParams) (result *dto.SegmentListResult, code int, err error)
 	SegmentPreview(ctx context.Context, accountID string, params *dto.SegmentPreviewParams) (result *dto.SegmentPreviewResult, code int, err error)
 	SegmentCreate(ctx context.Context, accountID string, segmentDTO *dto.Segment) (code int, err error)
 	SegmentUpdate(ctx context.Context, accountID string, segmentDTO *dto.Segment) (code int, err error)
 	SegmentDelete(ctx context.Context, accountID string, deleteSegmentDTO *dto.DeleteSegment) (code int, err error)
+
+	// subscription list
+	SubscriptionListList(ctx context.Context, accountID string, params *dto.SubscriptionListListParams) (result []*entity.SubscriptionList, code int, err error)
+
+	// email template
+	MessageTemplateList(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) (result []*entity.MessageTemplate, code int, err error)
 
 	// data hook
 	DataHookUpdate(ctx context.Context, accountID string, dataHookDTO *dto.DataHook) (updatedWorkspace *entity.Workspace, code int, err error)

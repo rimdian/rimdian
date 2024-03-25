@@ -27,13 +27,23 @@ Columns6666BlockDefinition.name = 'Section 1-1-1-1'
 Columns6666BlockDefinition.kind = 'columns6666'
 Columns6666BlockDefinition.columns = [6, 6, 6, 6]
 Columns6666BlockDefinition.children = [Column1, Column2, Column3, Column4]
-Columns6666BlockDefinition.renderMenu = () => <div className="cmeditor-ui-block">
+Columns6666BlockDefinition.renderMenu = () => (
+  <div className="rmdeditor-ui-block">
     <Row gutter={12}>
-        <Col span={6}><div className="cmeditor-ui-block-col"></div></Col>
-        <Col span={6}><div className="cmeditor-ui-block-col"></div></Col>
-        <Col span={6}><div className="cmeditor-ui-block-col"></div></Col>
-        <Col span={6}><div className="cmeditor-ui-block-col"></div></Col>
+      <Col span={6}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
+      <Col span={6}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
+      <Col span={6}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
+      <Col span={6}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
     </Row>
-</div>
+  </div>
+)
 
 export default Columns6666BlockDefinition

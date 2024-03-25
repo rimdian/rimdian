@@ -38,7 +38,7 @@ const ImageURL = (props: ImageURLProps) => {
   return (
     <Form.Item
       label="Alternative text"
-      className="cmeditor-form-item-align-right"
+      className="rmdeditor-form-item-align-right"
       labelCol={{ span: 10 }}
       wrapperCol={{ span: 14 }}
     >
@@ -89,7 +89,7 @@ const ImageURL = (props: ImageURLProps) => {
         {props.block.data.image.alt !== '' && (
           <>
             {props.block.data.image.alt} &nbsp;&nbsp;
-            <span className="cmeditor-ui-link">update</span>
+            <span className="rmdeditor-ui-link">update</span>
           </>
         )}
       </Popover>
@@ -104,7 +104,7 @@ const ClickURL = (props: ImageURLProps) => {
   return (
     <Form.Item
       label="Click URL"
-      className="cmeditor-form-item-align-right"
+      className="rmdeditor-form-item-align-right"
       labelCol={{ span: 10 }}
       wrapperCol={{ span: 14 }}
     >
@@ -156,7 +156,7 @@ const ClickURL = (props: ImageURLProps) => {
         {props.block.data.image.href && (
           <>
             {props.block.data.image.href} &nbsp;&nbsp;
-            <span className="cmeditor-ui-link">update</span>
+            <span className="rmdeditor-ui-link">update</span>
           </>
         )}
       </Popover>
@@ -283,11 +283,11 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
     // console.log('img block is', props.block)
 
     return (
-      <div className="cmeditor-padding-h-l">
+      <div className="rmdeditor-padding-h-l">
         <Form.Item
           label="Image"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -302,7 +302,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Align"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -334,7 +334,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
           valuePropName="checked"
           label="Full width on mobile"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -351,7 +351,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Width"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -416,7 +416,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Height"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -488,7 +488,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Border control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -515,7 +515,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Border radius"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -549,7 +549,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Borders"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -570,7 +570,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border top"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -586,7 +586,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border right"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -602,7 +602,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border bottom"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -618,7 +618,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border left"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -639,7 +639,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Padding control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -668,7 +668,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -703,7 +703,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -860,8 +860,8 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
 
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="cmeditor-ui-block cmeditor-square">
-        <div className="cmeditor-ui-block-icon">
+      <div className="rmdeditor-ui-block rmdeditor-square">
+        <div className="rmdeditor-ui-block-icon">
           <FontAwesomeIcon icon={faImage} />
         </div>
         Image

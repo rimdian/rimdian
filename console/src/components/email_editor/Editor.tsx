@@ -14,6 +14,7 @@ import Draggable from './Draggable'
 import uuid from 'short-uuid'
 import { BlockDefinitionInterface, BlockInterface, BlockDefinitionMap } from './Block'
 import { cloneDeep, get, isEqual, remove, set } from 'lodash'
+import './UI/editor.css'
 
 const EditorContext = createContext<EditorContextValue | null>(null)
 
@@ -28,7 +29,7 @@ export function useEditorContext(): EditorContextValue {
 export interface EditorContextValue {
   blockDefinitions: BlockDefinitionMap
   savedBlocks: BlockDefinitionInterface[]
-  templateData: any
+  templateData: string
   currentTree: BlockInterface
   selectedBlockId: string
   updateTree: (path: string, data: any) => void
@@ -55,7 +56,7 @@ export interface EditorProps {
   children: ReactNode
   blockDefinitions: BlockDefinitionMap
   savedBlocks: BlockDefinitionInterface[]
-  templateData: any
+  templateData: string
   value: BlockInterface
   onChange: (newValue: BlockInterface) => void
   renderSelectedBlockButtons: (props: SelectedBlockButtonsProp) => ReactNode
@@ -84,7 +85,7 @@ export const Editor = (props: EditorProps): JSX.Element => {
       // reset focused node on cleanup
       // eslint-disable-next-line react-hooks/exhaustive-deps
       if (focusedNode && focusedNode.current)
-        focusedNode.current.classList.remove('cmeditor-focused')
+        focusedNode.current.classList.remove('rmdeditor-focused')
     }
   })
 
@@ -338,11 +339,11 @@ export const Editor = (props: EditorProps): JSX.Element => {
 
     // remove previous CSS if possible
     if (previousNode) {
-      previousNode.classList.remove('cmeditor-focused')
+      previousNode.classList.remove('rmdeditor-focused')
     }
 
     if (currentNode) {
-      currentNode.classList.add('cmeditor-focused')
+      currentNode.classList.add('rmdeditor-focused')
     }
 
     focusedNode = node

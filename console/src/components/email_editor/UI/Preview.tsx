@@ -24,7 +24,7 @@ const objectAsKebab = (obj: any) => {
 const treeToMjmlJSON = (
   rootStyles: any,
   block: BlockInterface,
-  templateData: any,
+  templateData: string,
   parent?: BlockInterface
 ) => {
   let children: any[] = []
@@ -728,9 +728,7 @@ const treeToMjmlJSON = (
 }
 
 export const ExportHTML = (editorData: any) => {
-  return mjml2html(
-    json2mjml(treeToMjmlJSON(editorData.data.styles, editorData, undefined, undefined))
-  )
+  return mjml2html(json2mjml(treeToMjmlJSON(editorData.data.styles, editorData, '', undefined)))
 }
 
 const Preview = (props: any) => {
@@ -753,13 +751,13 @@ const Preview = (props: any) => {
     id: 'htmlCompiled'
   }
 
-  const doc = document.querySelector('.cmeditor-main')
+  const doc = document.querySelector('.rmdeditor-main')
   const layoutLeftHeight = doc ? parseInt(window.getComputedStyle(doc).height) - 220 : 400
 
   // console.log('html', html.errors)
   return (
     <>
-      <div className="cmeditor-layout-left preview">
+      <div className="rmdeditor-layout-left preview">
         <Form.Item label="Use a macros page" name="macroId" className="padding-t-m padding-h-m">
           <Select
             style={{ width: '100%' }}
@@ -814,22 +812,22 @@ const Preview = (props: any) => {
         </Form.Item>
       </div>
 
-      <div className="cmeditor-layout-html">
+      <div className="rmdeditor-layout-html">
         <Tabs defaultActiveKey="1" size="small">
           <Tabs.TabPane tab="HTML" key="1" id="iframe-container">
-            <div className="cmeditor-transparent">
+            <div className="rmdeditor-transparent">
               <Iframe {...iframeProps} />
             </div>
           </Tabs.TabPane>
 
           <Tabs.TabPane tab="MJML" key="2">
-            <div className="cmeditor-code-bg">
+            <div className="rmdeditor-code-bg">
               {html.errors &&
                 html.errors.length > 0 &&
                 html.errors.map((err: any, i: number) => (
                   <Alert
                     key={i}
-                    className="cmeditor-margin-b-s"
+                    className="rmdeditor-margin-b-s"
                     message={err.formattedMessage}
                     type="error"
                   />

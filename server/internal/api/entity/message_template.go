@@ -34,7 +34,7 @@ type MessageTemplate struct {
 	UTMCampaign     *string              `json:"utm_campaign,omitempty"`
 	UTMContent      *string              `json:"utm_content,omitempty"`
 	Settings        MapOfInterfaces      `json:"settings"`  // Channels specific 3rd-party settings
-	TestData        MapOfInterfaces      `json:"test_data"` // Test data for the template
+	TestData        string               `json:"test_data"` // Test data for the template
 	DBCreatedAt     time.Time            `json:"db_created_at"`
 	DBUpdatedAt     time.Time            `json:"db_updated_at"`
 }
@@ -69,10 +69,6 @@ func (e *MessageTemplate) Validate() (err error) {
 
 	if e.Settings == nil {
 		e.Settings = MapOfInterfaces{}
-	}
-
-	if e.TestData == nil {
-		e.TestData = MapOfInterfaces{}
 	}
 
 	return nil
@@ -162,7 +158,7 @@ var MessageTemplateSchema string = `CREATE ROWSTORE TABLE IF NOT EXISTS message_
 	utm_campaign VARCHAR(255),
 	utm_content VARCHAR(255),
 	settings JSON NOT NULL,
-	test_data JSON NOT NULL,
+	test_data TEXT,
 	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	  
@@ -183,7 +179,7 @@ var MessageTemplateSchemaMYSQL string = `CREATE TABLE IF NOT EXISTS message_temp
 	utm_campaign VARCHAR(255),
 	utm_content VARCHAR(255),
 	settings JSON NOT NULL,
-	test_data JSON NOT NULL,
+	test_data TEXT,
 	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 

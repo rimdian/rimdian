@@ -18,13 +18,19 @@ const Columns204BlockDefinition: BlockDefinitionInterface = cloneDeep(SectionBlo
 
 Columns204BlockDefinition.name = 'Section 5-1'
 Columns204BlockDefinition.kind = 'columns204'
-Columns204BlockDefinition.columns = [20,4]
+Columns204BlockDefinition.columns = [20, 4]
 Columns204BlockDefinition.children = [Column1, Column2]
-Columns204BlockDefinition.renderMenu = () => <div className="cmeditor-ui-block">
+Columns204BlockDefinition.renderMenu = () => (
+  <div className="rmdeditor-ui-block">
     <Row gutter={12}>
-        <Col span={20}><div className="cmeditor-ui-block-col"></div></Col>
-        <Col span={4}><div className="cmeditor-ui-block-col"></div></Col>
+      <Col span={20}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
+      <Col span={4}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
     </Row>
-</div>
+  </div>
+)
 
 export default Columns204BlockDefinition

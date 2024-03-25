@@ -44,11 +44,11 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
     // console.log('render settings', block.data)
 
     return (
-      <div className="cmeditor-padding-h-l">
+      <div className="rmdeditor-padding-h-l">
         <Form.Item
           label="Text align"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -82,7 +82,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
           <Form.Item
             label="Columns on mobile"
             labelAlign="left"
-            className="cmeditor-form-item-align-right"
+            className="rmdeditor-form-item-align-right"
             labelCol={{ span: 10 }}
             wrapperCol={{ span: 14 }}
           >
@@ -110,7 +110,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Background type"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -139,7 +139,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Background color"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -156,7 +156,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
         )}
 
         {/* 
-            <Form.Item label="Background image" labelAlign="left" className="cmeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
+            <Form.Item label="Background image" labelAlign="left" className="rmdeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
                 <Switch checked={props.block.data.backgroundType} onChange={(checked) => {
                     props.block.data.backgroundType = checked
                     props.updateTree(props.block.path, props.block)
@@ -168,7 +168,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Image URL"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -187,7 +187,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Background size"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -239,7 +239,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Background repeat"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -313,7 +313,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Padding control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -342,7 +342,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -376,7 +376,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -396,7 +396,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Border control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -423,7 +423,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Border radius"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -455,7 +455,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Borders"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -476,7 +476,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border top"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -492,7 +492,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border right"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -508,7 +508,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border bottom"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -524,7 +524,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border left"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -667,7 +667,7 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
 
   renderMenu: (blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="cmeditor-menu-definition">
+      <div className="rmdeditor-menu-definition">
         {blockDefinition.name} - {blockDefinition.draggableIntoGroup}
       </div>
     )

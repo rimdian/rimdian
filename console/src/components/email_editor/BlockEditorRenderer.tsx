@@ -92,12 +92,12 @@ export const BlockEditorRenderer = (props: BlockEditorRendererProps) => {
   const blockDefinition = props.blockDefinitions[props.block.kind]
   if (!blockDefinition) {
     return (
-      <div className="cmeditor-block-content">Block definition missing for {props.block.kind}</div>
+      <div className="rmdeditor-block-content">Block definition missing for {props.block.kind}</div>
     )
   }
   if (!blockDefinition.renderEditor) {
     return (
-      <div className="cmeditor-block-content">
+      <div className="rmdeditor-block-content">
         Block editor render missing for {props.block.kind}
       </div>
     )
@@ -153,14 +153,14 @@ export const BlockEditorRenderer = (props: BlockEditorRendererProps) => {
               groupName={blockDefinition.containerGroup}
               onDrop={(dropResult) => props.onContainerDrop(props.block.path, dropResult)}
               getChildPayload={(i) => props.block.children[i]}
-              dragHandleSelector=".cmeditor-drag-handle"
+              dragHandleSelector=".rmdeditor-drag-handle"
               style={containerStyle}
-              dragClass="cmeditor-ghost-drag"
-              dropClass="cmeditor-ghost-drop"
+              dragClass="rmdeditor-ghost-drag"
+              dropClass="rmdeditor-ghost-drop"
               dropPlaceholder={{
                 animationDuration: 200,
                 showOnTop: true,
-                className: 'cmeditor-drop-preview'
+                className: 'rmdeditor-drop-preview'
               }}
               // onDragEnter={() => {
               //     console.log('onDragEnter 2')
@@ -188,13 +188,13 @@ export const BlockEditorRenderer = (props: BlockEditorRendererProps) => {
           groupName={blockDefinition.containerGroup}
           onDrop={(dropResult) => props.onContainerDrop(props.block.path, dropResult)}
           getChildPayload={(i) => props.block.children[i]}
-          dragHandleSelector=".cmeditor-drag-handle"
-          dragClass="cmeditor-ghost-drag"
-          dropClass="cmeditor-ghost-drop"
+          dragHandleSelector=".rmdeditor-drag-handle"
+          dragClass="rmdeditor-ghost-drag"
+          dropClass="rmdeditor-ghost-drop"
           dropPlaceholder={{
             animationDuration: 200,
             showOnTop: true,
-            className: 'cmeditor-drop-preview'
+            className: 'rmdeditor-drop-preview'
           }}
           style={containerStyle}
           // onDragEnter={() => {
@@ -216,9 +216,9 @@ export const BlockEditorRenderer = (props: BlockEditorRendererProps) => {
       style={props.block.id === 'root' ? { minHeight: '100vh' } : {}}
       id={props.block.id}
       className={cn({
-        'cmeditor-block-content': props.block.kind !== 'root',
+        'rmdeditor-block-content': props.block.kind !== 'root',
         // 'focused': props.focusedBlock && props.focusedBlock.id === props.block.id,
-        'cmeditor-selected': props.block.id === props.selectedBlockId
+        'rmdeditor-selected': props.block.id === props.selectedBlockId
       })}
       onClick={props.onSelectBlock.bind(null, props.block)}
       onMouseOver={(e: MouseEvent) => {
@@ -229,7 +229,7 @@ export const BlockEditorRenderer = (props: BlockEditorRendererProps) => {
     >
       {props.block.id !== 'root' && props.block.id === props.selectedBlockId && (
         <span
-          className="cmeditor-drag-handle"
+          className="rmdeditor-drag-handle"
           onMouseOver={(event: MouseEvent) => {
             // stop propagation when we over the handles, to avoid focus underlying block
             // when the handles are in absolute position outside of the current block

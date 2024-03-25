@@ -20,11 +20,17 @@ Columns168BlockDefinition.name = 'Section 2-1'
 Columns168BlockDefinition.kind = 'columns168'
 Columns168BlockDefinition.columns = [16, 8]
 Columns168BlockDefinition.children = [Column1, Column2]
-Columns168BlockDefinition.renderMenu = () => <div className="cmeditor-ui-block">
+Columns168BlockDefinition.renderMenu = () => (
+  <div className="rmdeditor-ui-block">
     <Row gutter={12}>
-        <Col span={16}><div className="cmeditor-ui-block-col"></div></Col>
-        <Col span={8}><div className="cmeditor-ui-block-col"></div></Col>
+      <Col span={16}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
+      <Col span={8}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
     </Row>
-</div>
+  </div>
+)
 
 export default Columns168BlockDefinition

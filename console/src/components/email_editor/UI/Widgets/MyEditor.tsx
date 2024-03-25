@@ -357,7 +357,7 @@ const MyToolbar = (props: any) => {
     fontColorValue = matchFontColor[0].fontColor
 
   return (
-    <div ref={ref} className="cmeditor-toolbar">
+    <div ref={ref} className="rmdeditor-toolbar">
       {props.toolbarButtons.includes('bold') && (
         <FormatButton format="bold" icon={<BoldOutlined />} />
       )}
@@ -460,7 +460,7 @@ const MyToolbar = (props: any) => {
             options={fontFamilies}
           />
           <ColorPickerLight
-            className="cmeditor-toolbar-color"
+            className="rmdeditor-toolbar-color"
             size="small"
             value={fontColorValue}
             onMouseDown={() => {
@@ -483,7 +483,7 @@ const MyToolbar = (props: any) => {
           />
         </>
       )}
-      <div className="cmeditor-toolbar-overlay"></div>
+      <div className="rmdeditor-toolbar-overlay"></div>
     </div>
   )
 }
@@ -492,7 +492,7 @@ const FormatButton = (props: { format: string; icon: React.ReactNode }) => {
   const editor = useSlate()
   return (
     <Button
-      className="cmeditor-toolbar-button"
+      className="rmdeditor-toolbar-button"
       reversed
       active={isFormatActive(editor, props.format)}
       onMouseDown={(event: any) => {
@@ -510,7 +510,7 @@ const BlockButton = (props: { format: string; icon: React.ReactNode }) => {
 
   return (
     <Button
-      className="cmeditor-toolbar-button"
+      className="rmdeditor-toolbar-button"
       reversed
       active={isBlockActive(editor, props.format)}
       onMouseDown={(event: any) => {
@@ -538,7 +538,7 @@ const Button = React.forwardRef(
     >,
     ref: any
     // ref: Ref<OrNull<HTMLSpanElement>>
-  ) => <div {...props} ref={ref} className={cn('cmeditor-toolbar-button', { active: active })} />
+  ) => <div {...props} ref={ref} className={cn('rmdeditor-toolbar-button', { active: active })} />
 )
 
 export default MyEditor

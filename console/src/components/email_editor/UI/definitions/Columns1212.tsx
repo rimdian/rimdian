@@ -18,13 +18,19 @@ const Columns1212BlockDefinition: BlockDefinitionInterface = cloneDeep(SectionBl
 
 Columns1212BlockDefinition.name = 'Section 1-1'
 Columns1212BlockDefinition.kind = 'columns1212'
-Columns1212BlockDefinition.columns = [12,12]
+Columns1212BlockDefinition.columns = [12, 12]
 Columns1212BlockDefinition.children = [Column1, Column2]
-Columns1212BlockDefinition.renderMenu = () => <div className="cmeditor-ui-block">
+Columns1212BlockDefinition.renderMenu = () => (
+  <div className="rmdeditor-ui-block">
     <Row gutter={12}>
-        <Col span={12}><div className="cmeditor-ui-block-col"></div></Col>
-        <Col span={12}><div className="cmeditor-ui-block-col"></div></Col>
+      <Col span={12}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
+      <Col span={12}>
+        <div className="rmdeditor-ui-block-col"></div>
+      </Col>
     </Row>
-</div>
+  </div>
+)
 
 export default Columns1212BlockDefinition

@@ -69,10 +69,10 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
     // />
 
     return (
-      <div className="cmeditor-padding-h-l">
+      <div className="rmdeditor-padding-h-l">
         <Form.Item
           label="Content"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -123,7 +123,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             {props.block.data.button.text !== '' && (
               <>
                 {props.block.data.button.text} &nbsp;&nbsp;
-                <span className="cmeditor-ui-link">update</span>
+                <span className="rmdeditor-ui-link">update</span>
               </>
             )}
           </Popover>
@@ -132,7 +132,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Button URL"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -150,7 +150,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Button color"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -167,7 +167,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Font family"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -185,7 +185,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Font style"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -204,7 +204,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Width"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -270,7 +270,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
           </Radio.Group>
         </Form.Item>
 
-        {/* <Form.Item label="Width" labelAlign="left" className="cmeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
+        {/* <Form.Item label="Width" labelAlign="left" className="rmdeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
                 <InputNumber
                     style={{ width: '100%' }}
                     value={parseInt(props.block.data.button.width || '100px')}
@@ -290,7 +290,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Inner padding"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -332,7 +332,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
           </Input.Group>
         </Form.Item>
 
-        {/* <Form.Item label="Height" labelAlign="left" className="cmeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
+        {/* <Form.Item label="Height" labelAlign="left" className="rmdeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
                 <InputNumber
                     style={{ width: '100%' }}
                     value={parseInt(props.block.data.button.height)}
@@ -352,7 +352,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Align"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -383,7 +383,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Padding control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -412,7 +412,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -445,7 +445,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -465,7 +465,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Border control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -492,7 +492,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Border radius"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -524,7 +524,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Borders"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -545,7 +545,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border top"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -561,7 +561,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border right"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -577,7 +577,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border bottom"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -593,7 +593,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border left"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -753,8 +753,8 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
 
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="cmeditor-ui-block cmeditor-square">
-        <div className="cmeditor-ui-block-icon">
+      <div className="rmdeditor-ui-block rmdeditor-square">
+        <div className="rmdeditor-ui-block-icon">
           <div
             style={{
               border: '1px solid #1890ff',

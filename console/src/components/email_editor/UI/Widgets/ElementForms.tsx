@@ -28,7 +28,7 @@ const fontWeights = [
 
 const labelProps: any = {
   labelAlign: 'left',
-  className: 'cmeditor-form-item-align-right',
+  className: 'rmdeditor-form-item-align-right',
   labelCol: { span: 10 },
   wrapperCol: { span: 14 }
 }

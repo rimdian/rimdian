@@ -29,11 +29,11 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
     // console.log('render settings', block.data)
 
     return (
-      <div className="cmeditor-padding-h-l">
+      <div className="rmdeditor-padding-h-l">
         <Form.Item
           label="Vertical align"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -64,7 +64,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Background color"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -83,7 +83,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Padding control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -112,7 +112,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -146,7 +146,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -166,7 +166,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Border control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -193,7 +193,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Border radius"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -225,7 +225,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Borders"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -246,7 +246,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border top"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -262,7 +262,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border right"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -278,7 +278,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border bottom"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -294,7 +294,7 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Border left"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >

@@ -67,10 +67,10 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
   const isDeletable = props.blockDefinitions[props.block.kind].isDeletable
 
   return (
-    <div className="cmeditor-selected-block-buttons">
+    <div className="rmdeditor-selected-block-buttons">
       {isDraggable === true && (
         <Tooltip placement="left" title="Move">
-          <div className="cmeditor-selected-block-button">
+          <div className="rmdeditor-selected-block-button">
             <DragOutlined style={{ verticalAlign: 'middle', cursor: 'grab' }} />
           </div>
         </Tooltip>
@@ -79,7 +79,7 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
       {isDraggable === true && (
         <Tooltip placement="left" title="Clone">
           <div
-            className="cmeditor-selected-block-button"
+            className="rmdeditor-selected-block-button"
             onClick={props.cloneBlock.bind(null, props.block)}
           >
             <CopyOutlined style={{ verticalAlign: 'middle' }} />
@@ -89,7 +89,7 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
 
       {isDraggable === true && (
         <Tooltip placement="left" title="Save">
-          <div className="cmeditor-selected-block-button" onClick={toggleModal}>
+          <div className="rmdeditor-selected-block-button" onClick={toggleModal}>
             <SaveOutlined style={{ verticalAlign: 'middle' }} />
           </div>
         </Tooltip>
@@ -103,7 +103,7 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
             okText="Yes"
             cancelText="No"
           >
-            <div className="cmeditor-selected-block-button">
+            <div className="rmdeditor-selected-block-button">
               <DeleteOutlined style={{ verticalAlign: 'middle' }} />
             </div>
           </Popconfirm>

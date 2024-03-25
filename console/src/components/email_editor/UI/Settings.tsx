@@ -36,7 +36,7 @@ const Settings = (props: SettingsProps) => {
 
   return (
     <SimpleBar style={{ maxHeight: '100%' }}>
-      <div className="cmeditor-ui-menu-title">Current block settings</div>
+      <div className="rmdeditor-ui-menu-title">Current block settings</div>
       {props.blockDefinition.RenderSettings(settingsProps)}
     </SimpleBar>
   )

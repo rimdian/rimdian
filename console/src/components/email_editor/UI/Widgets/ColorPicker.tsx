@@ -164,7 +164,7 @@ export const ColorPickerLight = (props: ColorPickerInputProps) => {
     >
       <span
         onMouseDown={props.onMouseDown || undefined}
-        className={'cmeditor-color-picker-input-light ' + props.className}
+        className={'rmdeditor-color-picker-input-light ' + props.className}
         style={styles}
       ></span>
     </Dropdown>

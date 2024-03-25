@@ -81,10 +81,10 @@ const column = generateBlockFromDefinition(OneColumnBlockDefinition)
 // column.data.styles.backgroundColor = '#FFFFFF'
 // column.data.styles.borderRadius = '10px'
 
-logo.data.image.src = 'https://cdn.rimdian.com/images/rimdian-email.png'
+logo.data.image.src = 'https://cdn-eu.rimdian.com/images/rimdian-email.png'
 logo.data.image.alt = 'Rimdian'
-logo.data.image.href = 'https://rimdian.com'
-logo.data.image.width = '150px'
+logo.data.image.href = 'https://www.rimdian.com'
+logo.data.image.width = '50px'
 
 // heading.data.align = 'center'
 heading.data.paddingControl = 'separate'
@@ -191,7 +191,11 @@ const DrawerEmailTemplate = (props: {
     {
       utm_source: extractTLD(workspaceCtx.workspace.website_url),
       utm_medium: 'email',
-      engine: 'visual'
+      engine: 'visual',
+      email: {
+        visual_editor_tree: rootBlock
+      },
+      test_data: '{}'
     },
     props.template
   )
@@ -251,11 +255,8 @@ const DrawerEmailTemplate = (props: {
   // layout height
 
   const doc = document.querySelector('.ant-drawer')
-  const topbarHeight = 55
-  const footerHeight = 53
-  const contentHeight = doc
-    ? parseInt(window.getComputedStyle(doc).height) - topbarHeight - footerHeight
-    : 0
+  const topbarHeight = 65
+  const contentHeight = doc ? parseInt(window.getComputedStyle(doc).height) - topbarHeight : 0
 
   return (
     <Drawer
@@ -265,6 +266,8 @@ const DrawerEmailTemplate = (props: {
       width={tab === 'settings' ? 900 : '95%'}
       open={true}
       onClose={() => props.setDrawserVisible(false)}
+      className={CSS.drawerBodyNoPadding}
+      rootClassName={CSS.drawerNoTransition}
       extra={
         <div style={{ textAlign: 'right' }}>
           <Space>
@@ -291,7 +294,7 @@ const DrawerEmailTemplate = (props: {
                     .validateFields()
                     .then((values: any) => {
                       // compile html
-                      if (values.editor === 'visual') {
+                      if (values.engine === 'visual') {
                         const result = ExportHTML(values.editorData)
                         if (result.errors && result.errors.length > 0) {
                           message.error(result.errors[0].formattedMessage)
@@ -312,11 +315,11 @@ const DrawerEmailTemplate = (props: {
                             [
                               'name',
                               'id',
-                              'from_address',
-                              'from_name',
-                              'subject',
                               'engine',
-                              'reply_to'
+                              'email.from_address',
+                              'email.from_name',
+                              'email.subject',
+                              'email.reply_to'
                             ].indexOf(field.name['0']) !== -1
                           ) {
                             setTab('settings')
@@ -352,371 +355,373 @@ const DrawerEmailTemplate = (props: {
           ]}
         />
       </div>
-
-      <Form form={form} layout="vertical" initialValues={initialValues}>
-        <Tabs
-          activeKey={tab}
-          centered
-          onChange={(k) => setTab(k)}
-          tabBarStyle={{ display: 'none' }}
-          items={[
-            {
-              key: 'settings',
-              label: '1. Settings',
-              children: (
-                <>
-                  <Row gutter={24}>
-                    <Col span={12}>
-                      <Form.Item name="name" label="Template name" rules={[{ required: true }]}>
-                        <Input
-                          placeholder="i.e: Newsletter ABC"
-                          onChange={(e: any) => {
-                            if (!props.template) {
-                              const id = kebabCase(e.target.value)
-                              form.setFieldsValue({ id: id })
+      <div style={{ position: 'relative' }}>
+        <Form form={form} layout="vertical" initialValues={initialValues}>
+          <Tabs
+            activeKey={tab}
+            centered
+            onChange={(k) => setTab(k)}
+            tabBarStyle={{ display: 'none' }}
+            items={[
+              {
+                key: 'settings',
+                label: '1. Settings',
+                children: (
+                  <div className={CSS.padding_a_l}>
+                    <Row gutter={24}>
+                      <Col span={12}>
+                        <Form.Item name="name" label="Template name" rules={[{ required: true }]}>
+                          <Input
+                            placeholder="i.e: Newsletter ABC"
+                            onChange={(e: any) => {
+                              if (!props.template) {
+                                const id = kebabCase(e.target.value)
+                                form.setFieldsValue({ id: id })
+                              }
+                            }}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item
+                          name="id"
+                          label="Template ID"
+                          rules={[
+                            {
+                              required: true,
+                              type: 'string',
+                              pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
+                              message: Messages.InvalidIdFormat
                             }
-                          }}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name="id"
-                        label="Template ID"
-                        rules={[
+                          ]}
+                        >
+                          <Input
+                            disabled={props.template ? true : false}
+                            placeholder="i.e: newsletter-abc"
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Form.Item
+                      name="engine"
+                      label="Editor"
+                      rules={[{ required: true, type: 'string' }]}
+                    >
+                      <InfoRadioGroup
+                        layout="vertical"
+                        span={12}
+                        options={[
                           {
-                            required: true,
-                            type: 'string',
-                            pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
-                            message: Messages.InvalidIdFormat
+                            key: 'visual',
+                            title: <>Drag'n drop</>,
+                            icon: <FontAwesomeIcon icon={faPalette} />,
+                            content: (
+                              <span>Visual drag'n drop editor, for non-technical users.</span>
+                            )
+                          },
+                          {
+                            key: 'code',
+                            title: <>Code</>,
+                            icon: <FontAwesomeIcon icon={faCode} />,
+                            content: (
+                              <span>
+                                Code editor with templating engine, for maximum control over HTML.
+                              </span>
+                            )
                           }
                         ]}
-                      >
-                        <Input
-                          disabled={props.template ? true : false}
-                          placeholder="i.e: newsletter-abc"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
+                        onChange={() => {
+                          // triggers are unique for each kind, reset them when switching
+                          // form.setFieldsValue({ triggers: [] })
+                        }}
+                      />
+                    </Form.Item>
 
-                  <Form.Item
-                    name="engine"
-                    label="Editor"
-                    rules={[{ required: true, type: 'string' }]}
-                  >
-                    <InfoRadioGroup
-                      layout="vertical"
-                      span={12}
-                      options={[
-                        {
-                          key: 'visual',
-                          title: <>Drag'n drop</>,
-                          icon: <FontAwesomeIcon icon={faPalette} />,
-                          content: <span>Visual drag'n drop editor, for non-technical users.</span>
-                        },
-                        {
-                          key: 'code',
-                          title: <>Code</>,
-                          icon: <FontAwesomeIcon icon={faCode} />,
-                          content: (
-                            <span>
-                              Code editor with templating engine, for maximum control over HTML.
-                            </span>
+                    <Row gutter={24}>
+                      <Col span={8}>
+                        <Form.Item
+                          name={['email', 'from_address']}
+                          label="Sender email address"
+                          rules={[{ required: true, type: 'email' }]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          name={['email', 'from_name']}
+                          label="Sender name"
+                          rules={[{ required: true, type: 'string' }]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          name={['email', 'reply_to']}
+                          label="Reply to"
+                          rules={[{ required: false, type: 'email' }]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Form.Item
+                      name={['email', 'subject']}
+                      label="Email subject"
+                      rules={[{ required: true, type: 'string' }]}
+                    >
+                      <Input placeholder="Templating markup allowed" />
+                    </Form.Item>
+
+                    <Divider plain className={CSS.padding_v_l}>
+                      URL Tracking
+                    </Divider>
+
+                    <Row gutter={24}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="utm_source"
+                          label="utm_source"
+                          rules={[{ required: false, type: 'string' }]}
+                        >
+                          <Input placeholder="business.com" />
+                        </Form.Item>
+                        <Form.Item
+                          name="utm_medium"
+                          label="utm_medium"
+                          rules={[{ required: false, type: 'string' }]}
+                        >
+                          <Input placeholder="email" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          name="utm_campaign"
+                          label="utm_campaign"
+                          rules={[{ required: false, type: 'string' }]}
+                        >
+                          <Input />
+                        </Form.Item>
+                        <Form.Item
+                          name="utm_content"
+                          label="utm_content"
+                          rules={[{ required: false, type: 'string' }]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+                )
+              },
+              {
+                key: 'template',
+                label: '2. Template',
+                children: (
+                  <>
+                    <Form.Item noStyle shouldUpdate={true}>
+                      {({ getFieldValue }: any) => {
+                        if (getFieldValue('engine') === 'visual') {
+                          return (
+                            <div>
+                              <Form.Item noStyle name={['email', 'visual_editor_tree']}>
+                                <Editor
+                                  blockDefinitions={{
+                                    root: RootBlockDefinition,
+                                    column: ColumnBlockDefinition,
+                                    oneColumn: OneColumnBlockDefinition,
+                                    columns168: Columns168BlockDefinition,
+                                    columns204: Columns204BlockDefinition,
+                                    columns420: Columns420BlockDefinition,
+                                    columns816: Columns816BlockDefinition,
+                                    columns888: Columns888BlockDefinition,
+                                    columns1212: Columns1212BlockDefinition,
+                                    columns6666: Columns6666BlockDefinition,
+                                    image: ImageBlockDefinition,
+                                    divider: DividerBlockDefinition,
+                                    button: ButtonBlockDefinition,
+                                    text: TextBlockDefinition,
+                                    heading: HeadingBlockDefinition
+                                  }}
+                                  savedBlocks={workspaceCtx.workspace.emailBlocks || []}
+                                  templateData={getFieldValue('test_data')}
+                                  selectedBlockId={divider.id}
+                                  value={rootBlock}
+                                  onChange={(_newTree) => {
+                                    // console.log('new tree', newTree)
+                                  }}
+                                  renderSelectedBlockButtons={(props: SelectedBlockButtonsProp) => (
+                                    <SelectedBlockButtons {...props} />
+                                  )}
+                                  deviceWidth={DesktopWidth}
+                                >
+                                  <Layout form={form} macros={macros} height={contentHeight} />
+                                </Editor>
+                              </Form.Item>
+                            </div>
                           )
                         }
-                      ]}
-                      onChange={() => {
-                        // triggers are unique for each kind, reset them when switching
-                        // form.setFieldsValue({ triggers: [] })
-                      }}
-                    />
-                  </Form.Item>
 
-                  <Row gutter={24}>
-                    <Col span={8}>
-                      <Form.Item
-                        name="from_address"
-                        label="Sender email address"
-                        rules={[{ required: true, type: 'email' }]}
-                      >
-                        <Input />
-                      </Form.Item>
-                    </Col>
-                    <Col span={8}>
-                      <Form.Item
-                        name="from_name"
-                        label="Sender name"
-                        rules={[{ required: true, type: 'string' }]}
-                      >
-                        <Input />
-                      </Form.Item>
-                    </Col>
-                    <Col span={8}>
-                      <Form.Item
-                        name="reply_to"
-                        label="Reply to"
-                        rules={[{ required: false, type: 'email' }]}
-                      >
-                        <Input />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item
-                    name="subject"
-                    label="Email subject"
-                    rules={[{ required: true, type: 'string' }]}
-                  >
-                    <Input placeholder="Templating markup allowed" />
-                  </Form.Item>
-
-                  <Divider plain className={CSS.padding_v_l}>
-                    URL Tracking
-                  </Divider>
-
-                  <Row gutter={24}>
-                    <Col span={12}>
-                      <Form.Item
-                        name="utm_source"
-                        label="utm_source"
-                        rules={[{ required: false, type: 'string' }]}
-                      >
-                        <Input placeholder="business.com" />
-                      </Form.Item>
-                      <Form.Item
-                        name="utm_medium"
-                        label="utm_medium"
-                        rules={[{ required: false, type: 'string' }]}
-                      >
-                        <Input placeholder="email" />
-                      </Form.Item>
-                    </Col>
-
-                    <Col span={12}>
-                      <Form.Item
-                        name="utm_campaign"
-                        label="utm_campaign"
-                        rules={[{ required: false, type: 'string' }]}
-                      >
-                        <Input />
-                      </Form.Item>
-                      <Form.Item
-                        name="utm_content"
-                        label="utm_content"
-                        rules={[{ required: false, type: 'string' }]}
-                      >
-                        <Input />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </>
-              )
-            },
-            {
-              key: 'template',
-              label: '2. Template',
-              children: (
-                <>
-                  <Form.Item noStyle shouldUpdate={true}>
-                    {({ getFieldValue }: any) => {
-                      if (getFieldValue('engine') === 'visual') {
-                        return (
-                          <div>
-                            <Form.Item noStyle name="email.content">
-                              <Editor
-                                blockDefinitions={{
-                                  root: RootBlockDefinition,
-                                  column: ColumnBlockDefinition,
-                                  oneColumn: OneColumnBlockDefinition,
-                                  columns168: Columns168BlockDefinition,
-                                  columns204: Columns204BlockDefinition,
-                                  columns420: Columns420BlockDefinition,
-                                  columns816: Columns816BlockDefinition,
-                                  columns888: Columns888BlockDefinition,
-                                  columns1212: Columns1212BlockDefinition,
-                                  columns6666: Columns6666BlockDefinition,
-                                  image: ImageBlockDefinition,
-                                  divider: DividerBlockDefinition,
-                                  button: ButtonBlockDefinition,
-                                  text: TextBlockDefinition,
-                                  heading: HeadingBlockDefinition
-                                }}
-                                savedBlocks={workspaceCtx.workspace.emailBlocks || []}
-                                templateData={getFieldValue('test_data')}
-                                selectedBlockId={divider.id}
-                                value={rootBlock}
-                                onChange={(_newTree) => {
-                                  // console.log('new tree', newTree)
-                                }}
-                                renderSelectedBlockButtons={(props: SelectedBlockButtonsProp) => (
-                                  <SelectedBlockButtons {...props} />
-                                )}
-                                deviceWidth={DesktopWidth}
-                              >
-                                <Layout form={form} macros={macros} height={contentHeight} />
-                              </Editor>
-                            </Form.Item>
-                          </div>
-                        )
-                      }
-
-                      if (getFieldValue('engine') === 'code') {
-                        return (
-                          <>
-                            <Row gutter={24} className={CSS.margin_a_m}>
-                              <Col span={12}>
-                                <Tabs
-                                  tabBarExtraContent={
-                                    <div style={{ width: '250px' }}>
-                                      <Tooltip title="Macros page">
-                                        <div>
-                                          <Form.Item noStyle name="template_macro_id">
-                                            <Select
-                                              style={{ width: '100%' }}
-                                              dropdownMatchSelectWidth={false}
-                                              allowClear={true}
-                                              size="small"
-                                              placeholder="Select macros page"
-                                              options={macros.map((x: any) => {
-                                                return { label: x.name, value: x.id }
-                                              })}
-                                            />
-                                          </Form.Item>
-                                        </div>
-                                      </Tooltip>
-                                    </div>
-                                  }
-                                  defaultActiveKey={contentField}
-                                  onChange={(value: any) => {
-                                    setContentField(value)
-                                    decorateContent(
-                                      form.getFieldValue(value),
-                                      form.getFieldValue('test_data'),
-                                      form.getFieldValue('template_macro_id')
-                                    )
-                                  }}
-                                >
-                                  <Tabs.TabPane tab="HTML" key="content">
-                                    <Form.Item
-                                      name="content"
-                                      rules={[{ required: false, type: 'string' }]}
-                                    >
-                                      <AceInput
-                                        id="widgetContent"
-                                        width="600px"
-                                        height="300px"
-                                        mode="nunjucks"
-                                      />
-                                    </Form.Item>
-                                  </Tabs.TabPane>
-
-                                  <Tabs.TabPane tab="Text" key="text">
-                                    <Form.Item
-                                      name="text"
-                                      rules={[{ required: false, type: 'string' }]}
-                                    >
-                                      <AceInput
-                                        id="textContent"
-                                        width="600px"
-                                        height="300px"
-                                        mode="nunjucks"
-                                      />
-                                    </Form.Item>
-                                  </Tabs.TabPane>
-                                </Tabs>
-
-                                <Form.Item
-                                  label="Test data"
-                                  name="test_data"
-                                  validateFirst={true}
-                                  rules={[
-                                    {
-                                      validator: (_xxx, value) => {
-                                        // check if data is valid json
-                                        try {
-                                          if (JSON.parse(value)) {
-                                          }
-                                          return Promise.resolve(undefined)
-                                        } catch (e: any) {
-                                          return Promise.reject(
-                                            'Your test variables is not a valid JSON object!'
-                                          )
-                                        }
-                                      }
-                                    },
-                                    {
-                                      required: false,
-                                      type: 'object',
-                                      transform: (value: any) => {
-                                        try {
-                                          const parsed = JSON.parse(value)
-                                          return parsed
-                                        } catch (e: any) {
-                                          return value
-                                        }
-                                      }
+                        if (getFieldValue('engine') === 'code') {
+                          return (
+                            <>
+                              <Row gutter={24} className={CSS.margin_a_m}>
+                                <Col span={12}>
+                                  <Tabs
+                                    tabBarExtraContent={
+                                      <div style={{ width: '250px' }}>
+                                        <Tooltip title="Macros page">
+                                          <div>
+                                            <Form.Item noStyle name="template_macro_id">
+                                              <Select
+                                                style={{ width: '100%' }}
+                                                dropdownMatchSelectWidth={false}
+                                                allowClear={true}
+                                                size="small"
+                                                placeholder="Select macros page"
+                                                options={macros.map((x: any) => {
+                                                  return { label: x.name, value: x.id }
+                                                })}
+                                              />
+                                            </Form.Item>
+                                          </div>
+                                        </Tooltip>
+                                      </div>
                                     }
-                                  ]}
-                                >
-                                  <AceInput
-                                    id="test_data"
-                                    width="600px"
-                                    height="150px"
-                                    mode="json"
-                                  />
-                                </Form.Item>
-                                <Form.Item
-                                  name="css_inlining"
+                                    defaultActiveKey={contentField}
+                                    onChange={(value: any) => {
+                                      setContentField(value)
+                                      decorateContent(
+                                        form.getFieldValue(value),
+                                        form.getFieldValue('test_data'),
+                                        form.getFieldValue('template_macro_id')
+                                      )
+                                    }}
+                                  >
+                                    <Tabs.TabPane tab="HTML" key="content">
+                                      <Form.Item
+                                        name={['email', 'content']}
+                                        rules={[{ required: false, type: 'string' }]}
+                                      >
+                                        <AceInput
+                                          id="widgetContent"
+                                          width="600px"
+                                          height="300px"
+                                          mode="nunjucks"
+                                        />
+                                      </Form.Item>
+                                    </Tabs.TabPane>
+
+                                    <Tabs.TabPane tab="Text" key="text">
+                                      <Form.Item
+                                        name={['email', 'text']}
+                                        rules={[{ required: false, type: 'string' }]}
+                                      >
+                                        <AceInput
+                                          id="textContent"
+                                          width="600px"
+                                          height="300px"
+                                          mode="nunjucks"
+                                        />
+                                      </Form.Item>
+                                    </Tabs.TabPane>
+                                  </Tabs>
+
+                                  <Form.Item
+                                    label="Test data"
+                                    name="test_data"
+                                    validateFirst={true}
+                                    rules={[
+                                      {
+                                        validator: (_xxx, value) => {
+                                          // check if data is valid json
+                                          try {
+                                            if (JSON.parse(value)) {
+                                            }
+                                            return Promise.resolve(undefined)
+                                          } catch (e: any) {
+                                            return Promise.reject(
+                                              'Your test variables is not a valid JSON object!'
+                                            )
+                                          }
+                                        }
+                                      },
+                                      {
+                                        required: false,
+                                        type: 'object',
+                                        transform: (value: any) => {
+                                          try {
+                                            const parsed = JSON.parse(value)
+                                            return parsed
+                                          } catch (e: any) {
+                                            return value
+                                          }
+                                        }
+                                      }
+                                    ]}
+                                  >
+                                    <AceInput
+                                      id="test_data"
+                                      width="600px"
+                                      height="150px"
+                                      mode="json"
+                                    />
+                                  </Form.Item>
+                                  {/* <Form.Item
+                                  name="email.css_inlining"
                                   label="CSS inlining"
                                   rules={[{ required: false, type: 'boolean' }]}
                                   valuePropName="checked"
                                 >
                                   <Switch />
-                                </Form.Item>
-                              </Col>
+                                </Form.Item> */}
+                                </Col>
 
-                              <Col span={12} className={CSS.borderLeft.solid1}>
-                                <p className={CSS.padding_t_s}>Preview</p>
+                                <Col span={12} className={CSS.borderLeft.solid1}>
+                                  <p className={CSS.padding_t_s}>Preview</p>
 
-                                <Form.Item
-                                  noStyle
-                                  shouldUpdate={(prevValues, curValues) =>
-                                    prevValues.content !== curValues.content ||
-                                    prevValues.text !== curValues.text ||
-                                    prevValues.test_data !== curValues.test_data ||
-                                    prevValues.template_macro_id !== curValues.template_macro_id
-                                  }
-                                >
-                                  {({ getFieldValue }: any) => {
-                                    decorateContent(
-                                      getFieldValue(contentField),
-                                      getFieldValue('test_data'),
-                                      getFieldValue('template_macro_id')
-                                    )
-                                    return (
-                                      <IframeSandbox
-                                        content={contentDecorated}
-                                        sizeId="previewContent"
-                                        id="templateCompiled"
-                                      />
-                                    )
-                                  }}
-                                </Form.Item>
-                              </Col>
-                            </Row>
-                          </>
-                        )
-                      }
-                    }}
-                  </Form.Item>
-                </>
-              )
-            }
-          ]}
-        />
-      </Form>
-
+                                  <Form.Item
+                                    noStyle
+                                    dependencies={[
+                                      ['email', 'content'],
+                                      ['email', 'text'],
+                                      'test_data',
+                                      'template_macro_id'
+                                    ]}
+                                  >
+                                    {({ getFieldValue }: any) => {
+                                      decorateContent(
+                                        getFieldValue(contentField),
+                                        getFieldValue('test_data'),
+                                        getFieldValue('template_macro_id')
+                                      )
+                                      return (
+                                        <IframeSandbox
+                                          content={contentDecorated}
+                                          sizeId="previewContent"
+                                          id="templateCompiled"
+                                        />
+                                      )
+                                    }}
+                                  </Form.Item>
+                                </Col>
+                              </Row>
+                            </>
+                          )
+                        }
+                      }}
+                    </Form.Item>
+                  </>
+                )
+              }
+            ]}
+          />
+        </Form>
+      </div>
       {/* <Form
         form={form}
         initialValues={initialValues}

@@ -476,6 +476,18 @@ const CSS = {
   cascaderWide: css({
     width: '600px'
     // height: '300px'
+  }),
+
+  drawerNoTransition: css({
+    '& .ant-drawer-content-wrapper': {
+      transition: 'none !important'
+    }
+  }),
+
+  drawerBodyNoPadding: css({
+    '& .ant-drawer-body': {
+      padding: 0
+    }
   })
 }
 

@@ -28,12 +28,12 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
 
   RenderSettings: (props: BlockRenderSettingsProps) => {
     return (
-      <div className="cmeditor-padding-h-l">
+      <div className="rmdeditor-padding-h-l">
         {/* <Form> */}
         <Form.Item
           label="Border"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -51,7 +51,7 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Width"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -115,7 +115,7 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Align"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -144,7 +144,7 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Background color"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -163,7 +163,7 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
         <Form.Item
           label="Padding control"
           labelAlign="left"
-          className="cmeditor-form-item-align-right"
+          className="rmdeditor-form-item-align-right"
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
@@ -192,7 +192,7 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -225,7 +225,7 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
             <Form.Item
               label="Paddings"
               labelAlign="left"
-              className="cmeditor-form-item-align-right"
+              className="rmdeditor-form-item-align-right"
               labelCol={{ span: 10 }}
               wrapperCol={{ span: 14 }}
             >
@@ -308,8 +308,8 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
 
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="cmeditor-ui-block square">
-        <div className="cmeditor-ui-block-icon">
+      <div className="rmdeditor-ui-block square">
+        <div className="rmdeditor-ui-block-icon">
           <div
             style={{ backgroundColor: '#1890ff', height: '2px', margin: '18px 12px 18px 12px' }}
           ></div>

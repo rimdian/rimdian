@@ -10,8 +10,10 @@ const OneColumnBlockDefinition: BlockDefinitionInterface = cloneDeep(SectionBloc
 OneColumnBlockDefinition.kind = 'oneColumn'
 OneColumnBlockDefinition.children = [cloneDeep(Column)]
 
-OneColumnBlockDefinition.renderMenu = () => <div className="cmeditor-ui-block">
-    <div className="cmeditor-ui-block-col"></div>
-</div>
+OneColumnBlockDefinition.renderMenu = () => (
+  <div className="rmdeditor-ui-block">
+    <div className="rmdeditor-ui-block-col"></div>
+  </div>
+)
 
 export default OneColumnBlockDefinition

@@ -233,32 +233,34 @@ const Element = (props: any) => {
 }
 
 const Leaf = (props: any) => {
+  let content = props.children
+
   // console.log('leaf', leaf)
   if (props.leaf.bold) {
-    props.children = <strong>{props.children}</strong>
+    content = <strong>{content}</strong>
   }
 
   if (props.leaf.italic) {
-    props.children = <em>{props.children}</em>
+    content = <em>{content}</em>
   }
 
   if (props.leaf.underline) {
-    props.children = <u>{props.children}</u>
+    content = <u>{content}</u>
   }
 
   if (props.leaf.fontSize) {
-    props.children = <span style={{ fontSize: props.leaf.fontSize }}>{props.children}</span>
+    content = <span style={{ fontSize: props.leaf.fontSize }}>{content}</span>
   }
 
   if (props.leaf.fontFamily) {
-    props.children = <span style={{ fontFamily: props.leaf.fontFamily }}>{props.children}</span>
+    content = <span style={{ fontFamily: props.leaf.fontFamily }}>{content}</span>
   }
 
   if (props.leaf.fontColor) {
-    props.children = <span style={{ color: props.leaf.fontColor }}>{props.children}</span>
+    content = <span style={{ color: props.leaf.fontColor }}>{content}</span>
   }
 
-  return <span {...props.attributes}>{props.children}</span>
+  return <span {...props.attributes}>{content}</span>
 }
 
 const fontFamilies = [

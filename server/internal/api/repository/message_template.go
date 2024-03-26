@@ -74,16 +74,18 @@ func (repo *RepositoryImpl) GetMessageTemplate(ctx context.Context, workspaceID 
 		return
 	}
 
+	template = &entity.MessageTemplate{}
+
 	if tx != nil {
-		err = sqlscan.Get(ctx, tx, &template, query, args...)
+		err = sqlscan.Get(ctx, tx, template, query, args...)
 	} else {
-		conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
-		if err != nil {
-			return nil, err
+		conn, errConn := repo.GetWorkspaceConnection(ctx, workspaceID)
+		if errConn != nil {
+			return nil, errConn
 		}
 		defer conn.Close()
 
-		err = sqlscan.Get(ctx, conn, &template, query, args...)
+		err = sqlscan.Get(ctx, conn, template, query, args...)
 	}
 
 	if err != nil {
@@ -110,14 +112,16 @@ func (repo *RepositoryImpl) ListMessageTemplates(ctx context.Context, workspaceI
 
 	lists = []*entity.MessageTemplate{}
 
-	builder := sq.Select("*").From("message_template")
+	builder := sq.Select("t1.*").From("message_template as t1").InnerJoin("(SELECT id, MAX(version) AS max_version FROM message_template GROUP BY id) t2 ON t1.id = t2.id AND t1.version = t2.max_version")
 
 	if params.Channel != nil {
-		builder = builder.Where(sq.Eq{"channel": *params.Channel})
+		builder = builder.Where(sq.Eq{"t1.channel": *params.Channel})
 	}
 
 	// fetch lists
 	query, args, err := builder.ToSql()
+
+	// log.Println("query", query)
 
 	if err != nil {
 		err = eris.Wrapf(err, "ListMessageTemplates fetch query: %v, args: %+v", query, args)

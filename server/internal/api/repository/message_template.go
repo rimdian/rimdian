@@ -24,8 +24,8 @@ func (repo *RepositoryImpl) ListMessageTemplates(ctx context.Context, workspaceI
 
 	builder := sq.Select("*").From("message_template")
 
-	if params.Channel != "" {
-		builder = builder.Where("channel = ?", params.Channel)
+	if params.Channel != nil {
+		builder = builder.Where(sq.Eq{"channel": *params.Channel})
 	}
 
 	// fetch lists

@@ -90,7 +90,7 @@ logo.data.image.width = '50px'
 heading.data.paddingControl = 'separate'
 heading.data.paddingTop = '40px'
 heading.data.paddingBottom = '40px'
-heading.data.editorData[0].children[0].text = 'Hi {{ user.firstName }} 👋'
+heading.data.editorData[0].children[0].text = 'Hi {{ user.first_name }} 👋'
 
 divider.data.paddingControl = 'separate'
 divider.data.paddingTop = '40px'
@@ -195,7 +195,38 @@ const DrawerEmailTemplate = (props: {
       email: {
         visual_editor_tree: rootBlock
       },
-      test_data: '{}'
+      test_data: `{
+  "user": {
+    "external_id": "user_id",
+    "created_at": "2022-10-30T22:21:48.020Z",
+    "is_authenticated": true,
+    "signed_up_at": "2022-10-30T22:21:48.020Z",
+    "timezone": "Europe/Paris",
+    "language": "fr",
+    "country": "FR",
+    "consent_all": true,
+    "consent_personalization": true,
+    "consent_marketing": true,
+    "latitude": 123.123,
+    "longitude": 123.123,
+    "first_name": "John",
+    "last_name": "Doe",
+    "gender": "male",
+    "birthday": "1980-01-01",
+    "photo_url": "https://photo-url.com/photo.jpg",
+    "email": "john@doe.com",
+    "email_md5": "xxxxx",
+    "email_sha1": "xxxxx",
+    "email_sha256": "xxxxx",
+    "telephone": "+33601010101",
+    "address_line_1": "abc",
+    "address_line_2": "abc",
+    "city": "Paris",
+    "region": "Ile de France",
+    "postal_code": "75000",
+    "state": "abc"
+  }
+}`
     },
     props.template
   )
@@ -267,7 +298,7 @@ const DrawerEmailTemplate = (props: {
       open={true}
       onClose={() => props.setDrawserVisible(false)}
       className={CSS.drawerBodyNoPadding}
-      rootClassName={CSS.drawerNoTransition}
+      // rootClassName={CSS.drawerNoTransition}
       extra={
         <div style={{ textAlign: 'right' }}>
           <Space>

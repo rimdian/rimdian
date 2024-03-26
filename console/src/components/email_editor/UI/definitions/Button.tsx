@@ -1,6 +1,6 @@
 /* eslint-disable no-script-url */
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
 import { Popover, Button, Form, InputNumber, Divider, Radio, Input, Select } from 'antd'
@@ -13,7 +13,6 @@ import {
   faAlignRight,
   faHandPointer
 } from '@fortawesome/free-solid-svg-icons'
-// import { MobileWidth } from '../Layout'
 import ColorPickerInput from '../Widgets/ColorPicker'
 import FontStyleInputs from '../Widgets/FontStyleInputs'
 import { Fonts } from '../Widgets/ElementForms'
@@ -104,8 +103,8 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
             }
             title="Alternative text"
             trigger="click"
-            visible={textModalVisible}
-            onVisibleChange={(visible) => {
+            open={textModalVisible}
+            onOpenChange={(visible) => {
               setTextModalVisible(visible)
               setTimeout(() => {
                 if (visible)

@@ -1,17 +1,22 @@
 import { useState } from 'react'
-import { Row, Col, Button, Tooltip, Space, Radio } from 'antd'
+import { Button, Tooltip, Space, Form, Select } from 'antd'
 import _ from 'lodash'
 import { useEditorContext, EditorContextValue } from '../Editor'
 import Settings from './Settings'
 import { Blocks, BlocksProps } from './Blocks'
 import { BlockInterface } from '../Block'
-import { UndoOutlined, RedoOutlined, ExpandAltOutlined, ShrinkOutlined } from '@ant-design/icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDesktop, faMobileAlt, faEye, faPen } from '@fortawesome/free-solid-svg-icons'
+import {
+  faDesktop,
+  faMobileAlt,
+  faEye,
+  faPen,
+  faChevronLeft,
+  faChevronRight
+} from '@fortawesome/free-solid-svg-icons'
 import Preview from './Preview'
-import cn from 'classnames'
-
-// export type DeviceType = 'mobile' | 'desktop'
+import CSS from 'utils/css'
+import AceInput from 'components/common/input_ace'
 
 export const MobileWidth = 400
 export const DesktopWidth = 960
@@ -31,7 +36,7 @@ const FindBlockById = (currentBlock: BlockInterface, id: string): BlockInterface
 
 export const Layout = (props: any): JSX.Element => {
   const editor: EditorContextValue = useEditorContext()
-  const [modalPreview, setModalPreview] = useState(false)
+  const [isPreview, setIsPreview] = useState(false)
   // const [fullscreen, setFullscreen] = useState(false)
 
   // console.log('render')
@@ -73,12 +78,16 @@ export const Layout = (props: any): JSX.Element => {
   })
 
   const togglePreview = () => {
-    setModalPreview(!modalPreview)
+    setIsPreview(!isPreview)
   }
 
-  // const toggleFullscreen = () => {
-  //   setFullscreen(!fullscreen)
-  // }
+  const toggleDevice = () => {
+    if (editor.deviceWidth === MobileWidth) {
+      editor.setDeviceWidth(DesktopWidth)
+    } else {
+      editor.setDeviceWidth(MobileWidth)
+    }
+  }
 
   const goBackHistory = () => {
     const lastHistoryIndex: number = editor.history.length - 1
@@ -94,143 +103,187 @@ export const Layout = (props: any): JSX.Element => {
       editor.setCurrentHistoryIndex(editor.currentHistoryIndex + 1)
     }
   }
+  const doc = document.querySelector('.rmdeditor-main')
+  const layoutLeftHeight = doc ? parseInt(window.getComputedStyle(doc).height) - 132 : 400
 
   // console.log('layout props', props)
 
   return (
     <div className="rmdeditor-main" style={{ height: props.height || '100vh' }}>
-      <div className="rmdeditor-topbar">
-        <Row>
-          <Col span={6}>
-            <div className="rmdeditor-title"></div>
-          </Col>
-          <Col span={12} className="rmdeditor-path">
-            {modalPreview === false &&
-              pathBlocks.map((block, i) => {
-                const isLast = i === pathBlocks.length - 1 ? true : false
-                return (
-                  <span key={i}>
-                    {isLast === true && (
-                      <span className="rmdeditor-path-item-last">
-                        {editor.blockDefinitions[block.kind]?.name}
-                      </span>
-                    )}
-                    {isLast === false && (
-                      <>
-                        <span
-                          className="rmdeditor-path-item"
-                          onClick={editor.selectBlock.bind(null, block)}
-                        >
-                          {editor.blockDefinitions[block.kind]?.name}
-                        </span>
-                        <span className="rmdeditor-path-divider">/</span>
-                      </>
-                    )}
-                  </span>
-                )
-              })}
-          </Col>
-          <Col span={6} style={{ textAlign: 'right' }}>
+      <div className={'rmdeditor-layout-left ' + (isPreview ? 'preview' : '')}>
+        {!isPreview && <Blocks {...blocksProps} />}
+        {isPreview && (
+          <>
+            <Form.Item
+              label="Use a macros page"
+              name="macroId"
+              className={CSS.padding_t_m + ' ' + CSS.padding_h_m}
+            >
+              <Select
+                style={{ width: '100%' }}
+                dropdownMatchSelectWidth={false}
+                allowClear={true}
+                size="small"
+                placeholder="Select macros page"
+                options={props.macros.map((x: any) => {
+                  return { label: x.name, value: x.id }
+                })}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className={CSS.padding_h_m}>Notification test data</span>}
+              name="test_data"
+              validateFirst={true}
+              rules={[
+                {
+                  validator: (xxx, value) => {
+                    // check if data is valid json
+                    try {
+                      if (JSON.parse(value)) {
+                      }
+                      return Promise.resolve(undefined)
+                    } catch (e: any) {
+                      return Promise.reject('Your test variables is not a valid JSON object!')
+                    }
+                  }
+                },
+                {
+                  required: false,
+                  type: 'object',
+                  transform: (value: any) => {
+                    try {
+                      const parsed = JSON.parse(value)
+                      return parsed
+                    } catch (e: any) {
+                      return value
+                    }
+                  }
+                }
+              ]}
+            >
+              <AceInput
+                onChange={(val: any) => props.form.setFieldsValue({ testData: val })}
+                id="test_data"
+                width="100%"
+                height={layoutLeftHeight + 'px'}
+                mode="json"
+                theme="monokai"
+              />
+            </Form.Item>
+          </>
+        )}
+      </div>
+
+      {isPreview && (
+        <>
+          <Preview
+            tree={editor.currentTree}
+            templateData={editor.templateData}
+            isMobile={editor.deviceWidth === MobileWidth}
+            deviceWidth={editor.deviceWidth}
+            toggleDevice={toggleDevice}
+            closePreview={togglePreview}
+          />
+        </>
+      )}
+
+      {!isPreview && (
+        <div className="rmdeditor-layout-middle">
+          <div className="rmdeditor-topbar">
+            <span className={CSS.pull_right}>
+              <Space>
+                <Button.Group>
+                  <Button
+                    size="small"
+                    type="text"
+                    disabled={editor.deviceWidth === MobileWidth}
+                    onClick={() => toggleDevice()}
+                  >
+                    <FontAwesomeIcon icon={faMobileAlt} />
+                  </Button>
+                  <Button
+                    size="small"
+                    type="text"
+                    disabled={editor.deviceWidth === DesktopWidth}
+                    onClick={() => toggleDevice()}
+                  >
+                    <FontAwesomeIcon icon={faDesktop} />
+                  </Button>
+                </Button.Group>
+
+                <Button type="primary" size="small" ghost onClick={() => togglePreview()}>
+                  <FontAwesomeIcon icon={faEye} />
+                  &nbsp; Preview
+                </Button>
+              </Space>
+            </span>
+
             <Space size="large">
-              {editor.history.length > 1 && (
+              <>
                 <Button.Group>
                   <Tooltip title="Undo">
                     <Button
                       size="small"
+                      type="text"
                       onClick={goBackHistory}
                       disabled={editor.currentHistoryIndex === 0}
-                      icon={<UndoOutlined />}
+                      icon={<FontAwesomeIcon icon={faChevronLeft} />}
                     />
                   </Tooltip>
                   <Tooltip title="Redo">
                     <Button
                       size="small"
+                      type="text"
                       onClick={goNextHistory}
                       disabled={editor.currentHistoryIndex === editor.history.length - 1}
-                      icon={<RedoOutlined />}
+                      icon={<FontAwesomeIcon icon={faChevronRight} />}
                     />
                   </Tooltip>
                 </Button.Group>
-              )}
-              <Radio.Group
-                defaultValue={editor.deviceWidth}
-                buttonStyle="solid"
-                onChange={(e) => {
-                  editor.setDeviceWidth(e.target.value)
-                }}
-                size="small"
-              >
-                <Radio.Button value={MobileWidth}>
-                  <FontAwesomeIcon icon={faMobileAlt} />
-                </Radio.Button>
-                <Radio.Button value={DesktopWidth}>
-                  <FontAwesomeIcon icon={faDesktop} />
-                </Radio.Button>
-              </Radio.Group>
-              <Button type="primary" size="small" ghost onClick={() => togglePreview()}>
-                {modalPreview && (
-                  <>
-                    <FontAwesomeIcon icon={faPen} />
-                    &nbsp; Edit
-                  </>
-                )}
-                {!modalPreview && (
-                  <>
-                    <FontAwesomeIcon icon={faEye} />
-                    &nbsp; Preview
-                  </>
-                )}
-              </Button>
-              {/* 
-              <Button.Group>
-                <Button type="default" onClick={() => editor.setDeviceWidth(MobileWidth)}>
-                  <FontAwesomeIcon icon={faMobileAlt} />
-                </Button>
-                <Button type="default" onClick={() => editor.setDeviceWidth(DesktopWidth)}>
-                  <FontAwesomeIcon icon={faDesktop} />
-                </Button>
-              </Button.Group> */}
+                <div className="rmdeditor-path">
+                  {pathBlocks.map((block, i) => {
+                    const isLast = i === pathBlocks.length - 1 ? true : false
+                    return (
+                      <span key={i}>
+                        {isLast === true && (
+                          <span className="rmdeditor-path-item-last">
+                            {editor.blockDefinitions[block.kind]?.name}
+                          </span>
+                        )}
+                        {isLast === false && (
+                          <>
+                            <span
+                              className="rmdeditor-path-item"
+                              onClick={editor.selectBlock.bind(null, block)}
+                            >
+                              {editor.blockDefinitions[block.kind]?.name}
+                            </span>
+                            <span className="rmdeditor-path-divider">/</span>
+                          </>
+                        )}
+                      </span>
+                    )
+                  })}
+                </div>
+              </>
             </Space>
-          </Col>
-        </Row>
+          </div>
+          <div onClick={editor.selectBlock.bind(null, editor.currentTree)}>{editor.editor}</div>
+        </div>
+      )}
+
+      <div className={'rmdeditor-layout-right ' + (isPreview ? 'preview' : '')}>
+        {!isPreview && (
+          <Settings
+            block={selectedBlock}
+            blockDefinition={editor.blockDefinitions[selectedBlock.kind]}
+            tree={editor.currentTree}
+            updateTree={editor.updateTree}
+            // deviceType={editor.deviceWidth <= 480 ? 'mobile' : 'desktop'}
+          />
+        )}
       </div>
-
-      {modalPreview === true && (
-        <Preview
-          tree={editor.currentTree}
-          templateData={editor.templateData}
-          isMobile={editor.deviceWidth === MobileWidth}
-          form={props.form}
-          macros={props.macros}
-        />
-      )}
-
-      {modalPreview === false && (
-        <>
-          <div className="rmdeditor-layout-left">
-            <Blocks {...blocksProps} />
-          </div>
-
-          <div
-            className="rmdeditor-layout-middle"
-            onClick={editor.selectBlock.bind(null, editor.currentTree)}
-          >
-            {/* <div className="rmdeditor-page" style={{ maxWidth: editor.deviceWidth + 'px' }}> */}
-            {editor.editor}
-            {/* </div> */}
-          </div>
-
-          <div className="rmdeditor-layout-right">
-            <Settings
-              block={selectedBlock}
-              blockDefinition={editor.blockDefinitions[selectedBlock.kind]}
-              tree={editor.currentTree}
-              updateTree={editor.updateTree}
-              // deviceType={editor.deviceWidth <= 480 ? 'mobile' : 'desktop'}
-            />
-          </div>
-        </>
-      )}
     </div>
   )
 }

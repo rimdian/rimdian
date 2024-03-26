@@ -4,6 +4,7 @@ import AceEditor from 'react-ace'
 import 'ace-builds/src-noconflict/mode-javascript'
 import 'ace-builds/src-noconflict/mode-json'
 import 'ace-builds/src-noconflict/theme-chrome'
+import 'ace-builds/src-noconflict/theme-monokai'
 import 'ace-builds/src-noconflict/ext-language_tools'
 
 type AceInputProps = {
@@ -13,6 +14,7 @@ type AceInputProps = {
   id: string
   height: string
   width: string
+  theme?: string
 }
 
 const AceInput = (props: AceInputProps) => {
@@ -20,7 +22,7 @@ const AceInput = (props: AceInputProps) => {
     <AceEditor
       defaultValue={props.value}
       mode={props.mode}
-      theme="chrome"
+      theme={props.theme || 'chrome'}
       onChange={props.onChange}
       debounceChangePeriod={300}
       name={props.id}

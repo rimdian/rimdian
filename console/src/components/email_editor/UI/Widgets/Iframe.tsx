@@ -1,8 +1,5 @@
 import { Component } from 'react'
 import _ from 'lodash'
-import { Button } from 'antd'
-
-import { ExpandAltOutlined, ShrinkOutlined } from '@ant-design/icons'
 import { css } from '@emotion/css'
 
 const cssIframe = css({
@@ -10,17 +7,6 @@ const cssIframe = css({
   '&-normal': {
     height: '200px',
     width: '100%'
-  },
-  '&.expanded': {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    bottom: '0',
-    right: '0',
-    height: '100% !important',
-    border: 'none',
-    borderRadius: '0',
-    zIndex: '100'
   },
   '&-actions': {
     position: 'absolute',
@@ -35,10 +21,6 @@ class IframeSandbox extends Component<any, any> {
 
   constructor(props: any) {
     super(props)
-
-    this.state = {
-      expanded: false
-    }
 
     this.ref = _.uniqueId()
     this._resize = this._resize.bind(this)
@@ -56,8 +38,7 @@ class IframeSandbox extends Component<any, any> {
     }
 
     if (thisRef) {
-      if (this.state.expanded) thisRef.style.height = '100%'
-      else thisRef.style.height = parentHeight - 30 + 'px'
+      thisRef.style.height = parentHeight - 30 + 'px'
     }
   }
 
@@ -69,21 +50,11 @@ class IframeSandbox extends Component<any, any> {
     }, 100)
   }
 
-  componentDidUpdate(prevProps: any, prevState: any) {
-    // reload editor when expand/compress
-    if (prevState.expanded !== this.state.expanded) {
-      // console.log('resize after expand');
-      this._resize()
-      return
-    }
-  }
-
   shouldComponentUpdate(nextProps: any, nextState: any) {
     if (nextProps.id !== this.props.id) return true
     if (nextProps.ref !== this.ref) return true
     if (nextProps.className !== this.props.className) return true
     if (nextProps.content !== this.props.content) return true
-    if (nextState.expanded !== this.state.expanded) return true
     if (nextProps.sizeSelector !== this.props.sizeSelector) return true
     return false
   }
@@ -91,19 +62,7 @@ class IframeSandbox extends Component<any, any> {
   render() {
     // console.log('render', this.props.className);
     return (
-      <div
-        className={cssIframe + (this.state.expanded ? ' expanded' : '')}
-        ref={this.ref + '-container'}
-      >
-        {!this.props.noExpand && (
-          <Button
-            type="primary"
-            ghost
-            className={cssIframe + '-actions'}
-            onClick={() => this.setState({ expanded: !this.state.expanded })}
-            icon={this.state.expanded ? <ShrinkOutlined /> : <ExpandAltOutlined />}
-          />
-        )}
+      <div className={cssIframe} ref={this.ref + '-container'}>
         <iframe
           style={this.props.style}
           title={'iframe-' + this.props.id}
@@ -117,11 +76,5 @@ class IframeSandbox extends Component<any, any> {
     )
   }
 }
-
-// IframeSandbox.defaultProps = {
-//   id: 'iframe-id',
-//   className: 'Iframe-normal',
-//   content: ''
-// }
 
 export default IframeSandbox

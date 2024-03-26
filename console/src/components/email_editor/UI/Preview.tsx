@@ -1,16 +1,18 @@
 import mjml2html from 'mjml-browser'
-import { Alert, Form, Tabs, Select } from 'antd'
+import { Alert, Button, Space, Tabs } from 'antd'
 import Prism from 'prismjs'
 import 'prismjs/themes/prism-okaidia.css' /* or your own custom theme */
-// import 'prismjs/plugins/line-numbers/prism-line-numbers.css' /* add plugin css */
-// require('prismjs/plugins/line-numbers/prism-line-numbers');
 import Nunjucks from 'nunjucks'
 import { BlockInterface } from '../Block'
 import Iframe from './Widgets/Iframe'
 import 'prismjs/components/prism-xml-doc'
 import { kebabCase } from 'lodash'
-import AceInput from 'components/common/input_ace'
 import json2mjml from 'utils/json_to_mjml'
+import { useState } from 'react'
+import CSS from 'utils/css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faDesktop, faMobileAlt, faPen } from '@fortawesome/free-solid-svg-icons'
+import { DesktopWidth, MobileWidth } from './Layout'
 
 const objectAsKebab = (obj: any) => {
   const newObj: any = {}
@@ -731,7 +733,17 @@ export const ExportHTML = (editorData: any) => {
   return mjml2html(json2mjml(treeToMjmlJSON(editorData.data.styles, editorData, '', undefined)))
 }
 
-const Preview = (props: any) => {
+interface PreviewProps {
+  tree: any
+  templateData: string
+  isMobile: boolean
+  deviceWidth: number
+  toggleDevice: () => void
+  closePreview: () => void
+}
+
+const Preview = (props: PreviewProps) => {
+  const [tab, setTab] = useState('html')
   const jsonMjml = treeToMjmlJSON(props.tree.data.styles, props.tree, props.templateData, undefined)
   // console.log('json mjml', jsonMjml)
   const mjml = json2mjml(jsonMjml)
@@ -751,105 +763,89 @@ const Preview = (props: any) => {
     id: 'htmlCompiled'
   }
 
-  const doc = document.querySelector('.rmdeditor-main')
-  const layoutLeftHeight = doc ? parseInt(window.getComputedStyle(doc).height) - 220 : 400
-
   // console.log('html', html.errors)
   return (
-    <>
-      <div className="rmdeditor-layout-left preview">
-        <Form.Item label="Use a macros page" name="macroId" className="padding-t-m padding-h-m">
-          <Select
-            style={{ width: '100%' }}
-            dropdownMatchSelectWidth={false}
-            allowClear={true}
-            size="small"
-            placeholder="Select macros page"
-            options={props.macros.map((x: any) => {
-              return { label: x.name, value: x.id }
-            })}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label={<span className="padding-h-m">Notification test data</span>}
-          name="testData"
-          validateFirst={true}
-          rules={[
+    <div className="rmdeditor-layout-middle preview">
+      <div className="rmdeditor-topbar">
+        <span className={CSS.pull_right}>
+          <Space>
+            <Button.Group>
+              <Button
+                size="small"
+                type="text"
+                disabled={props.deviceWidth === MobileWidth}
+                onClick={() => props.toggleDevice()}
+              >
+                <FontAwesomeIcon icon={faMobileAlt} />
+              </Button>
+              <Button
+                size="small"
+                type="text"
+                disabled={props.deviceWidth === DesktopWidth}
+                onClick={() => props.toggleDevice()}
+              >
+                <FontAwesomeIcon icon={faDesktop} />
+              </Button>
+            </Button.Group>
+            <Button type="primary" size="small" ghost onClick={() => props.closePreview()}>
+              <FontAwesomeIcon icon={faPen} />
+              &nbsp; Edit
+            </Button>
+          </Space>
+        </span>
+        <Tabs
+          activeKey={tab}
+          centered
+          onChange={(k) => setTab(k)}
+          style={{ position: 'absolute', top: '6px' }}
+          items={[
             {
-              validator: (xxx, value) => {
-                // check if data is valid json
-                try {
-                  if (JSON.parse(value)) {
-                  }
-                  return Promise.resolve(undefined)
-                } catch (e: any) {
-                  return Promise.reject('Your test variables is not a valid JSON object!')
-                }
-              }
+              key: 'html',
+              label: 'HTML'
             },
             {
-              required: false,
-              type: 'object',
-              transform: (value: any) => {
-                try {
-                  const parsed = JSON.parse(value)
-                  return parsed
-                } catch (e: any) {
-                  return value
-                }
-              }
+              key: 'mjml',
+              label: 'MJML'
             }
           ]}
-        >
-          <AceInput
-            onChange={(val: any) => props.form.setFieldsValue({ testData: val })}
-            id="testData"
-            width="100%"
-            height={layoutLeftHeight + 'px'}
-            mode="json"
-          />
-        </Form.Item>
+        />
       </div>
+      {tab === 'html' && (
+        <div id="iframe-container">
+          <div className="rmdeditor-transparent">
+            <Iframe {...iframeProps} />
+          </div>
+        </div>
+      )}
 
-      <div className="rmdeditor-layout-html">
-        <Tabs defaultActiveKey="1" size="small">
-          <Tabs.TabPane tab="HTML" key="1" id="iframe-container">
-            <div className="rmdeditor-transparent">
-              <Iframe {...iframeProps} />
-            </div>
-          </Tabs.TabPane>
-
-          <Tabs.TabPane tab="MJML" key="2">
-            <div className="rmdeditor-code-bg">
-              {html.errors &&
-                html.errors.length > 0 &&
-                html.errors.map((err: any, i: number) => (
-                  <Alert
-                    key={i}
-                    className="rmdeditor-margin-b-s"
-                    message={err.formattedMessage}
-                    type="error"
-                  />
-                ))}
-              <pre
-                className="language-xml"
-                style={{
-                  background: 'none',
-                  margin: '0',
-                  padding: '0',
-                  wordWrap: 'break-word',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'normal'
-                }}
-              >
-                <code dangerouslySetInnerHTML={{ __html: mjmlBody }} />
-              </pre>
-            </div>
-          </Tabs.TabPane>
-        </Tabs>
-      </div>
-    </>
+      {tab === 'mjml' && (
+        <div className="rmdeditor-code-bg">
+          {html.errors &&
+            html.errors.length > 0 &&
+            html.errors.map((err: any, i: number) => (
+              <Alert
+                key={i}
+                className="rmdeditor-margin-b-s"
+                message={err.formattedMessage}
+                type="error"
+              />
+            ))}
+          <pre
+            className="language-xml"
+            style={{
+              background: 'none',
+              margin: '0',
+              padding: '0',
+              wordWrap: 'break-word',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'normal'
+            }}
+          >
+            <code dangerouslySetInnerHTML={{ __html: mjmlBody }} />
+          </pre>
+        </div>
+      )}
+    </div>
   )
 }
 

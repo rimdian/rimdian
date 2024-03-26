@@ -54,7 +54,7 @@ const ColorPickerInput = (props: ColorPickerInputProps) => {
     >
       <Dropdown
         overlayStyle={{ minWidth: 'none' }}
-        onVisibleChange={(visible: boolean) => {
+        onOpenChange={(visible: boolean) => {
           // trigger update when Input has been manually updated
           if (visible === false && hexColor !== props.value) {
             props.onChange(hexColor)
@@ -134,7 +134,7 @@ export const ColorPickerLight = (props: ColorPickerInputProps) => {
   return (
     <Dropdown
       overlayStyle={{ minWidth: 'none' }}
-      onVisibleChange={(visible: boolean) => {
+      onOpenChange={(visible: boolean) => {
         // trigger update when Input has been manually updated
         if (visible === false && hexColor !== props.value) {
           props.onChange(hexColor)

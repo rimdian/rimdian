@@ -31,11 +31,11 @@
 }
 
 .rmdeditor-topbar {
-    position: absolute;
+    position: sticky;
     top: 0;
     left: 0;
     right: 0;
-    height: 56px;
+    height: 52px;
     background-color: #F5F5F5;
     padding: 12px;
     z-index: 1;
@@ -56,16 +56,15 @@
 .rmdeditor-layout-left {
     position: absolute;
     width: 17%;
-    top: 56px;
+    top: 0;
     left: 0;
     bottom: 0;
     background-color: #F5F5F5;
-
+    transition: width 0.18s ease-in-out;
 }
 .rmdeditor-layout-left.preview {
     border-right: 1px solid #F3F6FC;
     width: 35%;
-    background-color: white;
 }
 
 .rmdeditor-layout-left .smooth-dnd-ghost {
@@ -86,7 +85,7 @@
     width: 65%;
     margin-left: 35%;
     background: white;
-    padding-top: 56px;
+    padding-top: 0;
 }
 
 .rmdeditor-layout-html iframe {
@@ -104,22 +103,30 @@
     overflow-y: scroll;
     border-right: 1px solid rgba(0, 0, 0, 0.1);
     border-left: 1px solid rgba(0, 0, 0, 0.1);
+    transition: width 0.18s ease-in-out;
+}
+.rmdeditor-layout-middle.preview {
+    left: 35%;
+    right: 0;
 }
 
 .rmdeditor-layout-right {
     position: absolute;
     width: 27%;
     background-color: #F5F5F5;
-    /* #111d2c; */
-    /* padding: 24px; */
-    top: 56px;
+    transition: width 0.18s ease-in-out;
+    top: 0;
     right: 0;
     bottom: 0;
     overflow-y: hidden;
 }
 
+.rmdeditor-layout-right.preview {
+    width: 0;
+}
+
 .rmdeditor-page {
-    padding-top: 56px;
+    padding-top: 0;
     margin: 0 auto;
 }
 
@@ -344,8 +351,8 @@ body:not(.smooth-dnd-no-user-select) .rmdeditor-block-content.rmdeditor-selected
     overflow: auto;
 }
 
-.rmdeditor-main .ant-form-vertical .ant-form-item,
-.rmdeditor-form-item-align-right {
+.rmdeditor-main .ant-form-vertical .ant-form-item .ant-form-item-row,
+.rmdeditor-form-item-align-right .ant-form-item-row {
     flex-direction: row !important;
 }
 

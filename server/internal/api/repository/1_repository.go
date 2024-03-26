@@ -198,6 +198,8 @@ type Repository interface {
 
 	// message templates
 	ListMessageTemplates(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) (templates []*entity.MessageTemplate, err error)
+	InsertMessageTemplate(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) (err error)
+	GetMessageTemplate(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (template *entity.MessageTemplate, err error)
 
 	// user segments
 	InsertUserSegment(ctx context.Context, userSegment *entity.UserSegment, tx *sql.Tx) (err error)

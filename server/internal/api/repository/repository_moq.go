@@ -215,6 +215,9 @@ var _ Repository = &RepositoryMock{}
 //			GetInvitationFunc: func(ctx context.Context, email string, organizationID string) (*entity.OrganizationInvitation, error) {
 //				panic("mock out the GetInvitation method")
 //			},
+//			GetMessageTemplateFunc: func(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (*entity.MessageTemplate, error) {
+//				panic("mock out the GetMessageTemplate method")
+//			},
 //			GetOrganizationFunc: func(ctx context.Context, organizationID string) (*entity.Organization, error) {
 //				panic("mock out the GetOrganization method")
 //			},
@@ -277,6 +280,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			InsertDeviceFunc: func(ctx context.Context, device *entity.Device, tx *sql.Tx) error {
 //				panic("mock out the InsertDevice method")
+//			},
+//			InsertMessageTemplateFunc: func(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) error {
+//				panic("mock out the InsertMessageTemplate method")
 //			},
 //			InsertOrderFunc: func(ctx context.Context, order *entity.Order, tx *sql.Tx) error {
 //				panic("mock out the InsertOrder method")
@@ -735,6 +741,9 @@ type RepositoryMock struct {
 	// GetInvitationFunc mocks the GetInvitation method.
 	GetInvitationFunc func(ctx context.Context, email string, organizationID string) (*entity.OrganizationInvitation, error)
 
+	// GetMessageTemplateFunc mocks the GetMessageTemplate method.
+	GetMessageTemplateFunc func(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (*entity.MessageTemplate, error)
+
 	// GetOrganizationFunc mocks the GetOrganization method.
 	GetOrganizationFunc func(ctx context.Context, organizationID string) (*entity.Organization, error)
 
@@ -797,6 +806,9 @@ type RepositoryMock struct {
 
 	// InsertDeviceFunc mocks the InsertDevice method.
 	InsertDeviceFunc func(ctx context.Context, device *entity.Device, tx *sql.Tx) error
+
+	// InsertMessageTemplateFunc mocks the InsertMessageTemplate method.
+	InsertMessageTemplateFunc func(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) error
 
 	// InsertOrderFunc mocks the InsertOrder method.
 	InsertOrderFunc func(ctx context.Context, order *entity.Order, tx *sql.Tx) error
@@ -1750,6 +1762,19 @@ type RepositoryMock struct {
 			// OrganizationID is the organizationID argument value.
 			OrganizationID string
 		}
+		// GetMessageTemplate holds details about calls to the GetMessageTemplate method.
+		GetMessageTemplate []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// ID is the id argument value.
+			ID string
+			// Version is the version argument value.
+			Version *int
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
 		// GetOrganization holds details about calls to the GetOrganization method.
 		GetOrganization []struct {
 			// Ctx is the ctx argument value.
@@ -1936,6 +1961,17 @@ type RepositoryMock struct {
 			Ctx context.Context
 			// Device is the device argument value.
 			Device *entity.Device
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
+		// InsertMessageTemplate holds details about calls to the InsertMessageTemplate method.
+		InsertMessageTemplate []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// Template is the template argument value.
+			Template *entity.MessageTemplate
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
@@ -2870,6 +2906,7 @@ type RepositoryMock struct {
 	lockGetDataLog                            sync.RWMutex
 	lockGetDataLogChildren                    sync.RWMutex
 	lockGetInvitation                         sync.RWMutex
+	lockGetMessageTemplate                    sync.RWMutex
 	lockGetOrganization                       sync.RWMutex
 	lockGetRunningTaskExecByTaskID            sync.RWMutex
 	lockGetSegment                            sync.RWMutex
@@ -2891,6 +2928,7 @@ type RepositoryMock struct {
 	lockInsertCustomEvent                     sync.RWMutex
 	lockInsertDataLog                         sync.RWMutex
 	lockInsertDevice                          sync.RWMutex
+	lockInsertMessageTemplate                 sync.RWMutex
 	lockInsertOrder                           sync.RWMutex
 	lockInsertOrderItem                       sync.RWMutex
 	lockInsertPageview                        sync.RWMutex
@@ -5771,6 +5809,54 @@ func (mock *RepositoryMock) GetInvitationCalls() []struct {
 	return calls
 }
 
+// GetMessageTemplate calls GetMessageTemplateFunc.
+func (mock *RepositoryMock) GetMessageTemplate(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (*entity.MessageTemplate, error) {
+	if mock.GetMessageTemplateFunc == nil {
+		panic("RepositoryMock.GetMessageTemplateFunc: method is nil but Repository.GetMessageTemplate was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		ID          string
+		Version     *int
+		Tx          *sql.Tx
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		ID:          id,
+		Version:     version,
+		Tx:          tx,
+	}
+	mock.lockGetMessageTemplate.Lock()
+	mock.calls.GetMessageTemplate = append(mock.calls.GetMessageTemplate, callInfo)
+	mock.lockGetMessageTemplate.Unlock()
+	return mock.GetMessageTemplateFunc(ctx, workspaceID, id, version, tx)
+}
+
+// GetMessageTemplateCalls gets all the calls that were made to GetMessageTemplate.
+// Check the length with:
+//
+//	len(mockedRepository.GetMessageTemplateCalls())
+func (mock *RepositoryMock) GetMessageTemplateCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	ID          string
+	Version     *int
+	Tx          *sql.Tx
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		ID          string
+		Version     *int
+		Tx          *sql.Tx
+	}
+	mock.lockGetMessageTemplate.RLock()
+	calls = mock.calls.GetMessageTemplate
+	mock.lockGetMessageTemplate.RUnlock()
+	return calls
+}
+
 // GetOrganization calls GetOrganizationFunc.
 func (mock *RepositoryMock) GetOrganization(ctx context.Context, organizationID string) (*entity.Organization, error) {
 	if mock.GetOrganizationFunc == nil {
@@ -6608,6 +6694,50 @@ func (mock *RepositoryMock) InsertDeviceCalls() []struct {
 	mock.lockInsertDevice.RLock()
 	calls = mock.calls.InsertDevice
 	mock.lockInsertDevice.RUnlock()
+	return calls
+}
+
+// InsertMessageTemplate calls InsertMessageTemplateFunc.
+func (mock *RepositoryMock) InsertMessageTemplate(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) error {
+	if mock.InsertMessageTemplateFunc == nil {
+		panic("RepositoryMock.InsertMessageTemplateFunc: method is nil but Repository.InsertMessageTemplate was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Template    *entity.MessageTemplate
+		Tx          *sql.Tx
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		Template:    template,
+		Tx:          tx,
+	}
+	mock.lockInsertMessageTemplate.Lock()
+	mock.calls.InsertMessageTemplate = append(mock.calls.InsertMessageTemplate, callInfo)
+	mock.lockInsertMessageTemplate.Unlock()
+	return mock.InsertMessageTemplateFunc(ctx, workspaceID, template, tx)
+}
+
+// InsertMessageTemplateCalls gets all the calls that were made to InsertMessageTemplate.
+// Check the length with:
+//
+//	len(mockedRepository.InsertMessageTemplateCalls())
+func (mock *RepositoryMock) InsertMessageTemplateCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	Template    *entity.MessageTemplate
+	Tx          *sql.Tx
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Template    *entity.MessageTemplate
+		Tx          *sql.Tx
+	}
+	mock.lockInsertMessageTemplate.RLock()
+	calls = mock.calls.InsertMessageTemplate
+	mock.lockInsertMessageTemplate.RUnlock()
 	return calls
 }
 

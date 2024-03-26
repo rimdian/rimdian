@@ -116,7 +116,7 @@ export const Layout = (props: any): JSX.Element => {
           <>
             <Form.Item
               label="Use a macros page"
-              name="macroId"
+              name="template_macro_id"
               className={CSS.padding_t_m + ' ' + CSS.padding_h_m}
             >
               <Select
@@ -128,6 +128,7 @@ export const Layout = (props: any): JSX.Element => {
                 options={props.macros.map((x: any) => {
                   return { label: x.name, value: x.id }
                 })}
+                onChange={(val: any) => props.form.setFieldsValue({ template_macro_id: val })}
               />
             </Form.Item>
 
@@ -163,7 +164,7 @@ export const Layout = (props: any): JSX.Element => {
               ]}
             >
               <AceInput
-                onChange={(val: any) => props.form.setFieldsValue({ testData: val })}
+                onChange={(val: any) => props.form.setFieldsValue({ test_data: val })}
                 id="test_data"
                 width="100%"
                 height={layoutLeftHeight + 'px'}
@@ -179,7 +180,7 @@ export const Layout = (props: any): JSX.Element => {
         <>
           <Preview
             tree={editor.currentTree}
-            templateData={editor.templateData}
+            templateData={editor.templateDataValue}
             isMobile={editor.deviceWidth === MobileWidth}
             deviceWidth={editor.deviceWidth}
             toggleDevice={toggleDevice}

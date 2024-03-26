@@ -8,8 +8,8 @@ import {
   Row,
   Select,
   Space,
-  Switch,
   Tabs,
+  Tag,
   Tooltip,
   message
 } from 'antd'
@@ -178,7 +178,26 @@ const DrawerEmailTemplate = (props: {
     if (loading) return
     setLoading(true)
 
-    props.setDrawserVisible(false)
+    const data = { ...values }
+    data.workspace_id = workspaceCtx.workspace.id
+    data.channel = 'email'
+
+    console.log(data)
+    if (props.template) {
+      data.id = props.template.id
+    }
+
+    workspaceCtx
+      .apiPOST('/messageTemplate.upsert', data)
+      .then(() => {
+        message.success('The template has been saved!')
+        setLoading(false)
+        props.onSuccess && props.onSuccess()
+        props.setDrawserVisible(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
   }
 
   // extract TLD from URL
@@ -232,21 +251,7 @@ const DrawerEmailTemplate = (props: {
   )
 
   const goNext = () => {
-    form
-      .validateFields([
-        // TODO
-        // 'name',
-        // 'kind',
-        // 'segmentId',
-        // 'notificationTopicId',
-        // 'triggers',
-        // 'limitExecPerUser',
-      ])
-      .then((values: any) => {
-        // console.log('next values', values)
-        setTab('template')
-      })
-      .catch(() => {})
+    setTab('template')
   }
 
   const decorateContent = (content: any, data: any, template_macro_id: any) => {
@@ -324,22 +329,25 @@ const DrawerEmailTemplate = (props: {
                   form
                     .validateFields()
                     .then((values: any) => {
+                      console.log('values', values)
                       // compile html
                       if (values.engine === 'visual') {
-                        const result = ExportHTML(values.editorData)
+                        const result = ExportHTML(values.email.visual_editor_tree)
+
                         if (result.errors && result.errors.length > 0) {
                           message.error(result.errors[0].formattedMessage)
                           return
                         }
-                        values.content = result.html
+
+                        values.email.content = result.html
                       } else {
-                        values.editorData = undefined
+                        values.email.visual_editor_tree = undefined
                       }
 
                       submitForm(values)
                     })
                     .catch((info) => {
-                      console.log('Validate Failed:', info)
+                      // console.log('Validate Failed:', info)
                       if (info.errorFields) {
                         info.errorFields.forEach((field: any) => {
                           if (
@@ -453,13 +461,21 @@ const DrawerEmailTemplate = (props: {
                           },
                           {
                             key: 'code',
-                            title: <>Code</>,
+                            title: (
+                              <>
+                                Code{' '}
+                                <Tag color="cyan" className={CSS.margin_l_m}>
+                                  Coming soon
+                                </Tag>
+                              </>
+                            ),
                             icon: <FontAwesomeIcon icon={faCode} />,
                             content: (
                               <span>
                                 Code editor with templating engine, for maximum control over HTML.
                               </span>
-                            )
+                            ),
+                            disabled: true
                           }
                         ]}
                         onChange={() => {
@@ -579,7 +595,7 @@ const DrawerEmailTemplate = (props: {
                                     heading: HeadingBlockDefinition
                                   }}
                                   savedBlocks={workspaceCtx.workspace.emailBlocks || []}
-                                  templateData={getFieldValue('test_data')}
+                                  templateDataValue={getFieldValue('test_data')}
                                   selectedBlockId={divider.id}
                                   value={rootBlock}
                                   onChange={(_newTree) => {
@@ -593,157 +609,172 @@ const DrawerEmailTemplate = (props: {
                                   <Layout form={form} macros={macros} height={contentHeight} />
                                 </Editor>
                               </Form.Item>
+                              {/*  hidden test_data field */}
+                              <Form.Item
+                                name="test_data"
+                                style={{ display: 'none' }}
+                                rules={[{ required: false, type: 'string' }]}
+                              >
+                                <Input />
+                              </Form.Item>
+                              <Form.Item
+                                name="template_macro_id"
+                                style={{ display: 'none' }}
+                                rules={[{ required: false, type: 'string' }]}
+                              >
+                                <Input />
+                              </Form.Item>
                             </div>
                           )
                         }
 
-                        if (getFieldValue('engine') === 'code') {
-                          return (
-                            <>
-                              <Row gutter={24} className={CSS.margin_a_m}>
-                                <Col span={12}>
-                                  <Tabs
-                                    tabBarExtraContent={
-                                      <div style={{ width: '250px' }}>
-                                        <Tooltip title="Macros page">
-                                          <div>
-                                            <Form.Item noStyle name="template_macro_id">
-                                              <Select
-                                                style={{ width: '100%' }}
-                                                dropdownMatchSelectWidth={false}
-                                                allowClear={true}
-                                                size="small"
-                                                placeholder="Select macros page"
-                                                options={macros.map((x: any) => {
-                                                  return { label: x.name, value: x.id }
-                                                })}
-                                              />
-                                            </Form.Item>
-                                          </div>
-                                        </Tooltip>
-                                      </div>
-                                    }
-                                    defaultActiveKey={contentField}
-                                    onChange={(value: any) => {
-                                      setContentField(value)
-                                      decorateContent(
-                                        form.getFieldValue(value),
-                                        form.getFieldValue('test_data'),
-                                        form.getFieldValue('template_macro_id')
-                                      )
-                                    }}
-                                  >
-                                    <Tabs.TabPane tab="HTML" key="content">
-                                      <Form.Item
-                                        name={['email', 'content']}
-                                        rules={[{ required: false, type: 'string' }]}
-                                      >
-                                        <AceInput
-                                          id="widgetContent"
-                                          width="600px"
-                                          height="300px"
-                                          mode="nunjucks"
-                                        />
-                                      </Form.Item>
-                                    </Tabs.TabPane>
+                        // if (getFieldValue('engine') === 'code') {
+                        //   return (
+                        //     <>
+                        //       <Row gutter={24} className={CSS.margin_a_m}>
+                        //         <Col span={12}>
+                        //           <Tabs
+                        //             tabBarExtraContent={
+                        //               <div style={{ width: '250px' }}>
+                        //                 <Tooltip title="Macros page">
+                        //                   <div>
+                        //                     <Form.Item noStyle name="template_macro_id">
+                        //                       <Select
+                        //                         style={{ width: '100%' }}
+                        //                         dropdownMatchSelectWidth={false}
+                        //                         allowClear={true}
+                        //                         size="small"
+                        //                         placeholder="Select macros page"
+                        //                         options={macros.map((x: any) => {
+                        //                           return { label: x.name, value: x.id }
+                        //                         })}
+                        //                       />
+                        //                     </Form.Item>
+                        //                   </div>
+                        //                 </Tooltip>
+                        //               </div>
+                        //             }
+                        //             defaultActiveKey={contentField}
+                        //             onChange={(value: any) => {
+                        //               setContentField(value)
+                        //               decorateContent(
+                        //                 form.getFieldValue(value),
+                        //                 form.getFieldValue('test_data'),
+                        //                 form.getFieldValue('template_macro_id')
+                        //               )
+                        //             }}
+                        //           >
+                        //             <Tabs.TabPane tab="HTML" key="content">
+                        //               <Form.Item
+                        //                 name={['email', 'content']}
+                        //                 rules={[{ required: false, type: 'string' }]}
+                        //               >
+                        //                 <AceInput
+                        //                   id="widgetContent"
+                        //                   width="600px"
+                        //                   height="300px"
+                        //                   mode="nunjucks"
+                        //                 />
+                        //               </Form.Item>
+                        //             </Tabs.TabPane>
 
-                                    <Tabs.TabPane tab="Text" key="text">
-                                      <Form.Item
-                                        name={['email', 'text']}
-                                        rules={[{ required: false, type: 'string' }]}
-                                      >
-                                        <AceInput
-                                          id="textContent"
-                                          width="600px"
-                                          height="300px"
-                                          mode="nunjucks"
-                                        />
-                                      </Form.Item>
-                                    </Tabs.TabPane>
-                                  </Tabs>
+                        //             <Tabs.TabPane tab="Text" key="text">
+                        //               <Form.Item
+                        //                 name={['email', 'text']}
+                        //                 rules={[{ required: false, type: 'string' }]}
+                        //               >
+                        //                 <AceInput
+                        //                   id="textContent"
+                        //                   width="600px"
+                        //                   height="300px"
+                        //                   mode="nunjucks"
+                        //                 />
+                        //               </Form.Item>
+                        //             </Tabs.TabPane>
+                        //           </Tabs>
 
-                                  <Form.Item
-                                    label="Test data"
-                                    name="test_data"
-                                    validateFirst={true}
-                                    rules={[
-                                      {
-                                        validator: (_xxx, value) => {
-                                          // check if data is valid json
-                                          try {
-                                            if (JSON.parse(value)) {
-                                            }
-                                            return Promise.resolve(undefined)
-                                          } catch (e: any) {
-                                            return Promise.reject(
-                                              'Your test variables is not a valid JSON object!'
-                                            )
-                                          }
-                                        }
-                                      },
-                                      {
-                                        required: false,
-                                        type: 'object',
-                                        transform: (value: any) => {
-                                          try {
-                                            const parsed = JSON.parse(value)
-                                            return parsed
-                                          } catch (e: any) {
-                                            return value
-                                          }
-                                        }
-                                      }
-                                    ]}
-                                  >
-                                    <AceInput
-                                      id="test_data"
-                                      width="600px"
-                                      height="150px"
-                                      mode="json"
-                                    />
-                                  </Form.Item>
-                                  {/* <Form.Item
-                                  name="email.css_inlining"
-                                  label="CSS inlining"
-                                  rules={[{ required: false, type: 'boolean' }]}
-                                  valuePropName="checked"
-                                >
-                                  <Switch />
-                                </Form.Item> */}
-                                </Col>
+                        //           <Form.Item
+                        //             label="Test data"
+                        //             name="test_data"
+                        //             validateFirst={true}
+                        //             rules={[
+                        //               {
+                        //                 validator: (_xxx, value) => {
+                        //                   // check if data is valid json
+                        //                   try {
+                        //                     if (JSON.parse(value)) {
+                        //                     }
+                        //                     return Promise.resolve(undefined)
+                        //                   } catch (e: any) {
+                        //                     return Promise.reject(
+                        //                       'Your test variables is not a valid JSON object!'
+                        //                     )
+                        //                   }
+                        //                 }
+                        //               },
+                        //               {
+                        //                 required: false,
+                        //                 type: 'object',
+                        //                 transform: (value: any) => {
+                        //                   try {
+                        //                     const parsed = JSON.parse(value)
+                        //                     return parsed
+                        //                   } catch (e: any) {
+                        //                     return value
+                        //                   }
+                        //                 }
+                        //               }
+                        //             ]}
+                        //           >
+                        //             <AceInput
+                        //               id="test_data"
+                        //               width="600px"
+                        //               height="150px"
+                        //               mode="json"
+                        //             />
+                        //           </Form.Item>
+                        //           {/* <Form.Item
+                        //           name="email.css_inlining"
+                        //           label="CSS inlining"
+                        //           rules={[{ required: false, type: 'boolean' }]}
+                        //           valuePropName="checked"
+                        //         >
+                        //           <Switch />
+                        //         </Form.Item> */}
+                        //         </Col>
 
-                                <Col span={12} className={CSS.borderLeft.solid1}>
-                                  <p className={CSS.padding_t_s}>Preview</p>
+                        //         <Col span={12} className={CSS.borderLeft.solid1}>
+                        //           <p className={CSS.padding_t_s}>Preview</p>
 
-                                  <Form.Item
-                                    noStyle
-                                    dependencies={[
-                                      ['email', 'content'],
-                                      ['email', 'text'],
-                                      'test_data',
-                                      'template_macro_id'
-                                    ]}
-                                  >
-                                    {({ getFieldValue }: any) => {
-                                      decorateContent(
-                                        getFieldValue(contentField),
-                                        getFieldValue('test_data'),
-                                        getFieldValue('template_macro_id')
-                                      )
-                                      return (
-                                        <IframeSandbox
-                                          content={contentDecorated}
-                                          sizeId="previewContent"
-                                          id="templateCompiled"
-                                        />
-                                      )
-                                    }}
-                                  </Form.Item>
-                                </Col>
-                              </Row>
-                            </>
-                          )
-                        }
+                        //           <Form.Item
+                        //             noStyle
+                        //             dependencies={[
+                        //               ['email', 'content'],
+                        //               ['email', 'text'],
+                        //               'test_data',
+                        //               'template_macro_id'
+                        //             ]}
+                        //           >
+                        //             {({ getFieldValue }: any) => {
+                        //               decorateContent(
+                        //                 getFieldValue(contentField),
+                        //                 getFieldValue('test_data'),
+                        //                 getFieldValue('template_macro_id')
+                        //               )
+                        //               return (
+                        //                 <IframeSandbox
+                        //                   content={contentDecorated}
+                        //                   sizeId="previewContent"
+                        //                   id="templateCompiled"
+                        //                 />
+                        //               )
+                        //             }}
+                        //           </Form.Item>
+                        //         </Col>
+                        //       </Row>
+                        //     </>
+                        //   )
+                        // }
                       }}
                     </Form.Item>
                   </>

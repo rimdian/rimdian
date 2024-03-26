@@ -29,7 +29,7 @@ export function useEditorContext(): EditorContextValue {
 export interface EditorContextValue {
   blockDefinitions: BlockDefinitionMap
   savedBlocks: BlockDefinitionInterface[]
-  templateData: string
+  templateDataValue: string
   currentTree: BlockInterface
   selectedBlockId: string
   updateTree: (path: string, data: any) => void
@@ -56,7 +56,7 @@ export interface EditorProps {
   children: ReactNode
   blockDefinitions: BlockDefinitionMap
   savedBlocks: BlockDefinitionInterface[]
-  templateData: string
+  templateDataValue: string
   value: BlockInterface
   onChange: (newValue: BlockInterface) => void
   renderSelectedBlockButtons: (props: SelectedBlockButtonsProp) => ReactNode
@@ -376,7 +376,7 @@ export const Editor = (props: EditorProps): JSX.Element => {
   const layoutProps: EditorContextValue = {
     blockDefinitions: props.blockDefinitions,
     savedBlocks: props.savedBlocks,
-    templateData: props.templateData,
+    templateDataValue: props.templateDataValue,
     currentTree: currentTree,
     selectedBlockId: selectedBlockId,
     updateTree: updateTree,

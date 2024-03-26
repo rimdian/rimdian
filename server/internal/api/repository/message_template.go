@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/v2/sqlscan"
@@ -9,6 +10,93 @@ import (
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
+
+func (repo *RepositoryImpl) InsertMessageTemplate(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) (err error) {
+
+	query, args, err := sq.Insert("message_template").
+		Columns(
+			"id",
+			"version",
+			"name",
+			"channel",
+			"engine",
+			"email",
+			"template_macro_id",
+			"utm_source",
+			"utm_medium",
+			"utm_campaign",
+			"utm_content",
+			"settings",
+			"test_data",
+		).
+		Values(
+			template.ID,
+			template.Version,
+			template.Name,
+			template.Channel,
+			template.Engine,
+			template.Email,
+			template.TemplateMacroID,
+			template.UTMSource,
+			template.UTMMedium,
+			template.UTMCampaign,
+			template.UTMContent,
+			template.Settings,
+			template.TestData,
+		).
+		ToSql()
+
+	if err != nil {
+		return eris.Wrapf(err, "InsertMessageTemplate insert query: %v, args: %+v", query, args)
+	}
+
+	_, err = tx.ExecContext(ctx, query, args...)
+
+	if err != nil {
+		return eris.Wrapf(err, "InsertMessageTemplate insert exec: %v, args: %+v", query, args)
+	}
+
+	return nil
+}
+
+func (repo *RepositoryImpl) GetMessageTemplate(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (template *entity.MessageTemplate, err error) {
+
+	builder := sq.Select("*").From("message_template").Where(sq.Eq{"id": id})
+
+	if version != nil {
+		builder = builder.Where(sq.Eq{"version": *version})
+	}
+
+	query, args, err := builder.ToSql()
+
+	if err != nil {
+		err = eris.Wrapf(err, "GetMessageTemplate fetch query: %v, args: %+v", query, args)
+		return
+	}
+
+	if tx != nil {
+		err = sqlscan.Get(ctx, tx, &template, query, args...)
+	} else {
+		conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
+		if err != nil {
+			return nil, err
+		}
+		defer conn.Close()
+
+		err = sqlscan.Get(ctx, conn, &template, query, args...)
+	}
+
+	if err != nil {
+		if eris.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+
+		err = eris.Wrapf(err, "GetMessageTemplate query: %v, args: %+v", query, args)
+		return
+	}
+
+	return
+}
 
 func (repo *RepositoryImpl) ListMessageTemplates(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) (lists []*entity.MessageTemplate, err error) {
 

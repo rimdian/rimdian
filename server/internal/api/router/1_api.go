@@ -166,6 +166,7 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 		r.Get("/api/subscriptionList.list", api.SubscriptionListList)
 
 		r.Get("/api/messageTemplate.list", api.MessageTemplateList)
+		r.Post("/api/messageTemplate.upsert", api.MessageTemplateUpsert)
 
 		r.Get("/api/app.list", api.AppList)
 		r.Get("/api/app.get", api.AppGet)

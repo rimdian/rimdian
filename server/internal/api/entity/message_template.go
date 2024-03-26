@@ -79,7 +79,7 @@ type MessageTemplateEmail struct {
 	FromName         string          `json:"from_name"`
 	ReplyTo          *string         `json:"reply_to,omitempty"`
 	Subject          string          `json:"subject"`
-	Content          string          `json:"content"` // json tree | mjml code | nunjucks code
+	Content          string          `json:"content"` // html | mjml code | nunjucks code
 	VisualEditorTree MapOfInterfaces `json:"visual_editor_tree"`
 	Text             *string         `json:"text,omitempty"`
 }

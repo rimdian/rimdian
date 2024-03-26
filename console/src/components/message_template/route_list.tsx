@@ -60,7 +60,7 @@ const RouteTemplates = () => {
           }}
           columns={[
             {
-              title: 'Templae',
+              title: 'Template',
               key: 'id',
               render: (x: MessageTemplate) => (
                 <div>

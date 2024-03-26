@@ -120,6 +120,7 @@ type Service interface {
 
 	// email template
 	MessageTemplateList(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) (result []*entity.MessageTemplate, code int, err error)
+	MessageTemplateUpsert(ctx context.Context, accountID string, data *dto.MessageTemplate) (code int, err error)
 
 	// data hook
 	DataHookUpdate(ctx context.Context, accountID string, dataHookDTO *dto.DataHook) (updatedWorkspace *entity.Workspace, code int, err error)

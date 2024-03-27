@@ -184,6 +184,7 @@ export const Layout = (props: any): JSX.Element => {
             isMobile={editor.deviceWidth === MobileWidth}
             deviceWidth={editor.deviceWidth}
             toggleDevice={toggleDevice}
+            urlParams={editor.urlParams}
             closePreview={togglePreview}
           />
         </>

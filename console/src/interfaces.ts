@@ -1,4 +1,4 @@
-import { FilesSettings } from 'components/files/interfaces'
+import { FilesSettings } from 'components/assets/files/interfaces'
 
 export interface MapOfStrings {
   [key: string]: string

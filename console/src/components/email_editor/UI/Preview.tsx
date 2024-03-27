@@ -13,6 +13,7 @@ import CSS from 'utils/css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDesktop, faMobileAlt, faPen } from '@fortawesome/free-solid-svg-icons'
 import { DesktopWidth, MobileWidth } from './Layout'
+import { url } from 'inspector'
 
 const objectAsKebab = (obj: any) => {
   const newObj: any = {}
@@ -23,17 +24,39 @@ const objectAsKebab = (obj: any) => {
   return newObj
 }
 
+const trackURL = (url: string, urlParams: any) => {
+  // parse href and append utm params
+  const newURL = new URL(url)
+  if (!newURL.searchParams.has('utm_source') && urlParams.utm_source) {
+    newURL.searchParams.append('utm_source', urlParams.utm_source)
+  }
+  if (!newURL.searchParams.has('utm_medium') && urlParams.utm_medium) {
+    newURL.searchParams.append('utm_medium', urlParams.utm_medium)
+  }
+  if (!newURL.searchParams.has('utm_campaign') && urlParams.utm_campaign) {
+    newURL.searchParams.append('utm_campaign', urlParams.utm_campaign)
+  }
+  if (!newURL.searchParams.has('utm_content') && urlParams.utm_content) {
+    newURL.searchParams.append('utm_content', urlParams.utm_content)
+  }
+  if (!newURL.searchParams.has('utm_id') && urlParams.utm_id) {
+    newURL.searchParams.append('utm_id', urlParams.utm_id)
+  }
+  return newURL.toString()
+}
+
 const treeToMjmlJSON = (
   rootStyles: any,
   block: BlockInterface,
   templateData: string,
+  urlParams: any,
   parent?: BlockInterface
 ) => {
   let children: any[] = []
 
   if (block.children && block.children.length) {
     children = block.children.map((child) => {
-      return treeToMjmlJSON(rootStyles, child, templateData, block)
+      return treeToMjmlJSON(rootStyles, child, templateData, urlParams, block)
     })
   }
 
@@ -497,6 +520,10 @@ const treeToMjmlJSON = (
 
       if (block.data.image.href) {
         imageAttrs['href'] = block.data.image.href
+
+        if (!block.data.image.disable_tracking) {
+          imageAttrs['href'] = trackURL(imageAttrs['href'], urlParams)
+        }
       }
 
       if (block.data.wrapper.paddingControl === 'all') {
@@ -591,6 +618,10 @@ const treeToMjmlJSON = (
         padding: 0,
         'inner-padding':
           block.data.button.innerVerticalPadding + ' ' + block.data.button.innerHorizontalPadding
+      }
+
+      if (!block.data.button.disable_tracking) {
+        buttonAttrs['href'] = trackURL(buttonAttrs['href'], urlParams)
       }
 
       if (block.data.button.width !== 'auto') {
@@ -729,8 +760,10 @@ const treeToMjmlJSON = (
   }
 }
 
-export const ExportHTML = (editorData: any) => {
-  return mjml2html(json2mjml(treeToMjmlJSON(editorData.data.styles, editorData, '', undefined)))
+export const ExportHTML = (editorData: any, urlParams: any) => {
+  return mjml2html(
+    json2mjml(treeToMjmlJSON(editorData.data.styles, editorData, '', urlParams, undefined))
+  )
 }
 
 interface PreviewProps {
@@ -738,13 +771,20 @@ interface PreviewProps {
   templateData: string
   isMobile: boolean
   deviceWidth: number
+  urlParams: any
   toggleDevice: () => void
   closePreview: () => void
 }
 
 const Preview = (props: PreviewProps) => {
   const [tab, setTab] = useState('html')
-  const jsonMjml = treeToMjmlJSON(props.tree.data.styles, props.tree, props.templateData, undefined)
+  const jsonMjml = treeToMjmlJSON(
+    props.tree.data.styles,
+    props.tree,
+    props.templateData,
+    props.urlParams,
+    undefined
+  )
   // console.log('json mjml', jsonMjml)
   const mjml = json2mjml(jsonMjml)
   // console.log('mjml', mjml)

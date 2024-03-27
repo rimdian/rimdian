@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
-import { Popover, Button, Form, InputNumber, Divider, Radio, Input, Select } from 'antd'
+import { Popover, Button, Form, InputNumber, Divider, Radio, Input, Select, Switch } from 'antd'
 import BorderInputs from '../Widgets/BorderInputs'
 import PaddingInputs from '../Widgets/PaddingInputs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -57,6 +57,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
     const textInputRef = useRef<any>(null)
     const [text, setText] = useState(props.block.data.button.text)
     const [textModalVisible, setTextModalVisible] = useState(false)
+    const [disableTracking, setDisableTracking] = useState(props.block.data.button.disable_tracking)
     // console.log('img block is', block)
     // return <Input
     //     value={props.block.data.url}
@@ -142,6 +143,25 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
               props.updateTree(props.block.path, props.block)
             }}
             value={props.block.data.button.href}
+            size="small"
+          />
+        </Form.Item>
+
+        <Form.Item
+          valuePropName="checked"
+          label="Disable URL tracking"
+          labelAlign="left"
+          className="rmdeditor-form-item-align-right"
+          labelCol={{ span: 10 }}
+          wrapperCol={{ span: 14 }}
+        >
+          <Switch
+            onChange={(value) => {
+              props.block.data.button.disable_tracking = value
+              props.updateTree(props.block.path, props.block)
+              setDisableTracking(value)
+            }}
+            checked={disableTracking}
             size="small"
           />
         </Form.Item>
@@ -739,7 +759,7 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
 
     return (
       <div style={wrapperStyles}>
-        <a style={buttonStyles} href="javascript:void(0)">
+        <a style={buttonStyles} href="#">
           {props.block.data.button.text}
         </a>
       </div>

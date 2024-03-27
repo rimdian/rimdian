@@ -392,8 +392,8 @@ const Topbar = (props: TopbarProps) => {
                   <FontAwesomeIcon icon={faFolderOpen} />
                 </div>
               }
-              title="Files"
-              route="/orgs/:organizationId/workspaces/:workspaceId/files"
+              title="Files & templates"
+              route="/orgs/:organizationId/workspaces/:workspaceId/assets"
             />
             {spacer}
             <div className={appItemCss.self}>

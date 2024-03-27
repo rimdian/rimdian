@@ -100,67 +100,89 @@ const ImageURL = (props: ImageURLProps) => {
 const ClickURL = (props: ImageURLProps) => {
   const hrefInputRef = useRef<any>(null)
   const [href, setHref] = useState(props.block.data.image.href)
+  const [disableTracking, setDisableTracking] = useState(props.block.data.image.disable_tracking)
   const [hrefModalVisible, setHrefModalVisible] = useState(false)
   return (
-    <Form.Item
-      label="Click URL"
-      className="rmdeditor-form-item-align-right"
-      labelCol={{ span: 10 }}
-      wrapperCol={{ span: 14 }}
-    >
-      <Popover
-        content={
-          <>
-            <Input
-              style={{ width: '100%' }}
-              onChange={(e) => setHref(e.target.value)}
-              value={href}
-              size="small"
-              ref={hrefInputRef}
-              placeholder="https://www..."
-            />
-            <Button
-              style={{ marginTop: '12px' }}
-              type="primary"
-              size="small"
-              block
-              onClick={() => {
-                props.block.data.image.href = href
-                props.updateTree(props.block.path, props.block)
-                setHrefModalVisible(false)
-              }}
-              disabled={props.block.data.image.href === href}
-            >
-              Save changes
-            </Button>
-          </>
-        }
-        title="Click URL"
-        trigger="click"
-        open={hrefModalVisible}
-        onOpenChange={(visible) => {
-          setHrefModalVisible(visible)
-          setTimeout(() => {
-            if (visible)
-              hrefInputRef.current!.focus({
-                cursor: 'start'
-              })
-          }, 10)
-        }}
+    <>
+      <Form.Item
+        label="Click URL"
+        className="rmdeditor-form-item-align-right"
+        labelCol={{ span: 10 }}
+        wrapperCol={{ span: 14 }}
       >
-        {!props.block.data.image.href && (
-          <Button type="primary" size="small" block>
-            Set value
-          </Button>
-        )}
-        {props.block.data.image.href && (
-          <>
-            {props.block.data.image.href} &nbsp;&nbsp;
-            <span className="rmdeditor-ui-link">update</span>
-          </>
-        )}
-      </Popover>
-    </Form.Item>
+        <Popover
+          content={
+            <>
+              <Input
+                style={{ width: '100%' }}
+                onChange={(e) => setHref(e.target.value)}
+                value={href}
+                size="small"
+                ref={hrefInputRef}
+                placeholder="https://www..."
+              />
+              <Button
+                style={{ marginTop: '12px' }}
+                type="primary"
+                size="small"
+                block
+                onClick={() => {
+                  props.block.data.image.href = href
+                  props.updateTree(props.block.path, props.block)
+                  setHrefModalVisible(false)
+                }}
+                disabled={props.block.data.image.href === href}
+              >
+                Save changes
+              </Button>
+            </>
+          }
+          title="Click URL"
+          trigger="click"
+          open={hrefModalVisible}
+          onOpenChange={(visible) => {
+            setHrefModalVisible(visible)
+            setTimeout(() => {
+              if (visible)
+                hrefInputRef.current!.focus({
+                  cursor: 'start'
+                })
+            }, 10)
+          }}
+        >
+          {!props.block.data.image.href && (
+            <Button type="primary" size="small" block>
+              Set value
+            </Button>
+          )}
+          {props.block.data.image.href && (
+            <>
+              {props.block.data.image.href} &nbsp;&nbsp;
+              <span className="rmdeditor-ui-link">update</span>
+            </>
+          )}
+        </Popover>
+      </Form.Item>
+      {/* disable tracking switch */}
+      <Form.Item
+        valuePropName="checked"
+        label="Disable URL tracking"
+        labelAlign="left"
+        className="rmdeditor-form-item-align-right"
+        labelCol={{ span: 10 }}
+        wrapperCol={{ span: 14 }}
+      >
+        <Switch
+          onChange={(value) => {
+            props.block.data.image.disable_tracking = value
+            props.updateTree(props.block.path, props.block)
+            setDisableTracking(value)
+          }}
+          checked={disableTracking}
+          size="small"
+        />
+      </Form.Item>
+    </>
   )
 }
 

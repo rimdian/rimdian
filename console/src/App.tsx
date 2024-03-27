@@ -35,8 +35,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { css, CSSInterpolation, injectGlobal } from '@emotion/css'
 import CSS from 'utils/css'
 import RouteDatabase from 'components/database/route_database'
-import RouteFiles from 'components/files/route_files'
-import RouteTemplates from 'components/message_template/route_list'
+import RouteAssets from 'components/assets/route_assets'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 dayjs.extend(utc)
@@ -116,12 +115,8 @@ const App = () => {
                           element={<RouteUsers />}
                         />
                         <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/files"
-                          element={<RouteFiles />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/templates"
-                          element={<RouteTemplates />}
+                          path="/orgs/:organizationId/workspaces/:workspaceId/assets"
+                          element={<RouteAssets />}
                         />
                         <Route
                           path="/orgs/:organizationId/workspaces/:workspaceId/system/configuration"

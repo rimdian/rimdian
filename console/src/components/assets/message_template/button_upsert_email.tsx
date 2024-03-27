@@ -19,26 +19,26 @@ import { cloneDeep, kebabCase } from 'lodash'
 import Messages from 'utils/formMessages'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCode, faPalette } from '@fortawesome/free-solid-svg-icons'
-import RootBlockDefinition from '../email_editor/UI/definitions/Root'
-import OneColumnBlockDefinition from '../email_editor/UI/definitions/OneColumn'
-import Columns168BlockDefinition from '../email_editor/UI/definitions/Columns168'
-import Columns204BlockDefinition from '../email_editor/UI/definitions/Columns204'
-import Columns420BlockDefinition from '../email_editor/UI/definitions/Columns420'
-import Columns816BlockDefinition from '../email_editor/UI/definitions/Columns816'
-import Columns888BlockDefinition from '../email_editor/UI/definitions/Columns888'
-import Columns1212BlockDefinition from '../email_editor/UI/definitions/Columns1212'
-import Columns6666BlockDefinition from '../email_editor/UI/definitions/Columns6666'
-import ImageBlockDefinition from '../email_editor/UI/definitions/Image'
-import DividerBlockDefinition from '../email_editor/UI/definitions/Divider'
-import ButtonBlockDefinition from '../email_editor/UI/definitions/Button'
-import TextBlockDefinition from '../email_editor/UI/definitions/Text'
-import HeadingBlockDefinition from '../email_editor/UI/definitions/Heading'
-import { Editor, SelectedBlockButtonsProp } from '../email_editor/Editor'
-import { BlockInterface, BlockDefinitionInterface } from '../email_editor/Block'
-import ColumnBlockDefinition from '../email_editor/UI/definitions/Column'
-import { ExportHTML } from '../email_editor/UI/Preview'
-import { Layout, DesktopWidth } from '../email_editor/UI/Layout'
-import SelectedBlockButtons from '../email_editor/UI/SelectedBlockButtons'
+import RootBlockDefinition from 'components/email_editor/UI/definitions/Root'
+import OneColumnBlockDefinition from 'components/email_editor/UI/definitions/OneColumn'
+import Columns168BlockDefinition from 'components/email_editor/UI/definitions/Columns168'
+import Columns204BlockDefinition from 'components/email_editor/UI/definitions/Columns204'
+import Columns420BlockDefinition from 'components/email_editor/UI/definitions/Columns420'
+import Columns816BlockDefinition from 'components/email_editor/UI/definitions/Columns816'
+import Columns888BlockDefinition from 'components/email_editor/UI/definitions/Columns888'
+import Columns1212BlockDefinition from 'components/email_editor/UI/definitions/Columns1212'
+import Columns6666BlockDefinition from 'components/email_editor/UI/definitions/Columns6666'
+import ImageBlockDefinition from 'components/email_editor/UI/definitions/Image'
+import DividerBlockDefinition from 'components/email_editor/UI/definitions/Divider'
+import ButtonBlockDefinition from 'components/email_editor/UI/definitions/Button'
+import TextBlockDefinition from 'components/email_editor/UI/definitions/Text'
+import HeadingBlockDefinition from 'components/email_editor/UI/definitions/Heading'
+import { Editor, SelectedBlockButtonsProp } from 'components/email_editor/Editor'
+import { BlockInterface, BlockDefinitionInterface } from 'components/email_editor/Block'
+import ColumnBlockDefinition from 'components/email_editor/UI/definitions/Column'
+import { ExportHTML } from 'components/email_editor/UI/Preview'
+import { Layout, DesktopWidth } from 'components/email_editor/UI/Layout'
+import SelectedBlockButtons from 'components/email_editor/UI/SelectedBlockButtons'
 import uuid from 'short-uuid'
 import { css } from '@emotion/css'
 import InfoRadioGroup from 'components/common/input_info_radio_group'
@@ -332,7 +332,14 @@ const DrawerEmailTemplate = (props: {
                       console.log('values', values)
                       // compile html
                       if (values.engine === 'visual') {
-                        const result = ExportHTML(values.email.visual_editor_tree)
+                        const urlParams = {
+                          utm_source: values.utm_source,
+                          utm_medium: values.utm_medium,
+                          utm_campaign: values.utm_campaign,
+                          utm_content: values.utm_content
+                        }
+
+                        const result = ExportHTML(values.email.visual_editor_tree, urlParams)
 
                         if (result.errors && result.errors.length > 0) {
                           message.error(result.errors[0].formattedMessage)
@@ -598,13 +605,20 @@ const DrawerEmailTemplate = (props: {
                                   templateDataValue={getFieldValue('test_data')}
                                   selectedBlockId={divider.id}
                                   value={rootBlock}
-                                  onChange={(_newTree) => {
+                                  onChange={() => {
                                     // console.log('new tree', newTree)
                                   }}
                                   renderSelectedBlockButtons={(props: SelectedBlockButtonsProp) => (
                                     <SelectedBlockButtons {...props} />
                                   )}
                                   deviceWidth={DesktopWidth}
+                                  urlParams={{
+                                    utm_source: getFieldValue('utm_source'),
+                                    utm_medium: getFieldValue('utm_medium'),
+                                    utm_campaign: getFieldValue('utm_campaign'),
+                                    utm_content: getFieldValue('utm_content'),
+                                    utm_id: getFieldValue('id')
+                                  }}
                                 >
                                   <Layout form={form} macros={macros} height={contentHeight} />
                                 </Editor>

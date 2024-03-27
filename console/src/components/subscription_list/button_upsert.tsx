@@ -15,7 +15,7 @@ import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_wor
 import { useMemo, useState } from 'react'
 import { size } from 'lodash'
 import { SubscriptionList } from 'interfaces'
-import EmailTemplateInput from 'components/message_template/input_email'
+import EmailTemplateInput from 'components/assets/message_template/input_email'
 
 const ButtonUpsertSubscriptionList = (props: { segment?: SubscriptionList }) => {
   const [drawserVisible, setDrawserVisible] = useState(false)

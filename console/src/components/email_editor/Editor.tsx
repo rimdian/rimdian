@@ -42,6 +42,7 @@ export interface EditorContextValue {
   setCurrentHistoryIndex: (index: number) => void
   deviceWidth: number
   setDeviceWidth: (width: number) => void
+  urlParams: any
 }
 
 export interface SelectedBlockButtonsProp {
@@ -62,6 +63,7 @@ export interface EditorProps {
   renderSelectedBlockButtons: (props: SelectedBlockButtonsProp) => ReactNode
   deviceWidth: number
   selectedBlockId?: string
+  urlParams: any
 }
 
 // recursive id generation, used to clone blocks
@@ -399,7 +401,8 @@ export const Editor = (props: EditorProps): JSX.Element => {
     currentHistoryIndex: currentHistoryIndex,
     setCurrentHistoryIndex: setCurrentHistoryIndex,
     deviceWidth: deviceWidth,
-    setDeviceWidth: setDeviceWidth
+    setDeviceWidth: setDeviceWidth,
+    urlParams: props.urlParams
   }
 
   return <EditorContext.Provider value={layoutProps}>{props.children}</EditorContext.Provider>

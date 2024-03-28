@@ -1,18 +1,4 @@
-import {
-  Button,
-  Col,
-  Divider,
-  Drawer,
-  Form,
-  Input,
-  Row,
-  Select,
-  Space,
-  Tabs,
-  Tag,
-  Tooltip,
-  message
-} from 'antd'
+import { Button, Col, Divider, Drawer, Form, Input, Row, Space, Tabs, Tag, message } from 'antd'
 import { MessageTemplate } from './interfaces'
 import { useState } from 'react'
 import { cloneDeep, kebabCase } from 'lodash'
@@ -30,6 +16,7 @@ import Columns1212BlockDefinition from 'components/email_editor/UI/definitions/C
 import Columns6666BlockDefinition from 'components/email_editor/UI/definitions/Columns6666'
 import ImageBlockDefinition from 'components/email_editor/UI/definitions/Image'
 import DividerBlockDefinition from 'components/email_editor/UI/definitions/Divider'
+import OpenTrackingBlockDefinition from 'components/email_editor/UI/definitions/OpenTracking'
 import ButtonBlockDefinition from 'components/email_editor/UI/definitions/Button'
 import TextBlockDefinition from 'components/email_editor/UI/definitions/Text'
 import HeadingBlockDefinition from 'components/email_editor/UI/definitions/Heading'
@@ -44,8 +31,8 @@ import { css } from '@emotion/css'
 import InfoRadioGroup from 'components/common/input_info_radio_group'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import Nunjucks from 'nunjucks'
-import AceInput from 'components/common/input_ace'
-import IframeSandbox from 'components/email_editor/UI/Widgets/Iframe'
+// import AceInput from 'components/common/input_ace'
+// import IframeSandbox from 'components/email_editor/UI/Widgets/Iframe'
 import CSS from 'utils/css'
 
 const generateBlockFromDefinition = (blockDefinition: BlockDefinitionInterface) => {
@@ -73,6 +60,7 @@ const heading = generateBlockFromDefinition(HeadingBlockDefinition)
 const logo = generateBlockFromDefinition(ImageBlockDefinition)
 const image = generateBlockFromDefinition(ImageBlockDefinition)
 const divider = generateBlockFromDefinition(DividerBlockDefinition)
+const openTracking = generateBlockFromDefinition(OpenTrackingBlockDefinition)
 const btn = generateBlockFromDefinition(ButtonBlockDefinition)
 const column = generateBlockFromDefinition(OneColumnBlockDefinition)
 
@@ -597,6 +585,7 @@ const DrawerEmailTemplate = (props: {
                                     columns6666: Columns6666BlockDefinition,
                                     image: ImageBlockDefinition,
                                     divider: DividerBlockDefinition,
+                                    openTracking: OpenTrackingBlockDefinition,
                                     button: ButtonBlockDefinition,
                                     text: TextBlockDefinition,
                                     heading: HeadingBlockDefinition
@@ -798,31 +787,6 @@ const DrawerEmailTemplate = (props: {
           />
         </Form>
       </div>
-      {/* <Form
-        form={form}
-        initialValues={initialValues}
-        labelCol={{ span: 6 }}
-        wrapperCol={{ span: 14 }}
-        layout="horizontal"
-        className={CSS.margin_a_m + ' ' + CSS.margin_b_xl}
-      >
-       
-        <Form.Item noStyle shouldUpdate>
-          {(funcs) => {
-            const type = funcs.getFieldValue('type')
-
-            return (
-              <>
-                {type === 'web' && (
-                  <>
-                    
-                  </>
-                )}
-              </>
-            )
-          }}
-        </Form.Item>
-      </Form> */}
     </Drawer>
   )
 }

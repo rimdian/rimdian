@@ -1,8 +1,13 @@
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
-import { Form, Radio } from 'antd'
+import { Form, Radio, Space } from 'antd'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAlignLeft, faAlignCenter, faAlignRight } from '@fortawesome/free-solid-svg-icons'
+import {
+  faAlignLeft,
+  faAlignCenter,
+  faAlignRight,
+  faAlignJustify
+} from '@fortawesome/free-solid-svg-icons'
 import ColorPickerInput from '../Widgets/ColorPicker'
 import MyEditor, { EditorDataToReact } from '../Widgets/MyEditor'
 import { cloneDeep } from 'lodash'
@@ -186,22 +191,11 @@ const TextBlockDefinition: BlockDefinitionInterface = {
 
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="rmdeditor-ui-block rmdeditor-square">
-        <div className="rmdeditor-ui-block-icon">
-          <div
-            style={{ backgroundColor: '#1890ff', height: '2px', margin: '8px 14px 4px 14px' }}
-          ></div>
-          <div
-            style={{ backgroundColor: '#1890ff', height: '2px', margin: '0px 14px 4px 14px' }}
-          ></div>
-          <div
-            style={{ backgroundColor: '#1890ff', height: '2px', margin: '0px 14px 4px 14px' }}
-          ></div>
-          <div
-            style={{ backgroundColor: '#1890ff', height: '2px', margin: '0px 14px 8px 14px' }}
-          ></div>
-        </div>
-        Text
+      <div className="rmdeditor-ui-block">
+        <Space size="middle">
+          <FontAwesomeIcon icon={faAlignJustify} />
+          Text
+        </Space>
       </div>
     )
   }

@@ -144,25 +144,27 @@ export const ColorPickerLight = (props: ColorPickerInputProps) => {
         if (visible === false && props.onBlur) props.onBlur(null)
       }}
       trigger={['click']}
-      overlay={
-        <span>
-          <div style={{ color: 'black' }} onClick={(e) => e.stopPropagation()}>
-            <SketchPicker
-              color={hexColor}
-              disableAlpha={true}
-              onChange={(color: any) => {
-                setHexColor(color.hex === 'transparent' ? undefined : color.hex)
-              }}
-              onChangeComplete={(color: any) => {
-                // called after drag knobs
-                // console.log('complete')
-                props.onChange(color.hex === 'transparent' ? undefined : color.hex)
-              }}
-              presetColors={presetColors}
-            />
-          </div>
-        </span>
-      }
+      dropdownRender={() => {
+        return (
+          <span>
+            <div style={{ color: 'black' }} onClick={(e) => e.stopPropagation()}>
+              <SketchPicker
+                color={hexColor}
+                disableAlpha={true}
+                onChange={(color: any) => {
+                  setHexColor(color.hex === 'transparent' ? undefined : color.hex)
+                }}
+                onChangeComplete={(color: any) => {
+                  // called after drag knobs
+                  // console.log('complete')
+                  props.onChange(color.hex === 'transparent' ? undefined : color.hex)
+                }}
+                presetColors={presetColors}
+              />
+            </div>
+          </span>
+        )
+      }}
     >
       <span
         onMouseDown={props.onMouseDown || undefined}

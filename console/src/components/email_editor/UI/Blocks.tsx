@@ -23,18 +23,14 @@ export const Blocks = (props: BlocksProps) => {
           key="1"
           style={{ paddingLeft: 0, paddingRight: 0, paddingTop: 12, marginBottom: 0 }}
         >
-          <Row gutter={12}>
-            <Col span={12}>{props.renderBlockForMenu(props.blockDefinitions['image'])}</Col>
-            <Col span={12}>{props.renderBlockForMenu(props.blockDefinitions['button'])}</Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={12}>{props.renderBlockForMenu(props.blockDefinitions['heading'])}</Col>
-            <Col span={12}>{props.renderBlockForMenu(props.blockDefinitions['text'])}</Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={12}>{props.renderBlockForMenu(props.blockDefinitions['divider'])}</Col>
-            {/* <Col span={12}>{props.renderBlockForMenu(props.blockDefinitions["text"])}</Col> */}
-          </Row>
+          {props.renderBlockForMenu(props.blockDefinitions['image'])}
+          {props.renderBlockForMenu(props.blockDefinitions['button'])}
+
+          {props.renderBlockForMenu(props.blockDefinitions['heading'])}
+          {props.renderBlockForMenu(props.blockDefinitions['text'])}
+
+          {props.renderBlockForMenu(props.blockDefinitions['divider'])}
+          {props.renderBlockForMenu(props.blockDefinitions['openTracking'])}
         </Collapse.Panel>
         <Collapse.Panel
           header={

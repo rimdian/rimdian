@@ -1,6 +1,6 @@
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
-import { Form, InputNumber, Divider, Radio } from 'antd'
+import { Form, InputNumber, Divider, Radio, Space } from 'antd'
 import BorderInputs from '../Widgets/BorderInputs'
 import PaddingInputs from '../Widgets/PaddingInputs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -307,13 +307,11 @@ const DividerBlockDefinition: BlockDefinitionInterface = {
 
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="rmdeditor-ui-block square">
-        <div className="rmdeditor-ui-block-icon">
-          <div
-            style={{ backgroundColor: '#1890ff', height: '2px', margin: '18px 12px 18px 12px' }}
-          ></div>
-        </div>
-        Divider
+      <div className="rmdeditor-ui-block">
+        <Space size="middle">
+          <div>--</div>
+          Divider
+        </Space>
       </div>
     )
   }

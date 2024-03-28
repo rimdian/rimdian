@@ -11,7 +11,8 @@ import {
   Input,
   Switch,
   Modal,
-  message
+  message,
+  Space
 } from 'antd'
 import BorderInputs from '../Widgets/BorderInputs'
 import PaddingInputs from '../Widgets/PaddingInputs'
@@ -876,49 +877,16 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
     )
   },
 
-  // transformer: (block: BlockInterface) => {
-  //     return <div>TODO transformer for {block.kind}</div>
-  // },
-
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="rmdeditor-ui-block rmdeditor-square">
-        <div className="rmdeditor-ui-block-icon">
+      <div className="rmdeditor-ui-block">
+        <Space size="middle">
           <FontAwesomeIcon icon={faImage} />
-        </div>
-        Image
+          Image
+        </Space>
       </div>
     )
   }
-
-  // deserialize (json: any) {
-
-  //     // children can contain other definitions
-  //     // they are deserialized at top level
-  //     // block.children = json.children
-
-  //     const block: BlockInterface = {
-  //         kind: this.kind,
-  //         id: json.id,
-  //         path: json.path,
-  //         data: json.data,
-  //         children: [],
-  //     }
-
-  //     return block
-  // }
-
-  // serialize (block: BlockInterface) {
-  //     // children can contain other definitions
-  //     // they are deserialized at top level
-  //     // block.children = json.children
-  //     return {
-  //         kind: block.kind,
-  //         id: block.id,
-  //         path: block.path,
-  //         data: block.data,
-  //     }
-  // }
 }
 
 export default ImageBlockDefinition

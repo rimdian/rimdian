@@ -780,6 +780,18 @@ const treeToMjmlJSON = (
 
       return dividerBlock
 
+    case 'openTracking':
+      return {
+        tagName: 'mj-image',
+        attributes: {
+          src: 'OPEN_TRACKING_PIXEL_SRC',
+          alt: '',
+          height: 1,
+          width: 1
+        }
+      }
+      break
+
     default:
       console.log('mjml not implemented', block)
       return {

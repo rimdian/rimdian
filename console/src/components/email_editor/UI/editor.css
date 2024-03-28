@@ -297,7 +297,7 @@ body:not(.smooth-dnd-no-user-select) .rmdeditor-block-content.rmdeditor-selected
 }
 
 .rmdeditor-ui-block {
-    padding: 8px;
+    padding: 8px 12px;
     /* background-color: #15395b; */
     /* background-color: #CFD8DC; */
     background-color: white;
@@ -306,9 +306,7 @@ body:not(.smooth-dnd-no-user-select) .rmdeditor-block-content.rmdeditor-selected
     box-sizing: border-box;
     border: 1px solid rgba(3, 169, 244, 0);
     margin-bottom: 12px;
-    /* color: white; */
     color: #4E6CFF;
-    text-align: center;
 }
 
 .rmdeditor-ui-saved-block {
@@ -334,11 +332,11 @@ body:not(.smooth-dnd-no-user-select) .rmdeditor-block-content.rmdeditor-selected
 }
 
 .rmdeditor-ui-block.rmdeditor-square {
-    height: 80px;
     vertical-align: middle;
 }
 
 .rmdeditor-ui-block-icon {
+    float: left;
     font-size: 24px;
 }
 

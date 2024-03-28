@@ -1,6 +1,6 @@
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
-import { Form, Radio } from 'antd'
+import { Form, Radio, Space } from 'antd'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAlignLeft, faAlignCenter, faAlignRight } from '@fortawesome/free-solid-svg-icons'
 import ColorPickerInput from '../Widgets/ColorPicker'
@@ -209,20 +209,19 @@ const HeadingBlockDefinition: BlockDefinitionInterface = {
 
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="rmdeditor-ui-block square">
-        <div className="rmdeditor-ui-block-icon">
+      <div className="rmdeditor-ui-block">
+        <Space size="middle">
           <div
             style={{
               fontFamily: '"Times New Roman", Times, serif',
-              fontSize: '28px',
-              lineHeight: '28px',
-              margin: '5px 0'
+              fontSize: '20px',
+              lineHeight: '20px'
             }}
           >
             T
           </div>
-        </div>
-        Heading
+          Heading
+        </Space>
       </div>
     )
   }

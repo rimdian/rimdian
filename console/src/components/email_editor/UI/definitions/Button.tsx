@@ -3,7 +3,18 @@
 import { useState, useRef } from 'react'
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
-import { Popover, Button, Form, InputNumber, Divider, Radio, Input, Select, Switch } from 'antd'
+import {
+  Popover,
+  Button,
+  Form,
+  InputNumber,
+  Divider,
+  Radio,
+  Input,
+  Select,
+  Switch,
+  Space
+} from 'antd'
 import BorderInputs from '../Widgets/BorderInputs'
 import PaddingInputs from '../Widgets/PaddingInputs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -11,7 +22,7 @@ import {
   faAlignLeft,
   faAlignCenter,
   faAlignRight,
-  faHandPointer
+  faMousePointer
 } from '@fortawesome/free-solid-svg-icons'
 import ColorPickerInput from '../Widgets/ColorPicker'
 import FontStyleInputs from '../Widgets/FontStyleInputs'
@@ -766,27 +777,24 @@ const ButtonBlockDefinition: BlockDefinitionInterface = {
     )
   },
 
-  // transformer: (block: BlockInterface) => {
-  //     return <div>TODO transformer for {block.kind}</div>
-  // },
-
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
-      <div className="rmdeditor-ui-block rmdeditor-square">
-        <div className="rmdeditor-ui-block-icon">
+      <div className="rmdeditor-ui-block">
+        <Space size="middle">
           <div
             style={{
               border: '1px solid #1890ff',
               borderRadius: '4px',
-              height: '24px',
-              margin: '7px 8px',
-              fontSize: '14px'
+              // height: '24px',
+              padding: '0 4px',
+              // margin: '7px 8px',
+              fontSize: '10px'
             }}
           >
-            <FontAwesomeIcon icon={faHandPointer} />
+            <FontAwesomeIcon icon={faMousePointer} />
           </div>
-        </div>
-        Button
+          Button
+        </Space>
       </div>
     )
   }

@@ -1,4 +1,3 @@
-import React from 'react'
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
 import { Form, InputNumber, Divider, Radio } from 'antd'

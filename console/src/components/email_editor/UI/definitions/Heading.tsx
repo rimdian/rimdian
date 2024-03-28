@@ -1,15 +1,12 @@
-import React from 'react'
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
-import { Form, Radio, Divider } from 'antd'
-// import PaddingInputs from '../Widgets/PaddingInputs'
+import { Form, Radio } from 'antd'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAlignLeft, faAlignCenter, faAlignRight } from '@fortawesome/free-solid-svg-icons'
 import ColorPickerInput from '../Widgets/ColorPicker'
 import MyEditor, { EditorDataToReact } from '../Widgets/MyEditor'
 import { cloneDeep } from 'lodash'
 import ElementForms from '../Widgets/ElementForms'
-// import { element } from 'prop-types'
 
 const HeadingBlockDefinition: BlockDefinitionInterface = {
   name: 'Heading',
@@ -21,8 +18,6 @@ const HeadingBlockDefinition: BlockDefinitionInterface = {
   defaultData: {
     type: 'h1',
     align: 'left',
-    // paddingControl: 'all', // all, separate
-    // padding: '20px',
     width: '100%',
     editorData: [
       {
@@ -114,12 +109,11 @@ const HeadingBlockDefinition: BlockDefinitionInterface = {
               }}
             />
           </Form.Item>
+        </div>
 
-          <Divider className="margin-v-t" orientation="left" plain>
-            {props.block.data.type} global settings
-          </Divider>
-          {/* <div className="rmdeditor-margin-b-l rmdeditor-margin-t-l" style={{ textTransform: 'capitalize' }}>{props.block.data.type} global settings:</div> */}
+        <div className="rmdeditor-ui-menu-title">{props.block.data.type} global settings</div>
 
+        <div className="rmdeditor-padding-h-l">
           {props.block.data.type === 'h1' && (
             <ElementForms block={root} updateTree={props.updateTree} element="h1" />
           )}
@@ -129,59 +123,6 @@ const HeadingBlockDefinition: BlockDefinitionInterface = {
           {props.block.data.type === 'h3' && (
             <ElementForms block={root} updateTree={props.updateTree} element="h3" />
           )}
-
-          {/* <Form.Item label="Padding control" labelAlign="left" className="rmdeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
-                    <Radio.Group
-                        style={{ width: '100%' }}
-                        onChange={(e) => {
-                            props.block.data.paddingControl = e.target.value
-                            props.updateTree(props.block.path, props.block)
-                        }}
-                        value={props.block.data.paddingControl}
-                        optionType="button"
-                        size="small"
-                    // buttonStyle="solid"
-                    >
-                        <Radio.Button style={{ width: '50%', textAlign: 'center' }} value="all">All</Radio.Button>
-                        <Radio.Button style={{ width: '50%', textAlign: 'center' }} value="separate">Separate</Radio.Button>
-                    </Radio.Group>
-                </Form.Item>
-
-                {props.block.data.paddingControl === 'all' && <>
-                    <Form.Item label="Paddings" labelAlign="left" className="rmdeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
-                        <InputNumber
-                            style={{ width: '100%' }}
-                            value={parseInt(props.block.data.padding || '0px')}
-                            onChange={(value) => {
-                                props.block.data.padding = value + 'px'
-                                props.updateTree(props.block.path, props.block)
-                            }}
-                            size="small"
-                            step={1}
-                            min={0}
-                            parser={(value: string) => {
-                                // if (['▭'].indexOf(value)) {
-                                //     value = value.substring(1)
-                                // }
-                                return parseInt(value.replace('px', ''))
-                            }}
-                            // formatter={value => '▭  ' + value + 'px'}
-                            formatter={value => value + 'px'}
-                        />
-                    </Form.Item>
-                </>} 
-
-                {props.block.data.paddingControl === 'separate' && <>
-                    <Form.Item label="Paddings" labelAlign="left" className="rmdeditor-form-item-align-right" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
-                        <PaddingInputs
-                            styles={props.block.data}
-                            onChange={(updatedStyles: any) => {
-                                props.block.data = updatedStyles
-                                props.updateTree(props.block.path, props.block)
-                            }}
-                        />
-                    </Form.Item>
-                </>} */}
         </div>
       </>
     )
@@ -265,10 +206,6 @@ const HeadingBlockDefinition: BlockDefinitionInterface = {
       </div>
     )
   },
-
-  // transformer: (block: BlockInterface) => {
-  //     return <div>TODO transformer for {block.kind}</div>
-  // },
 
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (

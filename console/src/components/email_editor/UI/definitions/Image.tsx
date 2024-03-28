@@ -1,4 +1,4 @@
-import React, { useState, useRef, MutableRefObject } from 'react'
+import { useState, useRef, MutableRefObject } from 'react'
 import { BlockDefinitionInterface, BlockInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
 import {

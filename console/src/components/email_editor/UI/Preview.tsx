@@ -13,7 +13,6 @@ import CSS from 'utils/css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDesktop, faMobileAlt, faPen } from '@fortawesome/free-solid-svg-icons'
 import { DesktopWidth, MobileWidth } from './Layout'
-import { url } from 'inspector'
 
 const objectAsKebab = (obj: any) => {
   const newObj: any = {}
@@ -390,7 +389,8 @@ const treeToMjmlJSON = (
             part.underlined === true ||
             part.fontSize ||
             part.fontColor ||
-            part.fontFamily
+            part.fontFamily ||
+            part.hyperlink
           ) {
             const spanStyles = []
             if (part.bold) spanStyles.push('font-weight: bold')
@@ -399,6 +399,28 @@ const treeToMjmlJSON = (
             if (part.fontSize) spanStyles.push('font-size: ' + part.fontSize)
             if (part.fontColor) spanStyles.push('color: ' + part.fontColor)
             if (part.fontFamily) spanStyles.push('font-family: ' + part.fontFamily)
+            if (part.hyperlink) {
+              const hyperlinkStyles = [
+                'color: ' + block.data.hyperlinkStyles.color,
+                'font-family: ' + block.data.hyperlinkStyles.fontFamily,
+                'font-size: ' + block.data.hyperlinkStyles.fontSize,
+                'font-style: ' + block.data.hyperlinkStyles.fontStyle,
+                'font-weight: ' + block.data.hyperlinkStyles.fontWeight
+              ]
+
+              const finalURL = part.hyperlink.disable_tracking
+                ? part.hyperlink.url
+                : trackURL(part.hyperlink.url, urlParams)
+              lineContent +=
+                '<a style="' +
+                hyperlinkStyles.join('; ') +
+                '" href="' +
+                finalURL +
+                '">' +
+                part.text +
+                '</a>'
+              return
+            }
 
             lineContent +=
               '<span' +
@@ -453,6 +475,14 @@ const treeToMjmlJSON = (
               '>' +
               lineContent +
               '</h2>'
+            break
+          case 'h3':
+            lineContent =
+              '<h3' +
+              (lineStyles.length > 0 ? ' style="' + lineStyles.join('; ') + '"' : '') +
+              '>' +
+              lineContent +
+              '</h3>'
             break
           case 'paragraph':
             lineContent =

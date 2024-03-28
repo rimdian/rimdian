@@ -70,13 +70,13 @@ export const Blocks = (props: BlocksProps) => {
           style={{ paddingLeft: 0, paddingRight: 0, paddingTop: 12, marginBottom: 0 }}
         >
           {props.renderBlockForMenu(props.blockDefinitions['oneColumn'])}
-          {props.renderBlockForMenu(props.blockDefinitions['columns420'])}
-          {props.renderBlockForMenu(props.blockDefinitions['columns816'])}
           {props.renderBlockForMenu(props.blockDefinitions['columns1212'])}
-          {props.renderBlockForMenu(props.blockDefinitions['columns168'])}
-          {props.renderBlockForMenu(props.blockDefinitions['columns204'])}
           {props.renderBlockForMenu(props.blockDefinitions['columns888'])}
           {props.renderBlockForMenu(props.blockDefinitions['columns6666'])}
+          {props.renderBlockForMenu(props.blockDefinitions['columns420'])}
+          {props.renderBlockForMenu(props.blockDefinitions['columns816'])}
+          {props.renderBlockForMenu(props.blockDefinitions['columns168'])}
+          {props.renderBlockForMenu(props.blockDefinitions['columns204'])}
         </Collapse.Panel>
       </Collapse>
     </>

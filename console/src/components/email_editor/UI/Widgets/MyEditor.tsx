@@ -4,9 +4,11 @@ import { Slate, Editable, ReactEditor, withReact, useSlate } from 'slate-react'
 import { Editor, Transforms, Text, createEditor, Element as SlateElement, Descendant } from 'slate'
 import cn from 'classnames'
 import { withHistory, HistoryEditor } from 'slate-history'
-import { BoldOutlined, ItalicOutlined, UnderlineOutlined } from '@ant-design/icons'
-import { Select } from 'antd'
+import { Button, Input, Popover, Select, Switch } from 'antd'
 import { ColorPickerLight } from './ColorPicker'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLink } from '@fortawesome/free-solid-svg-icons'
+import CSS from 'utils/css'
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
@@ -33,10 +35,16 @@ type FormattedText = {
   text: string
   bold?: boolean
   italic?: boolean
-  underline?: boolean
+  underlined?: boolean
   fontSize?: number
   fontFamily?: string
   fontColor?: string
+  hyperlink?: TextHyperlink
+}
+
+interface TextHyperlink {
+  url: string
+  disable_tracking: boolean
 }
 
 type CustomText = FormattedText
@@ -235,7 +243,6 @@ const Element = (props: any) => {
 const Leaf = (props: any) => {
   let content = props.children
 
-  // console.log('leaf', leaf)
   if (props.leaf.bold) {
     content = <strong>{content}</strong>
   }
@@ -244,7 +251,7 @@ const Leaf = (props: any) => {
     content = <em>{content}</em>
   }
 
-  if (props.leaf.underline) {
+  if (props.leaf.underlined) {
     content = <u>{content}</u>
   }
 
@@ -258,6 +265,10 @@ const Leaf = (props: any) => {
 
   if (props.leaf.fontColor) {
     content = <span style={{ color: props.leaf.fontColor }}>{content}</span>
+  }
+
+  if (props.leaf.hyperlink) {
+    content = <span style={props.styles.hyperlink}>{content}</span>
   }
 
   return <span {...props.attributes}>{content}</span>
@@ -320,6 +331,7 @@ const MyToolbar = (props: any) => {
   let fontSizeValue = undefined
   let fontFamilyValue = undefined
   let fontColorValue = undefined
+  let hyperlinkValue = undefined
 
   const [matchFontSize]: any = Editor.nodes(editor, {
     match: (n) => (Text.isText(n) && n.fontSize ? true : false),
@@ -336,38 +348,90 @@ const MyToolbar = (props: any) => {
     mode: 'all'
   })
 
+  const [matchURL]: any = Editor.nodes(editor, {
+    match: (n) => (Text.isText(n) && n.hyperlink ? true : false),
+    mode: 'all'
+  })
+
   if (
     matchFontSize &&
     matchFontSize[0] &&
     Text.isText(matchFontSize[0]) &&
     matchFontSize[0].fontSize
-  )
+  ) {
     fontSizeValue = matchFontSize[0].fontSize
+  }
+
   if (
     matchFontFamily &&
     matchFontFamily[0] &&
     Text.isText(matchFontFamily[0]) &&
     matchFontFamily[0].fontFamily
-  )
+  ) {
     fontFamilyValue = matchFontFamily[0].fontFamily
+  }
+
   if (
     matchFontColor &&
     matchFontColor[0] &&
     Text.isText(matchFontColor[0]) &&
     matchFontColor[0].fontColor
-  )
+  ) {
     fontColorValue = matchFontColor[0].fontColor
+  }
+
+  if (matchURL && matchURL[0] && Text.isText(matchURL[0]) && matchURL[0].hyperlink) {
+    hyperlinkValue = matchURL[0].hyperlink
+  }
 
   return (
     <div ref={ref} className="rmdeditor-toolbar">
       {props.toolbarButtons.includes('bold') && (
-        <FormatButton format="bold" icon={<BoldOutlined />} />
+        <FormatButton format="bold" icon={<b style={{ fontFamily: 'Tahoma, sans serif' }}>B</b>} />
       )}
       {props.toolbarButtons.includes('italic') && (
-        <FormatButton format="italic" icon={<ItalicOutlined />} />
+        <FormatButton
+          format="italic"
+          icon={
+            <b>
+              <i style={{ fontFamily: 'Tahoma, sans serif' }}>I</i>
+            </b>
+          }
+        />
       )}
       {props.toolbarButtons.includes('underlined') && (
-        <FormatButton format="underlined" icon={<UnderlineOutlined />} />
+        <FormatButton
+          format="underlined"
+          icon={<b style={{ fontFamily: 'Tahoma, sans serif', textDecoration: 'underline' }}>U</b>}
+        />
+      )}
+      {props.toolbarButtons.includes('hyperlink') && (
+        <>
+          <HyperlinkButton
+            value={hyperlinkValue}
+            onOpen={() => {
+              // save selection
+              if (editor.selection) editor.savedSelection = editor.selection
+            }}
+            onBlur={() => {
+              ReactEditor.focus(editor)
+            }}
+            onChange={(newData: any) => {
+              if (editor.savedSelection) {
+                Transforms.select(editor, editor.savedSelection)
+                Transforms.setNodes(
+                  editor,
+                  {
+                    hyperlink: newData
+                  },
+                  { match: Text.isText, split: true }
+                )
+                // focus required to commit changes to the tree
+                ReactEditor.focus(editor)
+              }
+            }}
+          />
+        </>
       )}
       {props.toolbarButtons.includes('h1') && (
         <BlockButton format="h1" icon={<span style={{ fontSize: '15px' }}>H1</span>} />
@@ -390,7 +454,7 @@ const MyToolbar = (props: any) => {
             value={fontSizeValue}
             onMouseDown={() => {
               // save last known selection
-              if (!editor.savedSelection) editor.savedSelection = editor.selection
+              if (editor.selection) editor.savedSelection = editor.selection
               // console.log('down')
             }}
             onBlur={() => {
@@ -403,7 +467,7 @@ const MyToolbar = (props: any) => {
               if (editor.selection) {
                 Transforms.select(editor, editor.selection)
                 clearFormat(editor, 'fontSize')
-                editor.savedSelection = null
+                // focus required to commit changes to the tree
                 ReactEditor.focus(editor)
               }
             }}
@@ -415,7 +479,8 @@ const MyToolbar = (props: any) => {
                 Transforms.select(editor, editor.savedSelection)
                 if (!val) clearFormat(editor, 'fontSize')
                 else setFontProperty(editor, 'fontSize', val)
-                editor.savedSelection = null
+
+                // focus required to commit changes to the tree
                 ReactEditor.focus(editor)
               } else {
                 // console.log('no selection')
@@ -434,13 +499,15 @@ const MyToolbar = (props: any) => {
             value={fontFamilyValue}
             onMouseDown={() => {
               // save last known selection
-              if (!editor.savedSelection) editor.savedSelection = editor.selection
+              if (editor.selection) editor.savedSelection = editor.selection
             }}
             onClear={() => {
               if (editor.selection) {
                 Transforms.select(editor, editor.selection)
                 clearFormat(editor, 'fontFamily')
                 editor.savedSelection = null
+
+                // focus required to commit changes to the tree
                 ReactEditor.focus(editor)
               }
             }}
@@ -454,7 +521,8 @@ const MyToolbar = (props: any) => {
               if (editor.savedSelection) {
                 Transforms.select(editor, editor.savedSelection)
                 setFontProperty(editor, 'fontFamily', val)
-                editor.savedSelection = null
+
+                // focus required to commit changes to the tree
                 ReactEditor.focus(editor)
               }
             }}
@@ -467,18 +535,18 @@ const MyToolbar = (props: any) => {
             value={fontColorValue}
             onMouseDown={() => {
               // save last known selection
-              if (!editor.savedSelection) editor.savedSelection = editor.selection
+              if (editor.selection) editor.savedSelection = editor.selection
             }}
             onBlur={() => {
               // reset selection on exit
               editor.savedSelection = null
             }}
             onChange={(newColor) => {
-              // console.log('newColor', newColor)
               if (editor.savedSelection) {
                 Transforms.select(editor, editor.savedSelection)
                 setFontProperty(editor, 'fontColor', newColor)
-                // console.log('newColor', newColor)
+
+                // focus required to commit changes to the tree
                 ReactEditor.focus(editor)
               }
             }}
@@ -493,7 +561,7 @@ const MyToolbar = (props: any) => {
 const FormatButton = (props: { format: string; icon: React.ReactNode }) => {
   const editor = useSlate()
   return (
-    <Button
+    <ToolbarButton
       className="rmdeditor-toolbar-button"
       reversed
       active={isFormatActive(editor, props.format)}
@@ -503,7 +571,7 @@ const FormatButton = (props: { format: string; icon: React.ReactNode }) => {
       }}
     >
       {props.icon}
-    </Button>
+    </ToolbarButton>
   )
 }
 
@@ -511,7 +579,7 @@ const BlockButton = (props: { format: string; icon: React.ReactNode }) => {
   const editor = useSlate()
 
   return (
-    <Button
+    <ToolbarButton
       className="rmdeditor-toolbar-button"
       reversed
       active={isBlockActive(editor, props.format)}
@@ -521,11 +589,11 @@ const BlockButton = (props: { format: string; icon: React.ReactNode }) => {
       }}
     >
       {props.icon}
-    </Button>
+    </ToolbarButton>
   )
 }
 
-const Button = React.forwardRef(
+const ToolbarButton = React.forwardRef(
   (
     {
       className,
@@ -542,6 +610,99 @@ const Button = React.forwardRef(
     // ref: Ref<OrNull<HTMLSpanElement>>
   ) => <div {...props} ref={ref} className={cn('rmdeditor-toolbar-button', { active: active })} />
 )
+
+interface HoveringToolbarProps {
+  value: any
+  onOpen: () => void
+  onBlur: () => void
+  onChange: (newData: any) => void
+}
+
+const HyperlinkButton = (props: HoveringToolbarProps) => {
+  const [open, setOpen] = useState(false)
+  const [url, setUrl] = useState(undefined)
+  const [disableTracking, setDisableTracking] = useState(false)
+
+  const isActive = props.value?.url !== undefined
+
+  useEffect(() => {
+    if (open) {
+      setUrl(props.value?.url)
+      setDisableTracking(props.value?.disable_tracking || false)
+    } else {
+      setUrl(undefined)
+      setDisableTracking(false)
+    }
+  }, [open, props.value])
+
+  const onClear = () => {
+    props.onChange(undefined)
+    setOpen(false)
+  }
+
+  const onSave = () => {
+    props.onChange({
+      url: url,
+      disable_tracking: disableTracking
+    })
+    setOpen(false)
+  }
+
+  return (
+    <Popover
+      trigger={['click']}
+      placement="topLeft"
+      destroyTooltipOnHide={true}
+      open={open}
+      onOpenChange={(open) => {
+        setOpen(open)
+        if (open) props.onOpen()
+        else props.onBlur()
+      }}
+      content={
+        <div>
+          <p>
+            <b>Hyperlink</b>
+          </p>
+          <p>
+            <Input placeholder="URL" value={url} onChange={(e: any) => setUrl(e.target.value)} />
+          </p>
+          <p>
+            <Switch
+              className={CSS.pull_right}
+              checked={disableTracking}
+              onChange={(checked) => setDisableTracking(checked)}
+            />
+            <b className={CSS.padding_r_l}>Disable URL tracking</b>
+          </p>
+          <Button
+            type="default"
+            style={{ width: '47%', marginRight: '3%' }}
+            size="small"
+            onClick={onClear}
+          >
+            Clear
+          </Button>
+          <Button
+            type="primary"
+            style={{ width: '47%', marginLeft: '3%' }}
+            size="small"
+            onClick={onSave}
+          >
+            Save
+          </Button>
+        </div>
+      }
+    >
+      <span
+        className={cn('rmdeditor-toolbar-button', { active: isActive })}
+        style={{ padding: '0px 0px 0px 2px' }}
+      >
+        <FontAwesomeIcon icon={faLink} style={{ verticalAlign: 'middle', fontSize: 13 }} />
+      </span>
+    </Popover>
+  )
+}
 
 export default MyEditor
 
@@ -622,6 +783,26 @@ const renderElementInReact = (key: any, element: any, styles: any) => {
 
     if (element.underlined) {
       children = <u key={key}>{children}</u>
+    }
+
+    if (element.hyperlink) {
+      children = (
+        <span
+          style={{
+            color: styles.hyperlink.color,
+            textDecoration: styles.hyperlink.textDecoration,
+            fontFamily: styles.hyperlink.fontFamily,
+            fontSize: styles.hyperlink.fontSize,
+            fontWeight: styles.hyperlink.fontWeight,
+            fontStyle: styles.hyperlink.fontStyle,
+            textTransform: styles.hyperlink.textTransform,
+            cursor: 'pointer'
+          }}
+          key={key}
+        >
+          {children}
+        </span>
+      )
     }
 
     if (element.fontSize) {

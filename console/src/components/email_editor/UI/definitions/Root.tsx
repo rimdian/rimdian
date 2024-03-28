@@ -1,10 +1,9 @@
-import React, { ReactNode } from 'react'
+import { ReactNode } from 'react'
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
 import { Form, InputNumber } from 'antd'
 import ColorPickerInput from '../Widgets/ColorPicker'
 import { Fonts } from '../Widgets/ElementForms'
-// import ElementForms from '../Widgets/ElementForms'
 
 const defaultWidth = '600px'
 
@@ -78,6 +77,15 @@ const RootBlockDefinition: BlockDefinitionInterface = {
         paddingLeft: '0px',
         margin: 0,
         fontFamily: Fonts[2].value
+      },
+      hyperlink: {
+        color: '#4e6cff',
+        textDecoration: 'none',
+        fontFamily: Fonts[2].value,
+        fontSize: '16px',
+        fontWeight: 400,
+        fontStyle: 'normal',
+        textTransform: 'none'
       }
     }
   },
@@ -128,18 +136,6 @@ const RootBlockDefinition: BlockDefinitionInterface = {
             />
           </Form.Item>
         </div>
-
-        {/* <Collapse className="rmdeditor-padding-h-s" defaultActiveKey={['1']} ghost accordion>
-                <Collapse.Panel header="Paragraph" key="1">
-                    <ElementForms block={props.block} updateTree={props.updateTree} element="paragraph" />
-                </Collapse.Panel>
-                <Collapse.Panel header="Heading 1" key="2">
-                    <ElementForms block={props.block} updateTree={props.updateTree} element="h1" />
-                </Collapse.Panel>
-                <Collapse.Panel header="Heading 2" key="3">
-                    <ElementForms block={props.block} updateTree={props.updateTree} element="h2" />
-                </Collapse.Panel>
-            </Collapse> */}
       </>
     )
   },
@@ -165,39 +161,6 @@ const RootBlockDefinition: BlockDefinitionInterface = {
       </div>
     )
   }
-
-  // transformer: (block: BlockInterface) => {
-  //     return <div>TODO transformer for {block.kind}</div>
-  // },
-
-  // deserialize (json: any) {
-
-  //     // children can contain other definitions
-  //     // they are deserialized at top level
-  //     // block.children = json.children
-
-  //     const block: BlockInterface = {
-  //         kind: this.kind,
-  //         id: json.id,
-  //         path: json.path,
-  //         data: json.data,
-  //         children: [],
-  //     }
-
-  //     return block
-  // }
-
-  // serialize (block: BlockInterface) {
-  //     // children can contain other definitions
-  //     // they are deserialized at top level
-  //     // block.children = json.children
-  //     return {
-  //         kind: block.kind,
-  //         id: block.id,
-  //         path: block.path,
-  //         data: block.data,
-  //     }
-  // }
 }
 
 export default RootBlockDefinition

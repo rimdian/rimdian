@@ -10,7 +10,6 @@ import {
   faDesktop,
   faMobileAlt,
   faEye,
-  faPen,
   faChevronLeft,
   faChevronRight
 } from '@fortawesome/free-solid-svg-icons'
@@ -133,7 +132,7 @@ export const Layout = (props: any): JSX.Element => {
             </Form.Item>
 
             <Form.Item
-              label={<span className={CSS.padding_h_m}>Notification test data</span>}
+              label={<span className={CSS.padding_h_m}>Test data</span>}
               name="test_data"
               validateFirst={true}
               rules={[

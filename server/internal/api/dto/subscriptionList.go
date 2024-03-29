@@ -3,6 +3,7 @@ package dto
 import (
 	"net/http"
 
+	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
 
@@ -23,4 +24,9 @@ func (params *SubscriptionListListParams) FromRequest(r *http.Request) (err erro
 	}
 
 	return nil
+}
+
+type SubscriptionListCreate struct {
+	WorkspaceID string `json:"workspace_id"`
+	*entity.SubscriptionList
 }

@@ -156,6 +156,16 @@ func (pipe *DataLogPipeline) ExtractAndValidateItem() {
 			return
 		}
 		pipe.ExtractCustomEventFromDataLogItem()
+	case "subscription_list_user":
+		// subscription_list_user requires a user
+		pipe.ExtractUserFromDataLogItem()
+		if pipe.HasError() {
+			return
+		}
+		pipe.ExtractSubscriptionListUserFromDataLogItem()
+		if pipe.HasError() {
+			return
+		}
 	default:
 		pipe.ExtractAppItemFromDataLogItem()
 	}
@@ -388,6 +398,26 @@ func (pipe *DataLogPipeline) ExtractPostviewFromDataLogItem() {
 		pipe.DataLog.ItemExternalID = pipe.DataLog.UpsertedPostview.ExternalID
 		pipe.DataLog.EventAt = *pipe.DataLog.UpsertedPostview.UpdatedAt
 		pipe.DataLog.EventAtTrunc = pipe.DataLog.UpsertedPostview.UpdatedAt.Truncate(time.Hour)
+	}
+}
+
+func (pipe *DataLogPipeline) ExtractSubscriptionListUserFromDataLogItem() {
+
+	var err error
+	subscription_list_user, err := entity.NewSubscriptionListUserFromDataLog(pipe.DataLog, pipe.DataLogInQueue.Context.ClockDifference)
+
+	if err != nil {
+		pipe.SetError("subscription_list_user", err.Error(), false)
+		return
+	}
+
+	pipe.DataLog.UpsertedSubscriptionListUser = subscription_list_user
+
+	if pipe.DataLog.Kind == "subscription_list_user" {
+		pipe.DataLog.ItemID = pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID
+		pipe.DataLog.ItemExternalID = pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID
+		pipe.DataLog.EventAt = *pipe.DataLog.UpsertedSubscriptionListUser.UpdatedAt
+		pipe.DataLog.EventAtTrunc = pipe.DataLog.UpsertedSubscriptionListUser.UpdatedAt.Truncate(time.Hour)
 	}
 }
 

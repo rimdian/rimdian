@@ -786,8 +786,8 @@ const treeToMjmlJSON = (
         attributes: {
           src: 'OPEN_TRACKING_PIXEL_SRC',
           alt: '',
-          height: 1,
-          width: 1
+          height: '1px',
+          width: '1px'
         }
       }
       break

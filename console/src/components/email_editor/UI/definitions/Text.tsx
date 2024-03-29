@@ -185,10 +185,6 @@ const TextBlockDefinition: BlockDefinitionInterface = {
     )
   },
 
-  // transformer: (block: BlockInterface) => {
-  //     return <div>TODO transformer for {block.kind}</div>
-  // },
-
   renderMenu: (_blockDefinition: BlockDefinitionInterface) => {
     return (
       <div className="rmdeditor-ui-block">

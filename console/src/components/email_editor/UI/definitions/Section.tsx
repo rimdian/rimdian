@@ -672,39 +672,6 @@ const SectionBlockDefinition: BlockDefinitionInterface = {
       </div>
     )
   }
-
-  // transformer: (block: BlockInterface) => {
-  //     return <div>TODO transformer for {block.kind}</div>
-  // },
-
-  // deserialize (json: any) {
-
-  //     // children can contain other definitions
-  //     // they are deserialized at top level
-  //     // block.children = json.children
-
-  //     const block: BlockInterface = {
-  //         kind: this.kind,
-  //         id: json.id,
-  //         path: json.path,
-  //         data: json.data,
-  //         children: [],
-  //     }
-
-  //     return block
-  // }
-
-  // serialize (block: BlockInterface) {
-  //     // children can contain other definitions
-  //     // they are deserialized at top level
-  //     // block.children = json.children
-  //     return {
-  //         kind: block.kind,
-  //         id: block.id,
-  //         path: block.path,
-  //         data: block.data,
-  //     }
-  // }
 }
 
 export default SectionBlockDefinition

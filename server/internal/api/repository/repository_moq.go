@@ -68,6 +68,9 @@ var _ Repository = &RepositoryMock{}
 //			CreateOrganizationFunc: func(ctx context.Context, organization *entity.Organization, tx *sql.Tx) error {
 //				panic("mock out the CreateOrganization method")
 //			},
+//			CreateSubscriptionListFunc: func(ctx context.Context, workspaceID string, list *entity.SubscriptionList) error {
+//				panic("mock out the CreateSubscriptionList method")
+//			},
 //			CreateTableFunc: func(ctx context.Context, workspace *entity.Workspace, table *entity.AppTableManifest) error {
 //				panic("mock out the CreateTable method")
 //			},
@@ -593,6 +596,9 @@ type RepositoryMock struct {
 
 	// CreateOrganizationFunc mocks the CreateOrganization method.
 	CreateOrganizationFunc func(ctx context.Context, organization *entity.Organization, tx *sql.Tx) error
+
+	// CreateSubscriptionListFunc mocks the CreateSubscriptionList method.
+	CreateSubscriptionListFunc func(ctx context.Context, workspaceID string, list *entity.SubscriptionList) error
 
 	// CreateTableFunc mocks the CreateTable method.
 	CreateTableFunc func(ctx context.Context, workspace *entity.Workspace, table *entity.AppTableManifest) error
@@ -1228,6 +1234,15 @@ type RepositoryMock struct {
 			Organization *entity.Organization
 			// Tx is the tx argument value.
 			Tx *sql.Tx
+		}
+		// CreateSubscriptionList holds details about calls to the CreateSubscriptionList method.
+		CreateSubscriptionList []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// List is the list argument value.
+			List *entity.SubscriptionList
 		}
 		// CreateTable holds details about calls to the CreateTable method.
 		CreateTable []struct {
@@ -2857,6 +2872,7 @@ type RepositoryMock struct {
 	lockCountSuccessfulDataLogsForDemo        sync.RWMutex
 	lockCreateChannel                         sync.RWMutex
 	lockCreateOrganization                    sync.RWMutex
+	lockCreateSubscriptionList                sync.RWMutex
 	lockCreateTable                           sync.RWMutex
 	lockCreateUserAlias                       sync.RWMutex
 	lockCreateWorkspaceTables                 sync.RWMutex
@@ -3662,6 +3678,46 @@ func (mock *RepositoryMock) CreateOrganizationCalls() []struct {
 	mock.lockCreateOrganization.RLock()
 	calls = mock.calls.CreateOrganization
 	mock.lockCreateOrganization.RUnlock()
+	return calls
+}
+
+// CreateSubscriptionList calls CreateSubscriptionListFunc.
+func (mock *RepositoryMock) CreateSubscriptionList(ctx context.Context, workspaceID string, list *entity.SubscriptionList) error {
+	if mock.CreateSubscriptionListFunc == nil {
+		panic("RepositoryMock.CreateSubscriptionListFunc: method is nil but Repository.CreateSubscriptionList was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		List        *entity.SubscriptionList
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		List:        list,
+	}
+	mock.lockCreateSubscriptionList.Lock()
+	mock.calls.CreateSubscriptionList = append(mock.calls.CreateSubscriptionList, callInfo)
+	mock.lockCreateSubscriptionList.Unlock()
+	return mock.CreateSubscriptionListFunc(ctx, workspaceID, list)
+}
+
+// CreateSubscriptionListCalls gets all the calls that were made to CreateSubscriptionList.
+// Check the length with:
+//
+//	len(mockedRepository.CreateSubscriptionListCalls())
+func (mock *RepositoryMock) CreateSubscriptionListCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	List        *entity.SubscriptionList
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		List        *entity.SubscriptionList
+	}
+	mock.lockCreateSubscriptionList.RLock()
+	calls = mock.calls.CreateSubscriptionList
+	mock.lockCreateSubscriptionList.RUnlock()
 	return calls
 }
 

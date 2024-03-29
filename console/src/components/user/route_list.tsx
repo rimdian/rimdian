@@ -191,11 +191,16 @@ const RouteUsers = () => {
   }, [workspaceCtx.segmentsMap])
 
   const currentSegment = useMemo(() => {
-    if (searchParams.get('segment_id') === '_all' || !searchParams.get('segment_id')) {
+    if (
+      searchParams.get('segment_id') === '_all' ||
+      (!searchParams.get('segment_id') && !searchParams.get('list_id'))
+    ) {
       return workspaceCtx.segmentsMap['_all']
     }
 
-    return workspaceCtx.segmentsMap[searchParams.get('segment_id') as string]
+    if (searchParams.get('segment_id'))
+      return workspaceCtx.segmentsMap[searchParams.get('segment_id') as string]
+    else return undefined
   }, [workspaceCtx.segmentsMap, searchParams])
 
   const currentList = useMemo(() => {
@@ -224,7 +229,7 @@ const RouteUsers = () => {
             <ul className={secondMenuCSS.list}>
               <li
                 onClick={() => setSearchParams({})}
-                className={currentSegment.id === '_all' ? 'active' : ''}
+                className={currentSegment && currentSegment.id === '_all' ? 'active' : ''}
               >
                 All users
                 <span className={secondMenuCSS.counter}>
@@ -240,7 +245,7 @@ const RouteUsers = () => {
                   <li
                     key={segment.id}
                     onClick={() => setSearchParams({ segment_id: segment.id })}
-                    className={currentSegment.id === segment.id ? 'active' : ''}
+                    className={currentSegment && currentSegment.id === segment.id ? 'active' : ''}
                   >
                     {segment.status === 'building' && (
                       <Tooltip className={CSS.pull_right} title="Building...">
@@ -296,7 +301,7 @@ const RouteUsers = () => {
         <Col span={19}>
           <div className={CSS.top}>
             <h1>Users</h1>
-            {currentSegment.id !== '_all' && (
+            {currentSegment && currentSegment.id !== '_all' && (
               <>
                 <Space style={{ marginTop: 2, lineHeight: '20px', height: '20px', marginLeft: 20 }}>
                   <Tag color={currentSegment.color}>{currentSegment.name}</Tag>
@@ -309,10 +314,36 @@ const RouteUsers = () => {
                 </Space>
 
                 <div className={CSS.topSeparator}></div>
-                {currentSegment.id !== 'anonymous' && currentSegment.id !== 'authenticated' && (
+                {currentSegment &&
+                  currentSegment.id !== 'anonymous' &&
+                  currentSegment.id !== 'authenticated' && (
+                    <Space>
+                      <Popconfirm
+                        title="Do you really want to delete this segment?"
+                        okText="Delete"
+                        okButtonProps={{ danger: true }}
+                        cancelText="No"
+                      >
+                        <Button type="text" size="small">
+                          <FontAwesomeIcon icon={faTrashAlt} />
+                        </Button>
+                      </Popconfirm>
+                    </Space>
+                  )}
+              </>
+            )}
+
+            {currentList && (
+              <>
+                <Space style={{ marginTop: 2, lineHeight: '20px', height: '20px', marginLeft: 20 }}>
+                  <Tag color={currentList.color}>{currentList.name}</Tag>
+                </Space>
+
+                <div className={CSS.topSeparator}></div>
+                {currentList && (
                   <Space>
                     <Popconfirm
-                      title="Do you really want to delete this segment?"
+                      title="Do you really want to delete this subscription list?"
                       okText="Delete"
                       okButtonProps={{ danger: true }}
                       cancelText="No"
@@ -321,12 +352,12 @@ const RouteUsers = () => {
                         <FontAwesomeIcon icon={faTrashAlt} />
                       </Button>
                     </Popconfirm>
-                    <ButtonUpsertSegment segment={currentSegment} />
                   </Space>
                 )}
               </>
             )}
           </div>
+
           <Table
             pagination={false}
             dataSource={data?.users}

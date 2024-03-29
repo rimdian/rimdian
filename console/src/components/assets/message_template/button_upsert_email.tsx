@@ -97,6 +97,7 @@ column.children[0].children.push(text)
 column.children[0].children.push(divider)
 column.children[0].children.push(image)
 column.children[0].children.push(btn)
+column.children[0].children.push(openTracking)
 
 const rootData = cloneDeep(RootBlockDefinition.defaultData)
 // rootData.styles.body.backgroundColor = '#1A237E'
@@ -170,7 +171,6 @@ const DrawerEmailTemplate = (props: {
     data.workspace_id = workspaceCtx.workspace.id
     data.channel = 'email'
 
-    console.log(data)
     if (props.template) {
       data.id = props.template.id
     }
@@ -286,6 +286,7 @@ const DrawerEmailTemplate = (props: {
     <Drawer
       title={<>{props.template ? 'Edit template' : 'Create a template'}</>}
       closable={true}
+      keyboard={false}
       maskClosable={false}
       width={tab === 'settings' ? 900 : '95%'}
       open={true}
@@ -295,7 +296,7 @@ const DrawerEmailTemplate = (props: {
       extra={
         <div style={{ textAlign: 'right' }}>
           <Space>
-            <Button loading={loading} onClick={() => props.setDrawserVisible(false)}>
+            <Button type="link" loading={loading} onClick={() => props.setDrawserVisible(false)}>
               Cancel
             </Button>
 

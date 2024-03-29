@@ -144,6 +144,10 @@ func (repo *RepositoryImpl) ListUsers(ctx context.Context, workspace *entity.Wor
 		}
 	}
 
+	if params.ListID != nil && *params.ListID != "" {
+		queryBuilder = queryBuilder.InnerJoin("subscribe_to_list ON u.id = subscribe_to_list.user_id").Where(sq.Eq{"subscribe_to_list.subscription_list_id": *params.ListID})
+	}
+
 	users, err = repo.FetchUsers(ctx, workspace, queryBuilder, nil)
 
 	if err != nil {

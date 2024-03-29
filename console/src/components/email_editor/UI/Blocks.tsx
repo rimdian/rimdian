@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { BlockDefinitionMap, BlockDefinitionInterface, BlockInterface } from '../Block'
-import { Row, Col, Collapse, Tooltip } from 'antd'
+import { Collapse, Tooltip } from 'antd'
 import { truncate } from 'lodash'
 
 export interface BlocksProps {

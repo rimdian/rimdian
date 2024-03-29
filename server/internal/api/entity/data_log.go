@@ -33,16 +33,17 @@ const (
 
 	MicrosecondLayout = "2006-01-02T15:04:05.999999Z" // .99 = trick for microseconds
 
-	ItemKindUser        = "user"
-	ItemKindSession     = "session"
-	ItemKindPostview    = "postview"
-	ItemKindPageview    = "pageview"
-	ItemKindDevice      = "device"
-	ItemKindOrder       = "order"
-	ItemKindOrderItem   = "order_item"
-	ItemKindCart        = "cart"
-	ItemKindCartItem    = "cart_item"
-	ItemKindCustomEvent = "custom_event"
+	ItemKindUser                 = "user"
+	ItemKindSession              = "session"
+	ItemKindPostview             = "postview"
+	ItemKindPageview             = "pageview"
+	ItemKindDevice               = "device"
+	ItemKindOrder                = "order"
+	ItemKindOrderItem            = "order_item"
+	ItemKindCart                 = "cart"
+	ItemKindCartItem             = "cart_item"
+	ItemKindCustomEvent          = "custom_event"
+	ItemKindSubscriptionListUser = "subscription_list_user"
 )
 
 // The data_log table is used to store all the data received from the collector
@@ -73,16 +74,17 @@ type DataLog struct {
 	ReplayID *string `db:"-" json:"replay_id,omitempty"` // used to identify if the data_log is a replay
 	DomainID *string `db:"-" json:"domain_id,omitempty"` // domain_id matched with the Host header for client-side origin
 	// upserted entities
-	UpsertedUser        *User        `json:"user,omitempty"`         // user upserted
-	UserAlias           *UserAlias   `json:"user_alias,omitempty"`   // user_alias upserted
-	UpsertedPageview    *Pageview    `json:"pageview,omitempty"`     // pageview upserted
-	UpsertedOrder       *Order       `json:"order,omitempty"`        // order upserted
-	UpsertedCart        *Cart        `json:"cart,omitempty"`         // cart upserted
-	UpsertedCustomEvent *CustomEvent `json:"custom_event,omitempty"` // custom_event upserted
-	UpsertedDevice      *Device      `json:"device,omitempty"`       // device upserted
-	UpsertedSession     *Session     `json:"session,omitempty"`      // session upserted
-	UpsertedPostview    *Postview    `json:"postview,omitempty"`     // postview upserted
-	UpsertedAppItem     *AppItem     `json:"-"`                      // app item upserted, not exposed in JSON directly
+	UpsertedUser                 *User                 `json:"user,omitempty"`                   // user upserted
+	UserAlias                    *UserAlias            `json:"user_alias,omitempty"`             // user_alias upserted
+	UpsertedPageview             *Pageview             `json:"pageview,omitempty"`               // pageview upserted
+	UpsertedOrder                *Order                `json:"order,omitempty"`                  // order upserted
+	UpsertedCart                 *Cart                 `json:"cart,omitempty"`                   // cart upserted
+	UpsertedCustomEvent          *CustomEvent          `json:"custom_event,omitempty"`           // custom_event upserted
+	UpsertedDevice               *Device               `json:"device,omitempty"`                 // device upserted
+	UpsertedSession              *Session              `json:"session,omitempty"`                // session upserted
+	UpsertedPostview             *Postview             `json:"postview,omitempty"`               // postview upserted
+	UpsertedSubscriptionListUser *SubscriptionListUser `json:"subscription_list_user,omitempty"` // subscription_list_user upserted
+	UpsertedAppItem              *AppItem              `json:"-"`                                // app item upserted, not exposed in JSON directly
 }
 
 func (dataLog *DataLog) IsPersisted() bool {

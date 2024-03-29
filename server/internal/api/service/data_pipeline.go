@@ -68,6 +68,7 @@ type IDataLogPipeline interface {
 	ExtractCartFromDataLogItem()
 	ExtractCustomEventFromDataLogItem()
 	ExtractPostviewFromDataLogItem()
+	ExtractSubscriptionListUserFromDataLogItem()
 	ExtractAppItemFromDataLogItem()
 	ExtractExtraColumnsFromItem(kind string)
 	ParseUserAgent(userAgent string) (result *entity.UserAgentResult, err error)
@@ -81,6 +82,7 @@ type IDataLogPipeline interface {
 	UpsertDevice(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
 	UpsertSession(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
 	UpsertPostview(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
+	UpsertSubscriptionListUser(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
 	UpsertAppItem(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
 
 	ReattributeUsersOrders(ctx context.Context)
@@ -184,7 +186,8 @@ func (pipe *DataLogPipeline) CreateDataLogFromQueue(ctx context.Context) {
 		"order",
 		"cart",
 		"postview",
-		"custom_event") {
+		"custom_event",
+		"subscription_list_user") {
 		// check if kind starts with "app_"
 		if strings.HasPrefix(pipe.DataLog.Kind, "app_") || strings.HasPrefix(pipe.DataLog.Kind, "appx_") {
 			return

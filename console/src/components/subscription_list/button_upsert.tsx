@@ -201,7 +201,7 @@ const DrawerSubscriptionList = (props: { list?: SubscriptionList; setDrawserVisi
           <Form.Item noStyle dependencies={['double_opt_in']}>
             {() => {
               return form.getFieldValue('double_opt_in') ? (
-                <Form.Item name="email_template_id" label="Email template">
+                <Form.Item name="message_template_id" label="Email template">
                   <EmailTemplateInput />
                 </Form.Item>
               ) : null

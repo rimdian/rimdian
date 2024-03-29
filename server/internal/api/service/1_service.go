@@ -117,6 +117,7 @@ type Service interface {
 
 	// subscription list
 	SubscriptionListList(ctx context.Context, accountID string, params *dto.SubscriptionListListParams) (result []*entity.SubscriptionList, code int, err error)
+	SubscriptionListCreate(ctx context.Context, accountID string, data *dto.SubscriptionListCreate) (code int, err error)
 
 	// email template
 	MessageTemplateList(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) (result []*entity.MessageTemplate, code int, err error)

@@ -195,6 +195,7 @@ type Repository interface {
 
 	// subscription lists
 	ListSubscriptionLists(ctx context.Context, workspaceID string, withUsersCount bool) (lists []*entity.SubscriptionList, err error)
+	CreateSubscriptionList(ctx context.Context, workspaceID string, list *entity.SubscriptionList) (err error)
 
 	// message templates
 	ListMessageTemplates(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) (templates []*entity.MessageTemplate, err error)

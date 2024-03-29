@@ -30,33 +30,35 @@ const RouteWorkspaceConfiguration = () => {
       currentOrganization={workspaceCtx.organization}
       currentWorkspace={workspaceCtx.workspace}
     >
-      <div className={CSS.top}>
-        <h1>Configuration</h1>
-      </div>
+      <div className={CSS.container}>
+        <div className={CSS.top + ' ' + CSS.margin_l_l}>
+          <h1>Configuration</h1>
+        </div>
 
-      <Tabs
-        activeKey={tab}
-        onChange={changeTab}
-        destroyInactiveTabPane={true}
-        tabPosition="left"
-        items={[
-          {
-            key: 'domains',
-            label: 'Domains',
-            children: <BlockDomains />
-          },
-          {
-            key: 'data-hooks',
-            label: 'Data hooks',
-            children: <BlockDataHooks />
-          },
-          {
-            key: 'settings',
-            label: 'Workspace settings',
-            children: <BlockWorkspaceSettings />
-          }
-        ]}
-      />
+        <Tabs
+          activeKey={tab}
+          onChange={changeTab}
+          destroyInactiveTabPane={true}
+          tabPosition="left"
+          items={[
+            {
+              key: 'domains',
+              label: 'Domains',
+              children: <BlockDomains />
+            },
+            {
+              key: 'data-hooks',
+              label: 'Data hooks',
+              children: <BlockDataHooks />
+            },
+            {
+              key: 'settings',
+              label: 'Workspace settings',
+              children: <BlockWorkspaceSettings />
+            }
+          ]}
+        />
+      </div>
     </Layout>
   )
 }

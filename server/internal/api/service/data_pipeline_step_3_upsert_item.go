@@ -162,6 +162,21 @@ func (pipe *DataLogPipeline) StepUpsertItem(ctx context.Context) {
 			}
 		}
 
+		if pipe.DataLog.UpsertedSubscriptionListUser != nil {
+			isChild := true
+			if pipe.DataLog.Kind == "subscription_list_user" {
+				isChild = false
+			}
+
+			// user_id might have been updated by user_alias
+			// so we need to update it in the pageview
+			pipe.DataLog.UpsertedSubscriptionListUser.UserID = pipe.DataLog.UpsertedUser.ID
+
+			if txErr = pipe.UpsertSubscriptionListUser(spanCtx, isChild, tx); txErr != nil {
+				return 500, txErr
+			}
+		}
+
 		if pipe.DataLog.UpsertedAppItem != nil {
 			isChild := true
 			if strings.HasPrefix(pipe.DataLog.Kind, "app_") || strings.HasPrefix(pipe.DataLog.Kind, "appx_") {

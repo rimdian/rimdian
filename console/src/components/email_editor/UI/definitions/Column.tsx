@@ -1,12 +1,10 @@
-import React, { ReactNode } from 'react'
+import { ReactNode } from 'react'
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
 import ColorPickerInput from '../Widgets/ColorPicker'
 import BorderInputs from '../Widgets/BorderInputs'
 import PaddingInputs from '../Widgets/PaddingInputs'
 import { Form, InputNumber, Divider, Radio } from 'antd'
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-// import { faAlignLeft, faAlignCenter, faAlignRight, faAlignJustify } from '@fortawesome/free-solid-svg-icons'
 
 const ColumnBlockDefinition: BlockDefinitionInterface = {
   name: 'Column',
@@ -423,14 +421,6 @@ const ColumnBlockDefinition: BlockDefinitionInterface = {
 
     return <div style={styles}>{content}</div>
   }
-
-  // renderEditorEmptyChildren: (_props: BlockEditorRendererProps) => {
-  //     return <div>insert here</div>
-  // },
-
-  // transformer: (block: BlockInterface) => {
-  //     return <div>TODO transformer for {block.kind}</div>
-  // },
 }
 
 export default ColumnBlockDefinition

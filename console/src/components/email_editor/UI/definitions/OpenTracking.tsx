@@ -1,4 +1,4 @@
-import { Space } from 'antd'
+import { Alert, Space } from 'antd'
 import { BlockDefinitionInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -15,7 +15,15 @@ const OpenTrackingBlockDefinition: BlockDefinitionInterface = {
   menuSettings: {},
 
   RenderSettings: (props: BlockRenderSettingsProps) => {
-    return <div className="rmdeditor-padding-h-l"></div>
+    return (
+      <div className="rmdeditor-padding-h-l">
+        <Alert
+          type="info"
+          showIcon
+          message="An invisible tracking pixel will be added to the email. When the email is opened, the pixel will be loaded and the open event will be recorded."
+        />
+      </div>
+    )
   },
 
   renderEditor: (props: BlockEditorRendererProps) => {

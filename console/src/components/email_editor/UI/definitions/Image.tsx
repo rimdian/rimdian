@@ -1,4 +1,4 @@
-import { useState, useRef, MutableRefObject } from 'react'
+import { useState, useRef } from 'react'
 import { BlockDefinitionInterface, BlockInterface, BlockRenderSettingsProps } from '../../Block'
 import { BlockEditorRendererProps } from '../../BlockEditorRenderer'
 import {
@@ -11,7 +11,6 @@ import {
   Input,
   Switch,
   Modal,
-  message,
   Space
 } from 'antd'
 import BorderInputs from '../Widgets/BorderInputs'
@@ -24,7 +23,8 @@ import {
   faImage
 } from '@fortawesome/free-solid-svg-icons'
 import { MobileWidth } from '../Layout'
-import short from 'short-uuid'
+import { FileManager } from 'components/assets/files/file_manager'
+import { ItemFilter, StorageObject } from 'components/assets/files/interfaces'
 
 interface ImageURLProps {
   block: BlockInterface
@@ -189,90 +189,73 @@ const ClickURL = (props: ImageURLProps) => {
 
 // the UploadButton useState cant reside directly in RenderSettings()
 // because it's not a proper React functional component
-// const UploadButton = ({ block, updateTree }) => {
-//     const projectCtx: ProjectContextValue = useProjectContext()
-//     const [fileManagerVisible, setFileManagerVisible] = useState(false)
-//     const [selectedImageURL, setSelectedImageURL] = useState<string | undefined>(undefined)
-//     const provider: MutableRefObject<FileProvider> = useRef(new FirestoreFileProvider({
-//         FirebaseApp: projectCtx.firebaseApp.current,
-//         resolveRootNodeID: (): string => {
-//             return projectCtx.currentProject.id
-//         },
-//         resolveUploadPath: (item: Item): string => {
-//             item.id = short.uuid()
-//             const uploadPath = '/' + projectCtx.currentProject.id + item.path.replace(new RegExp('~', 'g'), '/') + '/' + item.id
-//             return uploadPath
-//         },
-//         // collectionsPrefix: 'fs_',
-//         getNodeMetadata: (_node: TreeNode): any => {
-//             return {
-//                 userId: projectCtx.firebaseUser.uid,
-//                 organizationId: projectCtx.currentOrganization.id,
-//                 projectId: projectCtx.currentProject.id,
-//             }
-//         },
-//         // filterKey: 'projectId',
-//         // filterValue: 'test',
-//     }))
+interface UploadButtonProps {
+  block: BlockInterface
+  updateTree: (path: string, data: any) => void
+}
 
-//     const filters: ItemFilter[] = []
+const UploadButton = (props: UploadButtonProps) => {
+  const [fileManagerVisible, setFileManagerVisible] = useState(false)
+  const [selectedImageURL, setSelectedImageURL] = useState<string | undefined>(undefined)
 
-//     return <>
-//         {fileManagerVisible && <Modal
-//             visible={true}
-//             title="Select or upload"
-//             width={1100}
-//             bodyStyle={{ background: '#F3F6FC' }}
-//             onOk={() => {
-//                 if (selectedImageURL && selectedImageURL !== block.data.image.src) {
-//                     block.data.image.src = selectedImageURL
-//                     setSelectedImageURL(undefined)
-//                     setFileManagerVisible(false)
-//                     updateTree(block.path, block)
-//                 }
-//             }}
-//             onCancel={() => setFileManagerVisible(false)}
-//             destroyOnClose={true}
-//             okText="Use image"
-//             okButtonProps={{
-//                 disabled: !selectedImageURL,
-//             }}
-//         >
-//             <div style={{ height: 500 }}>
-//                 <FileManager
-//                     itemFilters={filters}
-//                     onError={(error) => {
-//                         console.error(error)
-//                         message.error(error)
-//                     }}
-//                     fileProvider={provider.current}
-//                 >
-//                 <Layout {...{
-//                     visible: true,
-//                     height: 500,
-//                     acceptFileType: 'images/*',
-//                     onError: (e) => message.error(e),
-//                     onSelect: (items: Item[]) => {
-//                         // console.log('onSelect', items)
-//                         if (items && items.length) {
-//                             setSelectedImageURL(items[0].url)
-//                         } else {
-//                             setSelectedImageURL(undefined)
-//                         }
-//                     },
-//                     withSelection: true,
-//                     multiple: false,
-//                     acceptItem: (item: Item) => {
-//                         return item.contentType.includes('image')
-//                     }
-//                 }} />
-//             </FileManager>
-//         </div>
-//         </Modal>
-// }
-// <Button type="primary" size="small" block onClick={() => setFileManagerVisible(true)}>Select or upload</Button>
-//    </>
-// }
+  const filters: ItemFilter[] = []
+
+  return (
+    <>
+      {fileManagerVisible && (
+        <Modal
+          open={true}
+          title="Select or upload"
+          width={1100}
+          bodyStyle={{ background: '#F3F6FC' }}
+          onOk={() => {
+            if (selectedImageURL && selectedImageURL !== props.block.data.image.src) {
+              props.block.data.image.src = selectedImageURL
+              setSelectedImageURL(undefined)
+              setFileManagerVisible(false)
+              props.updateTree(props.block.path, props.block)
+            }
+          }}
+          onCancel={() => setFileManagerVisible(false)}
+          destroyOnClose={true}
+          okText="Use image"
+          okButtonProps={{
+            disabled: !selectedImageURL
+          }}
+        >
+          <div style={{ height: 500 }}>
+            <FileManager
+              itemFilters={filters}
+              onError={() => {
+                // console.error(error)
+                // message.error(error)
+              }}
+              onSelect={(items: StorageObject[]) => {
+                if (items && items.length) {
+                  setSelectedImageURL(items[0].file_info.url)
+                } else {
+                  setSelectedImageURL(undefined)
+                }
+              }}
+              height={500}
+              acceptFileType="images/*"
+              acceptItem={(item: StorageObject) => {
+                if (item.is_folder) return false
+                return item.file_info.content_type.includes('image')
+              }}
+              multiple={false}
+              withSelection={true}
+            />
+          </div>
+        </Modal>
+      )}
+      <Button type="primary" size="small" block onClick={() => setFileManagerVisible(true)}>
+        Select or upload
+      </Button>
+    </>
+  )
+}
+
 const ImageBlockDefinition: BlockDefinitionInterface = {
   name: 'Image',
   kind: 'image',
@@ -314,8 +297,7 @@ const ImageBlockDefinition: BlockDefinitionInterface = {
           labelCol={{ span: 10 }}
           wrapperCol={{ span: 14 }}
         >
-          {/* <UploadButton block={props.block} updateTree={props.updateTree} /> */}
-          TODO
+          <UploadButton block={props.block} updateTree={props.updateTree} />
         </Form.Item>
 
         <ImageURL block={props.block} updateTree={props.updateTree} />

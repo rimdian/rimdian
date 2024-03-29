@@ -20,6 +20,7 @@ import { faCopy, faFolder, faTrashAlt, faTrashCan } from '@fortawesome/free-regu
 import {
   faArrowUpFromBracket,
   faArrowUpRightFromSquare,
+  faCog,
   faRefresh
 } from '@fortawesome/free-solid-svg-icons'
 import { css } from '@emotion/css'
@@ -61,6 +62,13 @@ export const FileManager = (props: FileManagerProps) => {
   const inputFileRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [form] = Form.useForm()
+
+  const goToPath = (path: string) => {
+    // reset selection on path change
+    setSelectedRowKeys([])
+    props.onSelect([])
+    setCurrentPath(path)
+  }
 
   const fetchObjects = useCallback(() => {
     if (!s3ClientRef.current) return
@@ -362,15 +370,6 @@ export const FileManager = (props: FileManagerProps) => {
           <div className={CSS.padding_a_m} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
             <div className={CSS.pull_right}>
               <Space>
-                <Tooltip title="Refresh the list">
-                  <Button
-                    size="small"
-                    type="primary"
-                    ghost
-                    onClick={() => fetchObjects()}
-                    icon={<FontAwesomeIcon icon={faRefresh} />}
-                  />
-                </Tooltip>
                 {currentPath !== '' && (
                   <Tooltip title="Delete folder" placement="bottom">
                     <Popconfirm
@@ -390,14 +389,29 @@ export const FileManager = (props: FileManagerProps) => {
                     >
                       <Button
                         size="small"
-                        type="primary"
-                        ghost
+                        type="text"
                         onClick={() => fetchObjects()}
                         icon={<FontAwesomeIcon icon={faTrashAlt} />}
                       />
                     </Popconfirm>
                   </Tooltip>
                 )}
+                <Tooltip title="Refresh the list">
+                  <Button
+                    size="small"
+                    type="text"
+                    onClick={() => fetchObjects()}
+                    icon={<FontAwesomeIcon icon={faRefresh} />}
+                  />
+                </Tooltip>
+
+                <ButtonFilesSettings>
+                  <Tooltip title="Storage settings">
+                    <Button type="text" size="small">
+                      <FontAwesomeIcon icon={faCog} />
+                    </Button>
+                  </Tooltip>
+                </ButtonFilesSettings>
                 <span role="button" onClick={onBrowseFiles}>
                   <input
                     type="file"
@@ -422,7 +436,7 @@ export const FileManager = (props: FileManagerProps) => {
 
             <Space>
               <div>
-                <Button type="text" size="small" onClick={() => setCurrentPath('')}>
+                <Button type="text" size="small" onClick={() => goToPath('')}>
                   {workspaceCtx.workspace.files_settings.bucket}
                 </Button>
                 {currentPath
@@ -438,7 +452,7 @@ export const FileManager = (props: FileManagerProps) => {
                           disabled={isLast}
                           type="text"
                           size="small"
-                          onClick={() => setCurrentPath(fullPath)}
+                          onClick={() => goToPath(fullPath)}
                         >
                           {part}
                         </Button>

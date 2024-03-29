@@ -2,8 +2,7 @@ import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_wor
 import Layout from 'components/common/layout'
 import CSS from 'utils/css'
 import { FileManager } from './files/file_manager'
-import ButtonFilesSettings from './files/button_settings'
-import { Button, Tabs } from 'antd'
+import { Tabs } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import ListTemplates from './message_template/block_list'
 
@@ -31,18 +30,8 @@ const RouteFiles = () => {
       currentWorkspace={workspaceCtx.workspace}
     >
       <div className={CSS.container}>
-        <div className={CSS.top}>
+        <div className={CSS.top + ' ' + CSS.margin_l_l}>
           <h1>Assets</h1>
-          <div className={CSS.topSeparator}></div>
-          <div>
-            {workspaceCtx.workspace.files_settings.endpoint !== '' && (
-              <ButtonFilesSettings>
-                <Button type="primary" ghost>
-                  Settings
-                </Button>
-              </ButtonFilesSettings>
-            )}
-          </div>
         </div>
 
         <Tabs

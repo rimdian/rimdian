@@ -196,6 +196,13 @@ type Repository interface {
 	// subscription lists
 	ListSubscriptionLists(ctx context.Context, workspaceID string, withUsersCount bool) (lists []*entity.SubscriptionList, err error)
 	CreateSubscriptionList(ctx context.Context, workspaceID string, list *entity.SubscriptionList) (err error)
+	FindSubscriptionListUser(ctx context.Context, listID string, userID string, tx *sql.Tx) (subscription *entity.SubscriptionListUser, err error)
+	GetSubscriptionList(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (list *entity.SubscriptionList, err error)
+
+	// subscritpion list users
+	InsertSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) (err error)
+	UpdateSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) (err error)
+	GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) (userIDs []*dto.UserToImportToSubscriptionList, err error)
 
 	// message templates
 	ListMessageTemplates(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) (templates []*entity.MessageTemplate, err error)

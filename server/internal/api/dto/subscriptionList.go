@@ -2,6 +2,7 @@ package dto
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
@@ -29,4 +30,10 @@ func (params *SubscriptionListListParams) FromRequest(r *http.Request) (err erro
 type SubscriptionListCreate struct {
 	WorkspaceID string `json:"workspace_id"`
 	*entity.SubscriptionList
+}
+
+type UserToImportToSubscriptionList struct {
+	ExternalID      string    `db:"external_id" json:"external_id"`
+	IsAuthenticated bool      `db:"is_authenticated" json:"is_authenticated"`
+	CreatedAt       time.Time `db:"created_at" json:"created_at"`
 }

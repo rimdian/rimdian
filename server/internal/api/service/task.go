@@ -56,10 +56,11 @@ func (svc *ServiceImpl) TaskRun(ctx context.Context, accountID string, params *d
 	}
 
 	taskExec := &entity.TaskExec{
-		TaskID:         task.TaskManifest.ID,
-		Name:           task.TaskManifest.Name,
-		OnMultipleExec: task.OnMultipleExec,
-		State:          mainState,
+		TaskID:          task.TaskManifest.ID,
+		Name:            task.TaskManifest.Name,
+		OnMultipleExec:  task.OnMultipleExec,
+		State:           mainState,
+		MultipleExecKey: params.MultipleExecKey,
 	}
 
 	code, err = svc.doTaskCreate(ctx, task.WorkspaceID, taskExec)

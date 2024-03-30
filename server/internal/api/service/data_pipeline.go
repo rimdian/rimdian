@@ -49,7 +49,7 @@ type IDataLogPipeline interface {
 	Replay(ctx context.Context)
 	InitDataLog(ctx context.Context)
 	CreateDataLogFromQueue(ctx context.Context)
-	ExtractAndValidateItem()
+	ExtractAndValidateItem(ctx context.Context)
 
 	StepPending(ctx context.Context)
 	StepPersistDatalog(ctx context.Context)
@@ -68,7 +68,7 @@ type IDataLogPipeline interface {
 	ExtractCartFromDataLogItem()
 	ExtractCustomEventFromDataLogItem()
 	ExtractPostviewFromDataLogItem()
-	ExtractSubscriptionListUserFromDataLogItem()
+	ExtractSubscriptionListUserFromDataLogItem(ctx context.Context)
 	ExtractAppItemFromDataLogItem()
 	ExtractExtraColumnsFromItem(kind string)
 	ParseUserAgent(userAgent string) (result *entity.UserAgentResult, err error)
@@ -361,7 +361,7 @@ func (pipe *DataLogPipeline) Replay(ctx context.Context) {
 
 	// rehydrate dataLog for not yet upserted items
 	if pipe.DataLog.Checkpoint < entity.DataLogCheckpointItemUpserted {
-		pipe.ExtractAndValidateItem()
+		pipe.ExtractAndValidateItem(spanCtx)
 	}
 
 	if pipe.DataLog.Checkpoint >= entity.DataLogCheckpointItemUpserted && pipe.DataLog.UserID != entity.None {

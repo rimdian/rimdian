@@ -319,6 +319,10 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 			pipe.TaskExecResult = TaskExecRecomputeSegment(spanCtx, pipe)
 			pipe.ProcessNextStep(spanCtx)
 			return
+		case entity.TaskKindImportUsersToSubscriptionList:
+			pipe.TaskExecResult = TaskExecImportUsersToSubscriptionList(spanCtx, pipe)
+			pipe.ProcessNextStep(spanCtx)
+			return
 		case entity.TaskKindTestingNotDone:
 			pipe.TaskExecResult = &entity.TaskExecResult{IsDone: false}
 			pipe.ProcessNextStep(spanCtx)

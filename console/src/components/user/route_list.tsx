@@ -38,6 +38,7 @@ import { Segment } from 'components/segment/interfaces'
 import { useMemo } from 'react'
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons'
 import ButtonUpsertSubscriptionList from 'components/subscription_list/button_upsert'
+import ButtonImportSubscriptionListUsers from 'components/subscription_list/button_import_users'
 
 interface UserList {
   users: User[]
@@ -342,7 +343,15 @@ const RouteUsers = () => {
                 <div className={CSS.topSeparator}></div>
                 {currentList && (
                   <Space>
-                    <Popconfirm
+                    <ButtonImportSubscriptionListUsers
+                      btnProps={{
+                        type: 'primary',
+                        ghost: true
+                      }}
+                      segments={segments}
+                      subscriptionList={currentList}
+                    />
+                    {/* <Popconfirm
                       title="Do you really want to delete this subscription list?"
                       okText="Delete"
                       okButtonProps={{ danger: true }}
@@ -351,7 +360,7 @@ const RouteUsers = () => {
                       <Button type="text" size="small">
                         <FontAwesomeIcon icon={faTrashAlt} />
                       </Button>
-                    </Popconfirm>
+                    </Popconfirm> */}
                   </Space>
                 )}
               </>

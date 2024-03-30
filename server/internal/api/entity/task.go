@@ -17,14 +17,15 @@ var (
 	ErrScheduledTaskIntervalTooSmall = eris.New("task interval should be >= 10 minutes")
 	ErrOnMultipleExecInvalid         = eris.New("on_multiple_exec is not valid")
 
-	TaskNameGenerateDemo           string = "Generate demo"
-	TaskKindTestingNotDone         string = "system_testing_task_not_done"
-	TaskKindTestingDone            string = "system_testing_task_done"
-	TaskKindTestingTimeout         string = "system_testing_task_timeout"
-	TaskKindTestingPanic           string = "system_testing_task_panic"
-	TaskKindGenerateDemo           string = "system_generate_demo"
-	TaskKindDataLogReprocessUntil  string = "system_data_log_reprocess_until"
-	TaskKindReattributeConversions string = "system_reattribute_conversions"
+	TaskNameGenerateDemo                  string = "Generate demo"
+	TaskKindTestingNotDone                string = "system_testing_task_not_done"
+	TaskKindTestingDone                   string = "system_testing_task_done"
+	TaskKindTestingTimeout                string = "system_testing_task_timeout"
+	TaskKindTestingPanic                  string = "system_testing_task_panic"
+	TaskKindGenerateDemo                  string = "system_generate_demo"
+	TaskKindDataLogReprocessUntil         string = "system_data_log_reprocess_until"
+	TaskKindReattributeConversions        string = "system_reattribute_conversions"
+	TaskKindImportUsersToSubscriptionList string = "system_import_users_to_subscription_list"
 
 	SystemTasks = []TaskManifest{
 		{
@@ -32,30 +33,26 @@ var (
 			ID:             TaskKindGenerateDemo,
 			Name:           "Generate demo",
 			IsCron:         false,
-			OnMultipleExec: "discard_new",
+			OnMultipleExec: OnMultipleExecDiscardNew,
 		},
 		{
 			ID:             TaskKindDataLogReprocessUntil,
 			Name:           "Reprocess data log until",
 			IsCron:         false,
-			OnMultipleExec: "discard_new",
+			OnMultipleExec: OnMultipleExecDiscardNew,
 		},
 		{
 			ID:             TaskKindReattributeConversions,
 			Name:           "Reattribute conversions",
 			IsCron:         false,
-			OnMultipleExec: "abort_existing",
+			OnMultipleExec: OnMultipleExecAbortExisting,
 		},
-		// {
-		// 	ID:     "system_testing_task_not_done",
-		// 	Name:   "Testing task not done",
-		// 	IsCron: false,
-		// },
-		// {
-		// 	ID:     "system_testing_task_done",
-		// 	Name:   "Testing task done",
-		// 	IsCron: false,
-		// },
+		{
+			ID:             TaskKindImportUsersToSubscriptionList,
+			Name:           "Import users to subscription list",
+			IsCron:         false,
+			OnMultipleExec: OnMultipleExecDiscardNew,
+		},
 	}
 
 	OnMultipleExecAllow         = "allow"          // mutliple tasks of the same kind are allowed to run at the same time

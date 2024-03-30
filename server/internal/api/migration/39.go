@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"log"
 
+	"github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 )
 
@@ -17,7 +19,7 @@ func (m *Migration39) GetMajorVersion() float64 {
 
 func (m *Migration39) HasSystemUpdate() bool {
 	log.Printf("running migration %v: HasSystemUpdate()", m.GetMajorVersion())
-	return false
+	return true
 }
 
 func (m *Migration39) HasWorkspaceUpdate() bool {
@@ -27,6 +29,58 @@ func (m *Migration39) HasWorkspaceUpdate() bool {
 
 func (m *Migration39) UpdateSystem(ctx context.Context, cfg *entity.Config, systemConnection *sql.Conn) (err error) {
 	log.Printf("running migration %v: UpdateSystem()", m.GetMajorVersion())
+
+	// insert new system task "system_import_users_to_subscription_list" for each workspace
+
+	// fetch workspace ids
+	ids := []string{}
+
+	err = sqlscan.Select(ctx, systemConnection, &ids, `SELECT id FROM workspace`)
+	if err != nil {
+		log.Printf("error fetching workspace ids: %v", err)
+		return err
+	}
+
+	for _, workspaceID := range ids {
+		log.Printf("inserting task for workspace: %s", workspaceID)
+
+		sql, args, err := squirrel.Insert("task").
+			Columns(
+				"id",
+				"workspace_id",
+				"name",
+				"on_multiple_exec",
+				"app_id",
+				"is_active",
+				"is_cron",
+				"minutes_interval",
+			).
+			Values(
+				entity.TaskKindImportUsersToSubscriptionList,
+				workspaceID,
+				"Import users to subscription list",
+				entity.OnMultipleExecDiscardNew,
+				"system",
+				true,
+				false,
+				0,
+			).
+			ToSql()
+
+		if err != nil {
+			log.Printf("error building insert query: %v",
+				err)
+			return err
+		}
+
+		_, err = systemConnection.ExecContext(ctx, sql, args...)
+
+		// silently ignore errors in case of retried migrations
+		if err != nil {
+			log.Printf("error inserting task: %v", err)
+		}
+	}
+
 	return nil
 }
 

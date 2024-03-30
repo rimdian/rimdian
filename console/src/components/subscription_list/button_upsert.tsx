@@ -13,9 +13,10 @@ import {
 } from 'antd'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { useMemo, useState } from 'react'
-import { size } from 'lodash'
+import { kebabCase, size } from 'lodash'
 import { SubscriptionList } from 'interfaces'
 import EmailTemplateInput from 'components/assets/message_template/input_email'
+import Messages from 'utils/formMessages'
 
 const ButtonUpsertSubscriptionList = (props: { segment?: SubscriptionList }) => {
   const [drawserVisible, setDrawserVisible] = useState(false)
@@ -148,13 +149,15 @@ const DrawerSubscriptionList = (props: { list?: SubscriptionList; setDrawserVisi
           name="groupForm"
           onFinish={onFinish}
         >
-          <Form.Item name="id" label="ID" rules={[{ required: true, type: 'string' }]}>
-            <Input placeholder="i.e: newsletter" />
-          </Form.Item>
-
           <Form.Item name="name" label="Name" rules={[{ required: true, type: 'string' }]}>
             <Input
               placeholder="i.e: Newsletter"
+              onChange={(e: any) => {
+                if (!props.list) {
+                  const id = kebabCase(e.target.value)
+                  form.setFieldsValue({ id: id })
+                }
+              }}
               addonAfter={
                 <Form.Item noStyle name="color">
                   <Select
@@ -178,6 +181,22 @@ const DrawerSubscriptionList = (props: { list?: SubscriptionList; setDrawserVisi
               }
             />
           </Form.Item>
+
+          <Form.Item
+            name="id"
+            label="ID"
+            rules={[
+              {
+                required: true,
+                type: 'string',
+                pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
+                message: Messages.InvalidIdFormat
+              }
+            ]}
+          >
+            <Input placeholder="i.e: newsletter" />
+          </Form.Item>
+
           {/*  channel */}
           <Form.Item name="channel" label="Channel" rules={[{ required: true, type: 'string' }]}>
             <Select

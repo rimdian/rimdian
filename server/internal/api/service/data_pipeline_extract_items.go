@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -13,7 +14,7 @@ import (
 )
 
 // extract the data from the data_pipe.Logger.item JSON and validate it
-func (pipe *DataLogPipeline) ExtractAndValidateItem() {
+func (pipe *DataLogPipeline) ExtractAndValidateItem(ctx context.Context) {
 
 	// verify Origin is allowed in workspace a web domain, for client-side batches only
 	// and set the matching domain_id to items
@@ -162,7 +163,7 @@ func (pipe *DataLogPipeline) ExtractAndValidateItem() {
 		if pipe.HasError() {
 			return
 		}
-		pipe.ExtractSubscriptionListUserFromDataLogItem()
+		pipe.ExtractSubscriptionListUserFromDataLogItem(ctx)
 		if pipe.HasError() {
 			return
 		}
@@ -401,10 +402,16 @@ func (pipe *DataLogPipeline) ExtractPostviewFromDataLogItem() {
 	}
 }
 
-func (pipe *DataLogPipeline) ExtractSubscriptionListUserFromDataLogItem() {
+func (pipe *DataLogPipeline) ExtractSubscriptionListUserFromDataLogItem(ctx context.Context) {
 
-	var err error
-	subscription_list_user, err := entity.NewSubscriptionListUserFromDataLog(pipe.DataLog, pipe.DataLogInQueue.Context.ClockDifference)
+	lists, err := pipe.Repository.ListSubscriptionLists(ctx, pipe.Workspace.ID, false)
+
+	if err != nil {
+		pipe.SetError("subscription_list_user", err.Error(), true)
+		return
+	}
+
+	subscription_list_user, err := entity.NewSubscriptionListUserFromDataLog(pipe.DataLog, pipe.DataLogInQueue.Context.ClockDifference, lists)
 
 	if err != nil {
 		pipe.SetError("subscription_list_user", err.Error(), false)

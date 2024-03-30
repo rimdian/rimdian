@@ -2,12 +2,32 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
+
+func (repo *RepositoryImpl) GetSubscriptionList(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (list *entity.SubscriptionList, err error) {
+
+	if tx != nil {
+		err = sqlscan.Get(ctx, tx, &list, "SELECT * FROM subscription_list WHERE id = ?", listID)
+	} else {
+		conn, errConn := repo.GetWorkspaceConnection(ctx, workspaceID)
+
+		if errConn != nil {
+			return
+		}
+
+		defer conn.Close()
+
+		err = sqlscan.Get(ctx, conn, &list, "SELECT * FROM subscription_list WHERE id = ?", listID)
+	}
+
+	return
+}
 
 func (repo *RepositoryImpl) CreateSubscriptionList(ctx context.Context, workspaceID string, list *entity.SubscriptionList) (err error) {
 
@@ -53,9 +73,9 @@ func (repo *RepositoryImpl) ListSubscriptionLists(ctx context.Context, workspace
 	queryBuilder := sq.Select("subscription_list.*").From("subscription_list")
 
 	if withUsersCount {
-		queryBuilder = queryBuilder.LeftJoin("subscribe_to_list ON subscription_list.id = subscribe_to_list.subscription_list_id")
+		queryBuilder = queryBuilder.LeftJoin("subscription_list_user ON subscription_list.id = subscription_list_user.subscription_list_id")
 		queryBuilder = queryBuilder.GroupBy("subscription_list.id")
-		queryBuilder = queryBuilder.Column("COALESCE(COUNT(subscribe_to_list.user_id), 0) AS users_count")
+		queryBuilder = queryBuilder.Column("COALESCE(COUNT(subscription_list_user.user_id), 0) AS users_count")
 	}
 
 	// fetch lists

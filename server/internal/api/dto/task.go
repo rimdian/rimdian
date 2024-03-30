@@ -33,4 +33,5 @@ type TaskRunParams struct {
 	ID              string                 `json:"id"`
 	WorkspaceID     string                 `json:"workspace_id"`
 	MainWorkerState entity.TaskWorkerState `json:"main_worker_state,omitempty"`
+	MultipleExecKey *string                `json:"multiple_exec_key,omitempty"`
 }

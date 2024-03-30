@@ -188,6 +188,9 @@ var _ Repository = &RepositoryMock{}
 //			FindSessionByIDFunc: func(ctx context.Context, workspace *entity.Workspace, sessionID string, userID string, tx *sql.Tx) (*entity.Session, error) {
 //				panic("mock out the FindSessionByID method")
 //			},
+//			FindSubscriptionListUserFunc: func(ctx context.Context, listID string, userID string, tx *sql.Tx) (*entity.SubscriptionListUser, error) {
+//				panic("mock out the FindSubscriptionListUser method")
+//			},
 //			FindUserAliasFunc: func(ctx context.Context, fromUserExternalID string, tx *sql.Tx) (*entity.UserAlias, error) {
 //				panic("mock out the FindUserAlias method")
 //			},
@@ -233,6 +236,9 @@ var _ Repository = &RepositoryMock{}
 //			GetSettingsFunc: func(ctx context.Context) (*entity.Settings, error) {
 //				panic("mock out the GetSettings method")
 //			},
+//			GetSubscriptionListFunc: func(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (*entity.SubscriptionList, error) {
+//				panic("mock out the GetSubscriptionList method")
+//			},
 //			GetSystemConnectionFunc: func(ctx context.Context) (*sql.Conn, error) {
 //				panic("mock out the GetSystemConnection method")
 //			},
@@ -247,6 +253,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			GetTaskExecJobsFunc: func(ctx context.Context, workspaceID string, taskExecID string, offset int, limit int) ([]*entity.TaskExecJob, int, error) {
 //				panic("mock out the GetTaskExecJobs method")
+//			},
+//			GetUsersNotInSubscriptionListFunc: func(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) ([]*dto.UserToImportToSubscriptionList, error) {
+//				panic("mock out the GetUsersNotInSubscriptionList method")
 //			},
 //			GetWorkspaceFunc: func(ctx context.Context, workspaceID string) (*entity.Workspace, error) {
 //				panic("mock out the GetWorkspace method")
@@ -310,6 +319,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			InsertSessionFunc: func(ctx context.Context, session *entity.Session, tx *sql.Tx) error {
 //				panic("mock out the InsertSession method")
+//			},
+//			InsertSubscriptionListUserFunc: func(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) error {
+//				panic("mock out the InsertSubscriptionListUser method")
 //			},
 //			InsertTaskFunc: func(ctx context.Context, task *entity.Task, tx *sql.Tx) error {
 //				panic("mock out the InsertTask method")
@@ -527,6 +539,9 @@ var _ Repository = &RepositoryMock{}
 //			UpdateSessionFunc: func(ctx context.Context, session *entity.Session, tx *sql.Tx) error {
 //				panic("mock out the UpdateSession method")
 //			},
+//			UpdateSubscriptionListUserFunc: func(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) error {
+//				panic("mock out the UpdateSubscriptionListUser method")
+//			},
 //			UpdateTaskFunc: func(ctx context.Context, task *entity.Task, tx *sql.Tx) error {
 //				panic("mock out the UpdateTask method")
 //			},
@@ -717,6 +732,9 @@ type RepositoryMock struct {
 	// FindSessionByIDFunc mocks the FindSessionByID method.
 	FindSessionByIDFunc func(ctx context.Context, workspace *entity.Workspace, sessionID string, userID string, tx *sql.Tx) (*entity.Session, error)
 
+	// FindSubscriptionListUserFunc mocks the FindSubscriptionListUser method.
+	FindSubscriptionListUserFunc func(ctx context.Context, listID string, userID string, tx *sql.Tx) (*entity.SubscriptionListUser, error)
+
 	// FindUserAliasFunc mocks the FindUserAlias method.
 	FindUserAliasFunc func(ctx context.Context, fromUserExternalID string, tx *sql.Tx) (*entity.UserAlias, error)
 
@@ -762,6 +780,9 @@ type RepositoryMock struct {
 	// GetSettingsFunc mocks the GetSettings method.
 	GetSettingsFunc func(ctx context.Context) (*entity.Settings, error)
 
+	// GetSubscriptionListFunc mocks the GetSubscriptionList method.
+	GetSubscriptionListFunc func(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (*entity.SubscriptionList, error)
+
 	// GetSystemConnectionFunc mocks the GetSystemConnection method.
 	GetSystemConnectionFunc func(ctx context.Context) (*sql.Conn, error)
 
@@ -776,6 +797,9 @@ type RepositoryMock struct {
 
 	// GetTaskExecJobsFunc mocks the GetTaskExecJobs method.
 	GetTaskExecJobsFunc func(ctx context.Context, workspaceID string, taskExecID string, offset int, limit int) ([]*entity.TaskExecJob, int, error)
+
+	// GetUsersNotInSubscriptionListFunc mocks the GetUsersNotInSubscriptionList method.
+	GetUsersNotInSubscriptionListFunc func(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) ([]*dto.UserToImportToSubscriptionList, error)
 
 	// GetWorkspaceFunc mocks the GetWorkspace method.
 	GetWorkspaceFunc func(ctx context.Context, workspaceID string) (*entity.Workspace, error)
@@ -839,6 +863,9 @@ type RepositoryMock struct {
 
 	// InsertSessionFunc mocks the InsertSession method.
 	InsertSessionFunc func(ctx context.Context, session *entity.Session, tx *sql.Tx) error
+
+	// InsertSubscriptionListUserFunc mocks the InsertSubscriptionListUser method.
+	InsertSubscriptionListUserFunc func(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) error
 
 	// InsertTaskFunc mocks the InsertTask method.
 	InsertTaskFunc func(ctx context.Context, task *entity.Task, tx *sql.Tx) error
@@ -1055,6 +1082,9 @@ type RepositoryMock struct {
 
 	// UpdateSessionFunc mocks the UpdateSession method.
 	UpdateSessionFunc func(ctx context.Context, session *entity.Session, tx *sql.Tx) error
+
+	// UpdateSubscriptionListUserFunc mocks the UpdateSubscriptionListUser method.
+	UpdateSubscriptionListUserFunc func(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) error
 
 	// UpdateTaskFunc mocks the UpdateTask method.
 	UpdateTaskFunc func(ctx context.Context, task *entity.Task, tx *sql.Tx) error
@@ -1689,6 +1719,17 @@ type RepositoryMock struct {
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
+		// FindSubscriptionListUser holds details about calls to the FindSubscriptionListUser method.
+		FindSubscriptionListUser []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ListID is the listID argument value.
+			ListID string
+			// UserID is the userID argument value.
+			UserID string
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
 		// FindUserAlias holds details about calls to the FindUserAlias method.
 		FindUserAlias []struct {
 			// Ctx is the ctx argument value.
@@ -1822,6 +1863,17 @@ type RepositoryMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 		}
+		// GetSubscriptionList holds details about calls to the GetSubscriptionList method.
+		GetSubscriptionList []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// ListID is the listID argument value.
+			ListID string
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
 		// GetSystemConnection holds details about calls to the GetSystemConnection method.
 		GetSystemConnection []struct {
 			// Ctx is the ctx argument value.
@@ -1868,6 +1920,19 @@ type RepositoryMock struct {
 			Offset int
 			// Limit is the limit argument value.
 			Limit int
+		}
+		// GetUsersNotInSubscriptionList holds details about calls to the GetUsersNotInSubscriptionList method.
+		GetUsersNotInSubscriptionList []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// ListID is the listID argument value.
+			ListID string
+			// Offset is the offset argument value.
+			Offset int64
+			// Limit is the limit argument value.
+			Limit int64
 		}
 		// GetWorkspace holds details about calls to the GetWorkspace method.
 		GetWorkspace []struct {
@@ -2073,6 +2138,15 @@ type RepositoryMock struct {
 			Ctx context.Context
 			// Session is the session argument value.
 			Session *entity.Session
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
+		// InsertSubscriptionListUser holds details about calls to the InsertSubscriptionListUser method.
+		InsertSubscriptionListUser []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Subscription is the subscription argument value.
+			Subscription *entity.SubscriptionListUser
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
@@ -2802,6 +2876,15 @@ type RepositoryMock struct {
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
+		// UpdateSubscriptionListUser holds details about calls to the UpdateSubscriptionListUser method.
+		UpdateSubscriptionListUser []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Subscription is the subscription argument value.
+			Subscription *entity.SubscriptionListUser
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
 		// UpdateTask holds details about calls to the UpdateTask method.
 		UpdateTask []struct {
 			// Ctx is the ctx argument value.
@@ -2912,6 +2995,7 @@ type RepositoryMock struct {
 	lockFindPageviewByID                      sync.RWMutex
 	lockFindPostviewByID                      sync.RWMutex
 	lockFindSessionByID                       sync.RWMutex
+	lockFindSubscriptionListUser              sync.RWMutex
 	lockFindUserAlias                         sync.RWMutex
 	lockFindUserByID                          sync.RWMutex
 	lockFindUserIDsWithOrdersToReattribute    sync.RWMutex
@@ -2927,11 +3011,13 @@ type RepositoryMock struct {
 	lockGetRunningTaskExecByTaskID            sync.RWMutex
 	lockGetSegment                            sync.RWMutex
 	lockGetSettings                           sync.RWMutex
+	lockGetSubscriptionList                   sync.RWMutex
 	lockGetSystemConnection                   sync.RWMutex
 	lockGetTask                               sync.RWMutex
 	lockGetTaskExec                           sync.RWMutex
 	lockGetTaskExecJob                        sync.RWMutex
 	lockGetTaskExecJobs                       sync.RWMutex
+	lockGetUsersNotInSubscriptionList         sync.RWMutex
 	lockGetWorkspace                          sync.RWMutex
 	lockGetWorkspaceConnection                sync.RWMutex
 	lockHasDataLogsToReprocess                sync.RWMutex
@@ -2953,6 +3039,7 @@ type RepositoryMock struct {
 	lockInsertSegmentDataLogs                 sync.RWMutex
 	lockInsertServiceAccount                  sync.RWMutex
 	lockInsertSession                         sync.RWMutex
+	lockInsertSubscriptionListUser            sync.RWMutex
 	lockInsertTask                            sync.RWMutex
 	lockInsertTaskExec                        sync.RWMutex
 	lockInsertUser                            sync.RWMutex
@@ -3025,6 +3112,7 @@ type RepositoryMock struct {
 	lockUpdatePostview                        sync.RWMutex
 	lockUpdateSegment                         sync.RWMutex
 	lockUpdateSession                         sync.RWMutex
+	lockUpdateSubscriptionListUser            sync.RWMutex
 	lockUpdateTask                            sync.RWMutex
 	lockUpdateTaskExecFromResult              sync.RWMutex
 	lockUpdateUser                            sync.RWMutex
@@ -5469,6 +5557,50 @@ func (mock *RepositoryMock) FindSessionByIDCalls() []struct {
 	return calls
 }
 
+// FindSubscriptionListUser calls FindSubscriptionListUserFunc.
+func (mock *RepositoryMock) FindSubscriptionListUser(ctx context.Context, listID string, userID string, tx *sql.Tx) (*entity.SubscriptionListUser, error) {
+	if mock.FindSubscriptionListUserFunc == nil {
+		panic("RepositoryMock.FindSubscriptionListUserFunc: method is nil but Repository.FindSubscriptionListUser was just called")
+	}
+	callInfo := struct {
+		Ctx    context.Context
+		ListID string
+		UserID string
+		Tx     *sql.Tx
+	}{
+		Ctx:    ctx,
+		ListID: listID,
+		UserID: userID,
+		Tx:     tx,
+	}
+	mock.lockFindSubscriptionListUser.Lock()
+	mock.calls.FindSubscriptionListUser = append(mock.calls.FindSubscriptionListUser, callInfo)
+	mock.lockFindSubscriptionListUser.Unlock()
+	return mock.FindSubscriptionListUserFunc(ctx, listID, userID, tx)
+}
+
+// FindSubscriptionListUserCalls gets all the calls that were made to FindSubscriptionListUser.
+// Check the length with:
+//
+//	len(mockedRepository.FindSubscriptionListUserCalls())
+func (mock *RepositoryMock) FindSubscriptionListUserCalls() []struct {
+	Ctx    context.Context
+	ListID string
+	UserID string
+	Tx     *sql.Tx
+} {
+	var calls []struct {
+		Ctx    context.Context
+		ListID string
+		UserID string
+		Tx     *sql.Tx
+	}
+	mock.lockFindSubscriptionListUser.RLock()
+	calls = mock.calls.FindSubscriptionListUser
+	mock.lockFindSubscriptionListUser.RUnlock()
+	return calls
+}
+
 // FindUserAlias calls FindUserAliasFunc.
 func (mock *RepositoryMock) FindUserAlias(ctx context.Context, fromUserExternalID string, tx *sql.Tx) (*entity.UserAlias, error) {
 	if mock.FindUserAliasFunc == nil {
@@ -6065,6 +6197,50 @@ func (mock *RepositoryMock) GetSettingsCalls() []struct {
 	return calls
 }
 
+// GetSubscriptionList calls GetSubscriptionListFunc.
+func (mock *RepositoryMock) GetSubscriptionList(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (*entity.SubscriptionList, error) {
+	if mock.GetSubscriptionListFunc == nil {
+		panic("RepositoryMock.GetSubscriptionListFunc: method is nil but Repository.GetSubscriptionList was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		ListID      string
+		Tx          *sql.Tx
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		ListID:      listID,
+		Tx:          tx,
+	}
+	mock.lockGetSubscriptionList.Lock()
+	mock.calls.GetSubscriptionList = append(mock.calls.GetSubscriptionList, callInfo)
+	mock.lockGetSubscriptionList.Unlock()
+	return mock.GetSubscriptionListFunc(ctx, workspaceID, listID, tx)
+}
+
+// GetSubscriptionListCalls gets all the calls that were made to GetSubscriptionList.
+// Check the length with:
+//
+//	len(mockedRepository.GetSubscriptionListCalls())
+func (mock *RepositoryMock) GetSubscriptionListCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	ListID      string
+	Tx          *sql.Tx
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		ListID      string
+		Tx          *sql.Tx
+	}
+	mock.lockGetSubscriptionList.RLock()
+	calls = mock.calls.GetSubscriptionList
+	mock.lockGetSubscriptionList.RUnlock()
+	return calls
+}
+
 // GetSystemConnection calls GetSystemConnectionFunc.
 func (mock *RepositoryMock) GetSystemConnection(ctx context.Context) (*sql.Conn, error) {
 	if mock.GetSystemConnectionFunc == nil {
@@ -6266,6 +6442,54 @@ func (mock *RepositoryMock) GetTaskExecJobsCalls() []struct {
 	mock.lockGetTaskExecJobs.RLock()
 	calls = mock.calls.GetTaskExecJobs
 	mock.lockGetTaskExecJobs.RUnlock()
+	return calls
+}
+
+// GetUsersNotInSubscriptionList calls GetUsersNotInSubscriptionListFunc.
+func (mock *RepositoryMock) GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) ([]*dto.UserToImportToSubscriptionList, error) {
+	if mock.GetUsersNotInSubscriptionListFunc == nil {
+		panic("RepositoryMock.GetUsersNotInSubscriptionListFunc: method is nil but Repository.GetUsersNotInSubscriptionList was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		ListID      string
+		Offset      int64
+		Limit       int64
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		ListID:      listID,
+		Offset:      offset,
+		Limit:       limit,
+	}
+	mock.lockGetUsersNotInSubscriptionList.Lock()
+	mock.calls.GetUsersNotInSubscriptionList = append(mock.calls.GetUsersNotInSubscriptionList, callInfo)
+	mock.lockGetUsersNotInSubscriptionList.Unlock()
+	return mock.GetUsersNotInSubscriptionListFunc(ctx, workspaceID, listID, offset, limit)
+}
+
+// GetUsersNotInSubscriptionListCalls gets all the calls that were made to GetUsersNotInSubscriptionList.
+// Check the length with:
+//
+//	len(mockedRepository.GetUsersNotInSubscriptionListCalls())
+func (mock *RepositoryMock) GetUsersNotInSubscriptionListCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	ListID      string
+	Offset      int64
+	Limit       int64
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		ListID      string
+		Offset      int64
+		Limit       int64
+	}
+	mock.lockGetUsersNotInSubscriptionList.RLock()
+	calls = mock.calls.GetUsersNotInSubscriptionList
+	mock.lockGetUsersNotInSubscriptionList.RUnlock()
 	return calls
 }
 
@@ -7142,6 +7366,46 @@ func (mock *RepositoryMock) InsertSessionCalls() []struct {
 	mock.lockInsertSession.RLock()
 	calls = mock.calls.InsertSession
 	mock.lockInsertSession.RUnlock()
+	return calls
+}
+
+// InsertSubscriptionListUser calls InsertSubscriptionListUserFunc.
+func (mock *RepositoryMock) InsertSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) error {
+	if mock.InsertSubscriptionListUserFunc == nil {
+		panic("RepositoryMock.InsertSubscriptionListUserFunc: method is nil but Repository.InsertSubscriptionListUser was just called")
+	}
+	callInfo := struct {
+		Ctx          context.Context
+		Subscription *entity.SubscriptionListUser
+		Tx           *sql.Tx
+	}{
+		Ctx:          ctx,
+		Subscription: subscription,
+		Tx:           tx,
+	}
+	mock.lockInsertSubscriptionListUser.Lock()
+	mock.calls.InsertSubscriptionListUser = append(mock.calls.InsertSubscriptionListUser, callInfo)
+	mock.lockInsertSubscriptionListUser.Unlock()
+	return mock.InsertSubscriptionListUserFunc(ctx, subscription, tx)
+}
+
+// InsertSubscriptionListUserCalls gets all the calls that were made to InsertSubscriptionListUser.
+// Check the length with:
+//
+//	len(mockedRepository.InsertSubscriptionListUserCalls())
+func (mock *RepositoryMock) InsertSubscriptionListUserCalls() []struct {
+	Ctx          context.Context
+	Subscription *entity.SubscriptionListUser
+	Tx           *sql.Tx
+} {
+	var calls []struct {
+		Ctx          context.Context
+		Subscription *entity.SubscriptionListUser
+		Tx           *sql.Tx
+	}
+	mock.lockInsertSubscriptionListUser.RLock()
+	calls = mock.calls.InsertSubscriptionListUser
+	mock.lockInsertSubscriptionListUser.RUnlock()
 	return calls
 }
 
@@ -10178,6 +10442,46 @@ func (mock *RepositoryMock) UpdateSessionCalls() []struct {
 	mock.lockUpdateSession.RLock()
 	calls = mock.calls.UpdateSession
 	mock.lockUpdateSession.RUnlock()
+	return calls
+}
+
+// UpdateSubscriptionListUser calls UpdateSubscriptionListUserFunc.
+func (mock *RepositoryMock) UpdateSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) error {
+	if mock.UpdateSubscriptionListUserFunc == nil {
+		panic("RepositoryMock.UpdateSubscriptionListUserFunc: method is nil but Repository.UpdateSubscriptionListUser was just called")
+	}
+	callInfo := struct {
+		Ctx          context.Context
+		Subscription *entity.SubscriptionListUser
+		Tx           *sql.Tx
+	}{
+		Ctx:          ctx,
+		Subscription: subscription,
+		Tx:           tx,
+	}
+	mock.lockUpdateSubscriptionListUser.Lock()
+	mock.calls.UpdateSubscriptionListUser = append(mock.calls.UpdateSubscriptionListUser, callInfo)
+	mock.lockUpdateSubscriptionListUser.Unlock()
+	return mock.UpdateSubscriptionListUserFunc(ctx, subscription, tx)
+}
+
+// UpdateSubscriptionListUserCalls gets all the calls that were made to UpdateSubscriptionListUser.
+// Check the length with:
+//
+//	len(mockedRepository.UpdateSubscriptionListUserCalls())
+func (mock *RepositoryMock) UpdateSubscriptionListUserCalls() []struct {
+	Ctx          context.Context
+	Subscription *entity.SubscriptionListUser
+	Tx           *sql.Tx
+} {
+	var calls []struct {
+		Ctx          context.Context
+		Subscription *entity.SubscriptionListUser
+		Tx           *sql.Tx
+	}
+	mock.lockUpdateSubscriptionListUser.RLock()
+	calls = mock.calls.UpdateSubscriptionListUser
+	mock.lockUpdateSubscriptionListUser.RUnlock()
 	return calls
 }
 

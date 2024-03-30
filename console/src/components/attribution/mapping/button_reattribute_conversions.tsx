@@ -18,9 +18,7 @@ const ButtonReattributeConversions = (props: Props) => {
     workspaceCtx
       .apiPOST('/task.run', {
         id: 'system_reattribute_conversions',
-        workspace_id: workspaceCtx.workspace.id,
-        name: 'Re-attribute conversions',
-        on_multiple_exec: 'abort_existing'
+        workspace_id: workspaceCtx.workspace.id
       })
       .then(() => {
         setLoading(false)

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import ButtonTaskAbout from './button_about'
 import { css } from '@emotion/css'
 import CSS, { shadowBase } from 'utils/css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type BadgeRunningTasksProps = {
   organizationId: string
@@ -70,10 +70,17 @@ export const BadgeRunningTasks = (props: BadgeRunningTasksProps) => {
       })
     },
     {
-      enabled: props.workspaceId && props.workspaces.length > 0 ? true : false,
-      refetchInterval: refreshRate * 1000
+      enabled: props.workspaceId && props.workspaces.length > 0 ? true : false
     }
   )
+
+  // create a dynamic interval to refresh data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch()
+    }, refreshRate * 1000)
+    return () => clearInterval(interval)
+  }, [refreshRate])
 
   // refresh data on open
   const onOpenChange = (visible: boolean) => {

@@ -9,9 +9,9 @@ import (
 
 var (
 	// statuses
-	SubscriptionListUserStatusActive       = 1
-	SubscriptionListUserStatusPaused       = 2
-	SubscriptionListUserStatusUnsubscribed = 3
+	SubscriptionListUserStatusActive       = int64(1)
+	SubscriptionListUserStatusPaused       = int64(2) // used for double opt-in and bounces
+	SubscriptionListUserStatusUnsubscribed = int64(3)
 )
 
 // attaches a user to a subscription list
@@ -19,8 +19,8 @@ var (
 type SubscriptionListUser struct {
 	SubscriptionListID string          `db:"subscription_list_id" json:"subscription_list_id"`
 	UserID             string          `db:"user_id" json:"user_id"`
-	Status             int             `db:"status" json:"status"`
-	Comment            *string         `db:"comment" json:"comment,omitempty"` // optional, reason for status change (email bounce...)
+	Status             *int64          `db:"status" json:"status,omitempty"`
+	Comment            *NullableString `db:"comment" json:"comment,omitempty"` // optional, reason for status change (email bounce...)
 	CreatedAt          time.Time       `db:"created_at" json:"created_at"`
 	DBCreatedAt        time.Time       `db:"db_created_at" json:"db_created_at"`
 	DBUpdatedAt        time.Time       `db:"db_updated_at" json:"db_updated_at"`
@@ -31,7 +31,7 @@ type SubscriptionListUser struct {
 	UpdatedAt *time.Time `db:"-" json:"-"`
 }
 
-func NewSubscriptionListUserFromDataLog(dataLog *DataLog, clockDifference time.Duration) (subscribeToList *SubscriptionListUser, err error) {
+func NewSubscriptionListUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, lists []*SubscriptionList) (subscribeToList *SubscriptionListUser, err error) {
 
 	result := gjson.Get(dataLog.Item, "subscription_list_user")
 	if !result.Exists() {
@@ -93,11 +93,19 @@ func NewSubscriptionListUserFromDataLog(dataLog *DataLog, clockDifference time.D
 			subscribeToList.UpdatedAt = &updatedAt
 
 		case "status":
-			subscribeToList.Status = int(value.Int())
+			if value.Type != gjson.Number {
+				err = eris.New("subscription_list_user.status must be a number")
+				return false
+			}
+
+			subscribeToList.Status = Int64Ptr(int64(value.Int()))
 
 		case "comment":
-			comment := value.String()
-			subscribeToList.Comment = &comment
+			if value.Type == gjson.Null {
+				subscribeToList.Comment = NewNullableString(nil)
+			} else {
+				subscribeToList.Comment = NewNullableString(StringPtr(value.String()))
+			}
 
 		default:
 			// ignore other fields
@@ -124,12 +132,27 @@ func NewSubscriptionListUserFromDataLog(dataLog *DataLog, clockDifference time.D
 		return nil, eris.New("subscription_list_user.created_at is required")
 	}
 
-	if subscribeToList.Status <= 0 {
-		return nil, eris.New("subscription_list_user.status is required")
+	if subscribeToList.Status != nil && (*subscribeToList.Status < 0 || *subscribeToList.Status > 3) {
+		return nil, eris.New("subscription_list_user.status is invalid")
 	}
 
-	if subscribeToList.Status > 3 {
-		return nil, eris.New("subscription_list_user.status is invalid")
+	// TODO : validate list exists + double opt in status
+	var listFound *SubscriptionList
+
+	for _, list := range lists {
+		if list.ID == subscribeToList.SubscriptionListID {
+			listFound = list
+			break
+		}
+	}
+
+	if listFound == nil {
+		return nil, eris.New("subscription_list_user.subscription_list_id is invalid")
+	}
+
+	if listFound.DoubleOptIn && (subscribeToList.Status == nil || *subscribeToList.Status == 0) {
+		subscribeToList.Status = Int64Ptr(SubscriptionListUserStatusPaused)
+		subscribeToList.Comment = NewNullableString(StringPtr("waiting for double opt-in"))
 	}
 
 	return subscribeToList, nil
@@ -154,6 +177,81 @@ func (s *SubscriptionListUser) SetCreatedAt(value time.Time) {
 	}
 }
 
+func (s *SubscriptionListUser) GetFieldDate(field string) time.Time {
+	// use updated_at if it has been passed in the API data import
+	if s.UpdatedAt != nil && s.UpdatedAt.After(s.CreatedAt) {
+		return *s.UpdatedAt
+	}
+	// or use the existing field timestamp
+	if date, exists := s.FieldsTimestamp[field]; exists {
+		return date
+	}
+	// or use the object creation date as a fallback
+	return s.CreatedAt
+}
+
+func (s *SubscriptionListUser) SetStatus(value *int64, timestamp time.Time) (update *UpdatedField) {
+	key := "status"
+	// value cant be null
+	if value == nil {
+		return nil
+	}
+	// abort if values are equal
+	if Int64Equal(s.Status, value) {
+		return nil
+	}
+	existingValueTimestamp := s.GetFieldDate(key)
+	// abort if existing value is newer
+	if existingValueTimestamp.After(timestamp) {
+		return nil
+	}
+	// the value might be set for the first time
+	// so we set the value without producing a field update
+	if existingValueTimestamp.Equal(timestamp) {
+		s.Status = value
+		return
+	}
+	update = &UpdatedField{
+		Field:     key,
+		PrevValue: Int64PointerToInterface(s.Status),
+		NewValue:  Int64PointerToInterface(value),
+	}
+	s.Status = value
+	s.FieldsTimestamp[key] = timestamp
+	return
+}
+
+func (o *SubscriptionListUser) SetComment(value *NullableString, timestamp time.Time) (update *UpdatedField) {
+	key := "comme t"
+	// ignore if value is not provided
+	if value == nil {
+		return nil
+	}
+	// abort if values are equal
+	if value != nil && o.Comment != nil && o.Comment.IsNull == value.IsNull && o.Comment.String == value.String {
+		return nil
+	}
+	existingValueTimestamp := o.GetFieldDate(key)
+	// abort if existing value is newer
+	if existingValueTimestamp.After(timestamp) {
+		return nil
+	}
+	// the value might be set for the first time
+	// so we set the value without producing a field update
+	if existingValueTimestamp.Equal(timestamp) {
+		o.Comment = value
+		return
+	}
+	update = &UpdatedField{
+		Field:     key,
+		PrevValue: NullableStringToInterface(o.Comment),
+		NewValue:  NullableStringToInterface(value),
+	}
+	o.Comment = value
+	o.FieldsTimestamp[key] = timestamp
+	return
+}
+
 // merges two subs and returns the list of updated fields
 func (fromSubscribe *SubscriptionListUser) MergeInto(toSubscribe *SubscriptionListUser) (updatedFields []*UpdatedField) {
 
@@ -163,10 +261,13 @@ func (fromSubscribe *SubscriptionListUser) MergeInto(toSubscribe *SubscriptionLi
 		toSubscribe.FieldsTimestamp = FieldsTimestamp{}
 	}
 
-	// TODO
-	// if fieldUpdate := toSubscribe.SetUnsubscribed(fromSubscribe.Unsubscribed, fromSubscribe.GetFieldDate("status")); fieldUpdate != nil {
-	// 	updatedFields = append(updatedFields, fieldUpdate)
-	// }
+	if fieldUpdate := toSubscribe.SetStatus(fromSubscribe.Status, fromSubscribe.GetFieldDate("status")); fieldUpdate != nil {
+		updatedFields = append(updatedFields, fieldUpdate)
+	}
+
+	if fieldUpdate := toSubscribe.SetComment(fromSubscribe.Comment, fromSubscribe.GetFieldDate("comment")); fieldUpdate != nil {
+		updatedFields = append(updatedFields, fieldUpdate)
+	}
 
 	// UpdatedAt is the timeOfEvent for ITs
 	toSubscribe.UpdatedAt = fromSubscribe.UpdatedAt
@@ -181,8 +282,8 @@ var SubscriptionListUserSchema = `CREATE ROWSTORE TABLE IF NOT EXISTS subscripti
 	user_id VARCHAR(64) NOT NULL,
 	status INT NOT NULL DEFAULT 0,
 	comment VARCHAR(255),
-	created_at TIMESTAMP NOT NULL,
-    db_created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at DATETIME NOT NULL,
+    db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     merged_from_user_id VARCHAR(64),
     fields_timestamp JSON NOT NULL,
@@ -196,9 +297,9 @@ var SubscriptionListUserSchemaMYSQL = `CREATE TABLE IF NOT EXISTS subscription_l
 	user_id VARCHAR(64) NOT NULL,
 	status INT NOT NULL DEFAULT 0,
 	comment VARCHAR(255),
-	created_at TIMESTAMP NOT NULL,
-    db_created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	created_at DATETIME NOT NULL,
+  	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  	db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     merged_from_user_id VARCHAR(64),
     fields_timestamp JSON NOT NULL,
 

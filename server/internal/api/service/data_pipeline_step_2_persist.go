@@ -15,7 +15,7 @@ func (pipe *DataLogPipeline) StepPersistDatalog(ctx context.Context) {
 	spanCtx, span := trace.StartSpan(ctx, "StepPersistDatalog")
 	defer span.End()
 
-	pipe.ExtractAndValidateItem()
+	pipe.ExtractAndValidateItem(spanCtx)
 	pipe.AddDataLogGenerated(pipe.DataLog)
 
 	// persist dataLog in DB

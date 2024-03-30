@@ -318,25 +318,11 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 				JobID:      job.ID,
 			}
 
-		case entity.TaskKindDataLogReprocessUntil:
-			job.TaskExecID = taskExec.ID
+		case entity.TaskKindDataLogReprocessUntil,
+			entity.TaskKindReattributeConversions,
+			entity.TaskKindRecomputeSegment,
+			entity.TaskKindImportUsersToSubscriptionList:
 
-			googleTaskQueueJob.Payload = dto.TaskExecRequestPayload{
-				TaskExecID: taskExec.ID,
-				WorkerID:   0,
-				JobID:      job.ID,
-			}
-
-		case entity.TaskKindReattributeConversions:
-			job.TaskExecID = taskExec.ID
-
-			googleTaskQueueJob.Payload = dto.TaskExecRequestPayload{
-				TaskExecID: taskExec.ID,
-				WorkerID:   0,
-				JobID:      job.ID,
-			}
-
-		case entity.TaskKindRecomputeSegment:
 			job.TaskExecID = taskExec.ID
 
 			googleTaskQueueJob.Payload = dto.TaskExecRequestPayload{

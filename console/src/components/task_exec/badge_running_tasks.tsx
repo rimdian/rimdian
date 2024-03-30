@@ -80,7 +80,7 @@ export const BadgeRunningTasks = (props: BadgeRunningTasksProps) => {
       refetch()
     }, refreshRate * 1000)
     return () => clearInterval(interval)
-  }, [refreshRate])
+  }, [refreshRate, refetch])
 
   // refresh data on open
   const onOpenChange = (visible: boolean) => {

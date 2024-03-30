@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
+	"github.com/rimdian/rimdian/internal/common/dto"
 	"go.opencensus.io/trace"
 )
 
@@ -174,6 +176,41 @@ func (pipe *DataLogPipeline) StepUpsertItem(ctx context.Context) {
 
 			if txErr = pipe.UpsertSubscriptionListUser(spanCtx, isChild, tx); txErr != nil {
 				return 500, txErr
+			}
+
+			// send double opt-in message
+
+			if pipe.DataLog.Action == "create" &&
+				pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionList != nil &&
+				pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionList.DoubleOptIn &&
+				*pipe.DataLog.UpsertedSubscriptionListUser.Status == entity.SubscriptionListUserStatusPaused {
+
+				message := fmt.Sprintf(`{
+					"kind": "message",
+					"message": {
+						"external_id": "%s",
+						"created_at": "%s",
+						"channel": "%s",
+						"message_template_id": "%s",
+						"subscription_list_id": "%s"
+					},
+					"user": {
+						"external_id": "%s",
+						"is_authenticated": %t,
+						"created_at": "%s"
+					}
+				}`,
+					fmt.Sprintf("double_opt_in_%s", pipe.DataLog.ID),
+					pipe.DataLog.UpsertedSubscriptionListUser.CreatedAt.Format(time.RFC3339),
+					pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionList.Channel,
+					*pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionList.MessageTemplateID,
+					pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionList.ID,
+					pipe.DataLog.UpsertedUser.ExternalID,
+					pipe.DataLog.UpsertedUser.IsAuthenticated,
+					pipe.DataLog.UpsertedUser.CreatedAt.Format("2006-01-02T15:04:05Z"),
+				)
+
+				pipe.DataLogEnqueue(spanCtx, nil, dto.DataLogOriginInternalDataLog, pipe.DataLog.ID, pipe.Workspace.ID, []string{message}, false)
 			}
 		}
 

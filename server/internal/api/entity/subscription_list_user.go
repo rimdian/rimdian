@@ -19,7 +19,7 @@ var (
 type SubscriptionListUser struct {
 	SubscriptionListID string          `db:"subscription_list_id" json:"subscription_list_id"`
 	UserID             string          `db:"user_id" json:"user_id"`
-	Status             *int64          `db:"status" json:"status,omitempty"`
+	Status             *int64          `db:"status" json:"status,omitempty"`   // 1: active, 2: paused, 3: unsubscribed
 	Comment            *NullableString `db:"comment" json:"comment,omitempty"` // optional, reason for status change (email bounce...)
 	CreatedAt          time.Time       `db:"created_at" json:"created_at"`
 	DBCreatedAt        time.Time       `db:"db_created_at" json:"db_created_at"`
@@ -29,6 +29,9 @@ type SubscriptionListUser struct {
 
 	// used to merge fields and append item_timeline at the right time
 	UpdatedAt *time.Time `db:"-" json:"-"`
+	// attached in data pipeline for easy access:
+	HasDoubleOptIn   bool              `db:"-" json:"-"`
+	SubscriptionList *SubscriptionList `db:"-" json:"-"`
 }
 
 func NewSubscriptionListUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, lists []*SubscriptionList) (subscribeToList *SubscriptionListUser, err error) {
@@ -136,7 +139,6 @@ func NewSubscriptionListUserFromDataLog(dataLog *DataLog, clockDifference time.D
 		return nil, eris.New("subscription_list_user.status is invalid")
 	}
 
-	// TODO : validate list exists + double opt in status
 	var listFound *SubscriptionList
 
 	for _, list := range lists {
@@ -154,6 +156,9 @@ func NewSubscriptionListUserFromDataLog(dataLog *DataLog, clockDifference time.D
 		subscribeToList.Status = Int64Ptr(SubscriptionListUserStatusPaused)
 		subscribeToList.Comment = NewNullableString(StringPtr("waiting for double opt-in"))
 	}
+
+	// attach list for further processing
+	subscribeToList.SubscriptionList = listFound
 
 	return subscribeToList, nil
 }

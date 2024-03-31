@@ -137,7 +137,7 @@ type BroadcastCampaignSubscriptionList struct {
 	ID string `json:"id"`
 }
 
-var BroadcastCampaignSchema = `CREATE ROWSTORE TABLE IF NOT EXISTS broadcast_campaigns (
+var BroadcastCampaignSchema = `CREATE ROWSTORE TABLE IF NOT EXISTS broadcast_campaign (
 	id VARCHAR(64) NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	channel VARCHAR(255) NOT NULL,
@@ -152,7 +152,7 @@ var BroadcastCampaignSchema = `CREATE ROWSTORE TABLE IF NOT EXISTS broadcast_cam
 	PRIMARY KEY (id)
 ) COLLATE utf8mb4_general_ci;`
 
-var BroadcastCampaignSchemaMYSQL = `CREATE TABLE IF NOT EXISTS broadcast_campaigns (
+var BroadcastCampaignSchemaMYSQL = `CREATE TABLE IF NOT EXISTS broadcast_campaign (
 	id VARCHAR(64) NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	channel VARCHAR(255) NOT NULL,

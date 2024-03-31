@@ -165,6 +165,22 @@ func TestServiceImpl_DataPipeline(t *testing.T) {
 			InsertDataLogFunc: func(ctx context.Context, workspaceID string, dataLog *entity.DataLog, tx *sql.Tx) error {
 				return nil
 			},
+			ListAppsFunc: func(ctx context.Context, workspaceID string) ([]*entity.App, error) {
+				return []*entity.App{
+					{
+						ID:                 demoWorkspace.InstalledApps[0].ID,
+						Name:               demoWorkspace.InstalledApps[0].Name,
+						Status:             entity.AppStatusActive,
+						State:              entity.MapOfInterfaces{},
+						Manifest:           entity.AppManifestTest,
+						EncryptedSecretKey: encryptedAppSecretKey,
+						IsNative:           true,
+						CreatedAt:          time.Now(),
+						UpdatedAt:          time.Now(),
+					},
+				}, nil
+
+			},
 		}
 
 		dataLogInQueue := &commonDTO.DataLogInQueue{

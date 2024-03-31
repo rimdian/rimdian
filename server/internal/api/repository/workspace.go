@@ -37,6 +37,7 @@ func (repo *RepositoryImpl) CreateWorkspaceTables(ctx context.Context, workspace
 		entity.BroadcastCampaignSchema,
 		entity.SubscriptionListSchema,
 		entity.SubscriptionListUserSchema,
+		entity.MessageSchema,
 	}
 
 	if repo.Config.DB_TYPE == "mysql" {
@@ -64,6 +65,7 @@ func (repo *RepositoryImpl) CreateWorkspaceTables(ctx context.Context, workspace
 			entity.BroadcastCampaignSchemaMYSQL,
 			entity.SubscriptionListSchemaMYSQL,
 			entity.SubscriptionListUserSchemaMYSQL,
+			entity.MessageSchemaMYSQL,
 		}
 	}
 

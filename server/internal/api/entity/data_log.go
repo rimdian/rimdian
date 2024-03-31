@@ -44,6 +44,7 @@ const (
 	ItemKindCartItem             = "cart_item"
 	ItemKindCustomEvent          = "custom_event"
 	ItemKindSubscriptionListUser = "subscription_list_user"
+	ItemKindMessage              = "message"
 )
 
 // The data_log table is used to store all the data received from the collector
@@ -84,6 +85,7 @@ type DataLog struct {
 	UpsertedSession              *Session              `json:"session,omitempty"`                // session upserted
 	UpsertedPostview             *Postview             `json:"postview,omitempty"`               // postview upserted
 	UpsertedSubscriptionListUser *SubscriptionListUser `json:"subscription_list_user,omitempty"` // subscription_list_user upserted
+	UpsertedMessage              *Message              `json:"message,omitempty"`                // message upserted
 	UpsertedAppItem              *AppItem              `json:"-"`                                // app item upserted, not exposed in JSON directly
 }
 

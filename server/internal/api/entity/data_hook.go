@@ -93,6 +93,7 @@ func (x *DataHook) Validate(installedApps InstalledApps) error {
 		"*",
 		"user",
 		"session",
+		"segment",
 		"order",
 		"order_item",
 		"pageview",

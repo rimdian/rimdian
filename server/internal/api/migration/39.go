@@ -93,6 +93,7 @@ func (m *Migration39) UpdateWorkspace(ctx context.Context, cfg *entity.Config, w
 		entity.SubscriptionListUserSchema,
 		entity.MessageTemplateSchema,
 		entity.BroadcastCampaignSchema,
+		entity.MessageSchema,
 	}
 
 	// mysql migration queries here
@@ -102,6 +103,7 @@ func (m *Migration39) UpdateWorkspace(ctx context.Context, cfg *entity.Config, w
 			entity.SubscriptionListUserSchemaMYSQL,
 			entity.MessageTemplateSchemaMYSQL,
 			entity.BroadcastCampaignSchemaMYSQL,
+			entity.MessageSchemaMYSQL,
 		}
 	}
 

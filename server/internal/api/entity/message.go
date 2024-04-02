@@ -19,8 +19,11 @@ var (
 	MessageStatusUnsubscribed = int64(80)
 	MessageStatusComplained   = int64(90)
 
-	DoubleOptInKeyword = "DOUBLE_OPT_IN_LINK"
-	UnsubscribeKeyword = "UNSUBSCRIBE_LINK"
+	DoubleOptInKeyword = "double_opt_in_link"
+	UnsubscribeKeyword = "unsubscribe_link"
+
+	DoubleOptInPath      = "/double-opt-in"
+	UnsubscribeEmailPath = "/unsubscribe-email"
 )
 
 type Message struct {

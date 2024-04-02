@@ -8,7 +8,9 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"time"
 
+	"aidanwoods.dev/go-paseto"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 	"github.com/tidwall/sjson"
@@ -67,6 +69,11 @@ func SendMessage(ctx context.Context, pipe *DataLogPipeline) {
 		return
 	}
 
+	if pipe.DataLog.UpsertedUser.Email == nil || pipe.DataLog.UpsertedUser.Email.String == "" {
+		pipe.SetError("user", "SendMessage: user has no email address", false)
+		return
+	}
+
 	// shortcut
 	template := pipe.DataLog.UpsertedMessage.MessageTemplate
 
@@ -92,6 +99,39 @@ func SendMessage(ctx context.Context, pipe *DataLogPipeline) {
 		return
 	}
 
+	// add double opt-in / unsubscribe link to the data
+	if pipe.DataLog.UpsertedMessage.SubscriptionList != nil {
+
+		// check if template has DoubleOptInKeyword
+		if strings.Contains(template.Email.Content, entity.DoubleOptInKeyword) {
+			doubleOptInLink, err := GenerateDoubleOptInLink(pipe.Config.COLLECTOR_ENDPOINT, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+			if err != nil {
+				pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
+				return
+			}
+
+			jsonData, err = sjson.Set(jsonData, entity.DoubleOptInKeyword, doubleOptInLink)
+			if err != nil {
+				pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
+				return
+			}
+		}
+
+		if strings.Contains(template.Email.Content, entity.UnsubscribeKeyword) {
+			unsubLink, err := GenerateEmailUnsubscribeLink(pipe.Config.COLLECTOR_ENDPOINT, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+			if err != nil {
+				pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
+				return
+			}
+
+			jsonData, err = sjson.Set(jsonData, entity.UnsubscribeKeyword, unsubLink)
+			if err != nil {
+				pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
+				return
+			}
+		}
+	}
+
 	// build content
 	subject, err := CompileNunjucksTemplate(template.Email.Subject, jsonData)
 
@@ -113,23 +153,6 @@ func SendMessage(ctx context.Context, pipe *DataLogPipeline) {
 		if err != nil {
 			pipe.SetError("server", fmt.Sprintf("nunjucks text err %v", err), false)
 			return
-		}
-	}
-
-	// inject double opt-in / unsubscribe link
-	if pipe.DataLog.UpsertedMessage.SubscriptionList != nil {
-
-		// check if template has DoubleOptInKeyword
-		if strings.Contains(html, entity.DoubleOptInKeyword) {
-			doubleOptInLink := "TODO"
-			html = strings.ReplaceAll(html, entity.DoubleOptInKeyword, doubleOptInLink)
-			text = strings.ReplaceAll(text, entity.DoubleOptInKeyword, doubleOptInLink)
-		}
-
-		if strings.Contains(template.Email.Content, entity.UnsubscribeKeyword) {
-			unsubLink := "TODO"
-			html = strings.ReplaceAll(html, entity.UnsubscribeKeyword, unsubLink)
-			text = strings.ReplaceAll(text, entity.UnsubscribeKeyword, unsubLink)
 		}
 	}
 
@@ -164,4 +187,52 @@ func CompileNunjucksTemplate(templateString string, jsonData string) (result str
 	}
 
 	return string(output), nil
+}
+
+func GenerateDoubleOptInLink(endpoint string, secretKey string, list *entity.SubscriptionList, user *entity.User) (token string, err error) {
+
+	// create a token with custom claims
+	pasetoToken := paseto.NewToken()
+	pasetoToken.SetAudience(endpoint)
+	pasetoToken.SetIssuedAt(time.Now())
+	pasetoToken.SetString("lid", list.ID)
+	pasetoToken.SetString("lname", list.Name)
+	pasetoToken.SetString("email", user.Email.String)
+
+	if user.IsAuthenticated {
+		pasetoToken.SetString("auth_uid", user.ExternalID)
+	} else {
+		pasetoToken.SetString("anon_uid", user.ExternalID)
+	}
+
+	key, err := paseto.V4SymmetricKeyFromBytes([]byte(secretKey))
+	if err != nil {
+		return "", eris.Wrap(err, "GenerateDoubleOptInLink V4SymmetricKeyFromBytes")
+	}
+
+	return endpoint + entity.DoubleOptInPath + "?token=" + pasetoToken.V4Encrypt(key, nil), nil
+}
+
+func GenerateEmailUnsubscribeLink(endpoint string, secretKey string, list *entity.SubscriptionList, user *entity.User) (token string, err error) {
+
+	// create a token with custom claims
+	pasetoToken := paseto.NewToken()
+	pasetoToken.SetAudience(endpoint)
+	pasetoToken.SetIssuedAt(time.Now())
+	pasetoToken.SetString("lid", list.ID)
+	pasetoToken.SetString("lname", list.Name)
+	pasetoToken.SetString("email", user.Email.String)
+
+	if user.IsAuthenticated {
+		pasetoToken.SetString("auth_uid", user.ExternalID)
+	} else {
+		pasetoToken.SetString("anon_uid", user.ExternalID)
+	}
+
+	key, err := paseto.V4SymmetricKeyFromBytes([]byte(secretKey))
+	if err != nil {
+		return "", eris.Wrap(err, "GenerateEmailUnsubscribeLink V4SymmetricKeyFromBytes")
+	}
+
+	return endpoint + entity.UnsubscribeEmailPath + "?token=" + pasetoToken.V4Encrypt(key, nil), nil
 }

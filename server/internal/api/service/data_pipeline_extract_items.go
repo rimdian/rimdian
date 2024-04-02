@@ -167,6 +167,16 @@ func (pipe *DataLogPipeline) ExtractAndValidateItem(ctx context.Context) {
 		if pipe.HasError() {
 			return
 		}
+	case "message":
+		// message requires a user
+		pipe.ExtractUserFromDataLogItem()
+		if pipe.HasError() {
+			return
+		}
+		pipe.ExtractMessageFromDataLogItem(ctx)
+		if pipe.HasError() {
+			return
+		}
 	default:
 		pipe.ExtractAppItemFromDataLogItem()
 	}
@@ -425,6 +435,44 @@ func (pipe *DataLogPipeline) ExtractSubscriptionListUserFromDataLogItem(ctx cont
 		pipe.DataLog.ItemExternalID = pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID
 		pipe.DataLog.EventAt = *pipe.DataLog.UpsertedSubscriptionListUser.UpdatedAt
 		pipe.DataLog.EventAtTrunc = pipe.DataLog.UpsertedSubscriptionListUser.UpdatedAt.Truncate(time.Hour)
+	}
+}
+
+func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) {
+
+	message, err := entity.NewMessageFromDataLog(pipe.DataLog, pipe.DataLogInQueue.Context.ClockDifference)
+
+	if err != nil {
+		pipe.SetError("message", err.Error(), false)
+		return
+	}
+
+	// attach subscription list + email_template to message
+	if message.SubscriptionListID != nil {
+		message.SubscriptionList, err = pipe.Repository.GetSubscriptionList(ctx, pipe.Workspace.ID, *message.SubscriptionListID, nil)
+
+		if err != nil {
+			pipe.SetError("message", err.Error(), false)
+			return
+		}
+	}
+
+	if message.MessageTemplateID != nil {
+		message.MessageTemplate, err = pipe.Repository.GetMessageTemplate(ctx, pipe.Workspace.ID, *message.MessageTemplateID, message.MessageTemplateVersion, nil)
+
+		if err != nil {
+			pipe.SetError("message", err.Error(), false)
+			return
+		}
+	}
+
+	pipe.DataLog.UpsertedMessage = message
+
+	if pipe.DataLog.Kind == "message" {
+		pipe.DataLog.ItemID = pipe.DataLog.UpsertedMessage.ID
+		pipe.DataLog.ItemExternalID = pipe.DataLog.UpsertedMessage.ExternalID
+		pipe.DataLog.EventAt = *pipe.DataLog.UpsertedMessage.UpdatedAt
+		pipe.DataLog.EventAtTrunc = pipe.DataLog.UpsertedMessage.UpdatedAt.Truncate(time.Hour)
 	}
 }
 

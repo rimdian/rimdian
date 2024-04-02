@@ -43,6 +43,9 @@ var _ Pipeline = &PipelineMock{}
 //			ExecuteFunc: func(ctx context.Context)  {
 //				panic("mock out the Execute method")
 //			},
+//			GetDataLogsGeneratedFunc: func() []*entity.DataLog {
+//				panic("mock out the GetDataLogsGenerated method")
+//			},
 //			GetQueueResultFunc: func() *common.DataLogInQueueResult {
 //				panic("mock out the GetQueueResult method")
 //			},
@@ -103,6 +106,9 @@ type PipelineMock struct {
 
 	// ExecuteFunc mocks the Execute method.
 	ExecuteFunc func(ctx context.Context)
+
+	// GetDataLogsGeneratedFunc mocks the GetDataLogsGenerated method.
+	GetDataLogsGeneratedFunc func() []*entity.DataLog
 
 	// GetQueueResultFunc mocks the GetQueueResult method.
 	GetQueueResultFunc func() *common.DataLogInQueueResult
@@ -194,6 +200,9 @@ type PipelineMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 		}
+		// GetDataLogsGenerated holds details about calls to the GetDataLogsGenerated method.
+		GetDataLogsGenerated []struct {
+		}
 		// GetQueueResult holds details about calls to the GetQueueResult method.
 		GetQueueResult []struct {
 		}
@@ -265,6 +274,7 @@ type PipelineMock struct {
 	lockDataLogEnqueue         sync.RWMutex
 	lockEnsureUsersLock        sync.RWMutex
 	lockExecute                sync.RWMutex
+	lockGetDataLogsGenerated   sync.RWMutex
 	lockGetQueueResult         sync.RWMutex
 	lockGetUserIDs             sync.RWMutex
 	lockGetWorkspace           sync.RWMutex
@@ -511,6 +521,33 @@ func (mock *PipelineMock) ExecuteCalls() []struct {
 	mock.lockExecute.RLock()
 	calls = mock.calls.Execute
 	mock.lockExecute.RUnlock()
+	return calls
+}
+
+// GetDataLogsGenerated calls GetDataLogsGeneratedFunc.
+func (mock *PipelineMock) GetDataLogsGenerated() []*entity.DataLog {
+	if mock.GetDataLogsGeneratedFunc == nil {
+		panic("PipelineMock.GetDataLogsGeneratedFunc: method is nil but Pipeline.GetDataLogsGenerated was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockGetDataLogsGenerated.Lock()
+	mock.calls.GetDataLogsGenerated = append(mock.calls.GetDataLogsGenerated, callInfo)
+	mock.lockGetDataLogsGenerated.Unlock()
+	return mock.GetDataLogsGeneratedFunc()
+}
+
+// GetDataLogsGeneratedCalls gets all the calls that were made to GetDataLogsGenerated.
+// Check the length with:
+//
+//	len(mockedPipeline.GetDataLogsGeneratedCalls())
+func (mock *PipelineMock) GetDataLogsGeneratedCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockGetDataLogsGenerated.RLock()
+	calls = mock.calls.GetDataLogsGenerated
+	mock.lockGetDataLogsGenerated.RUnlock()
 	return calls
 }
 

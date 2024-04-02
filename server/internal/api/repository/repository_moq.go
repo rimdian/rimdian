@@ -221,7 +221,7 @@ var _ Repository = &RepositoryMock{}
 //			GetInvitationFunc: func(ctx context.Context, email string, organizationID string) (*entity.OrganizationInvitation, error) {
 //				panic("mock out the GetInvitation method")
 //			},
-//			GetMessageTemplateFunc: func(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (*entity.MessageTemplate, error) {
+//			GetMessageTemplateFunc: func(ctx context.Context, workspaceID string, id string, version *int64, tx *sql.Tx) (*entity.MessageTemplate, error) {
 //				panic("mock out the GetMessageTemplate method")
 //			},
 //			GetOrganizationFunc: func(ctx context.Context, organizationID string) (*entity.Organization, error) {
@@ -766,7 +766,7 @@ type RepositoryMock struct {
 	GetInvitationFunc func(ctx context.Context, email string, organizationID string) (*entity.OrganizationInvitation, error)
 
 	// GetMessageTemplateFunc mocks the GetMessageTemplate method.
-	GetMessageTemplateFunc func(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (*entity.MessageTemplate, error)
+	GetMessageTemplateFunc func(ctx context.Context, workspaceID string, id string, version *int64, tx *sql.Tx) (*entity.MessageTemplate, error)
 
 	// GetOrganizationFunc mocks the GetOrganization method.
 	GetOrganizationFunc func(ctx context.Context, organizationID string) (*entity.Organization, error)
@@ -1827,7 +1827,7 @@ type RepositoryMock struct {
 			// ID is the id argument value.
 			ID string
 			// Version is the version argument value.
-			Version *int
+			Version *int64
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
@@ -5998,7 +5998,7 @@ func (mock *RepositoryMock) GetInvitationCalls() []struct {
 }
 
 // GetMessageTemplate calls GetMessageTemplateFunc.
-func (mock *RepositoryMock) GetMessageTemplate(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (*entity.MessageTemplate, error) {
+func (mock *RepositoryMock) GetMessageTemplate(ctx context.Context, workspaceID string, id string, version *int64, tx *sql.Tx) (*entity.MessageTemplate, error) {
 	if mock.GetMessageTemplateFunc == nil {
 		panic("RepositoryMock.GetMessageTemplateFunc: method is nil but Repository.GetMessageTemplate was just called")
 	}
@@ -6006,7 +6006,7 @@ func (mock *RepositoryMock) GetMessageTemplate(ctx context.Context, workspaceID 
 		Ctx         context.Context
 		WorkspaceID string
 		ID          string
-		Version     *int
+		Version     *int64
 		Tx          *sql.Tx
 	}{
 		Ctx:         ctx,
@@ -6029,14 +6029,14 @@ func (mock *RepositoryMock) GetMessageTemplateCalls() []struct {
 	Ctx         context.Context
 	WorkspaceID string
 	ID          string
-	Version     *int
+	Version     *int64
 	Tx          *sql.Tx
 } {
 	var calls []struct {
 		Ctx         context.Context
 		WorkspaceID string
 		ID          string
-		Version     *int
+		Version     *int64
 		Tx          *sql.Tx
 	}
 	mock.lockGetMessageTemplate.RLock()

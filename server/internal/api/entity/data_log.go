@@ -24,11 +24,12 @@ const (
 	DataLogCheckpointHookOnValidationExecuted DataLogStatusType = 10  // hook on_validation executed
 	DataLogCheckpointPersisted                DataLogStatusType = 20  // data_log data extracted and persisted in DB
 	DataLogCheckpointItemUpserted             DataLogStatusType = 30  // item upserted
-	DataLogCheckpointConversionsAttributed    DataLogStatusType = 40  // conversions attributed
-	DataLogCheckpointSegmentsRecomputed       DataLogStatusType = 50  // segment processed
-	DataLogCheckpointShouldRespawn            DataLogStatusType = 60  // should respawn to process workflows+hooks asynchronously
-	DataLogCheckpointWorkflowsTriggered       DataLogStatusType = 70  // workflow triggered
-	DataLogCheckpointHooksFinalizeExecuted    DataLogStatusType = 80  // hooks finalize executed
+	DataLogCheckpointSpecialActionExecuted    DataLogStatusType = 40  // send eventual message etc... (email, sms...)
+	DataLogCheckpointConversionsAttributed    DataLogStatusType = 50  // conversions attributed
+	DataLogCheckpointSegmentsRecomputed       DataLogStatusType = 60  // segment processed
+	DataLogCheckpointShouldRespawn            DataLogStatusType = 70  // should respawn to process workflows+hooks asynchronously
+	DataLogCheckpointWorkflowsTriggered       DataLogStatusType = 80  // workflow triggered
+	DataLogCheckpointHooksFinalizeExecuted    DataLogStatusType = 90  // hooks finalize executed
 	DataLogCheckpointDone                     DataLogStatusType = 100 // launch eventual child tasks and we are done (success or aborted)
 
 	MicrosecondLayout = "2006-01-02T15:04:05.999999Z" // .99 = trick for microseconds
@@ -91,6 +92,13 @@ type DataLog struct {
 
 func (dataLog *DataLog) IsPersisted() bool {
 	return dataLog.DBCreatedAt != nil
+}
+
+func (dataLog *DataLog) IsSpecialAction() bool {
+	if dataLog.Kind == ItemKindMessage {
+		return true
+	}
+	return false
 }
 
 // some data_logs produce and process children synchronously

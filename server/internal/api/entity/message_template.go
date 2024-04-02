@@ -23,7 +23,7 @@ var (
 
 type MessageTemplate struct {
 	ID              string               `json:"id"`
-	Version         int                  `json:"version"`
+	Version         int64                `json:"version"`
 	Name            string               `json:"name"`
 	Channel         string               `json:"channel"` // email | sms | push
 	Engine          string               `json:"engine"`  // visual | mjml | nunchucks

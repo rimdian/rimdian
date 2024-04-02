@@ -54,6 +54,7 @@ type IDataLogPipeline interface {
 	StepPending(ctx context.Context)
 	StepPersistDatalog(ctx context.Context)
 	StepUpsertItem(ctx context.Context)
+	StepExecuteSpecialAction(ctx context.Context)
 	StepAttribution(ctx context.Context)
 	StepSegmentation(ctx context.Context)
 	StepWorkflows(ctx context.Context)
@@ -83,6 +84,7 @@ type IDataLogPipeline interface {
 	UpsertSession(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
 	UpsertPostview(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
 	UpsertSubscriptionListUser(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
+	UpsertMessage(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
 	UpsertAppItem(ctx context.Context, isChild bool, tx *sql.Tx) (err error)
 
 	ReattributeUsersOrders(ctx context.Context)
@@ -469,6 +471,12 @@ func (pipe *DataLogPipeline) ProcessNextStep(ctx context.Context) {
 	}
 
 	if pipe.DataLog.Checkpoint == entity.DataLogCheckpointItemUpserted {
+		pipe.StepExecuteSpecialAction(spanCtx)
+		pipe.ProcessNextStep(spanCtx)
+		return
+	}
+
+	if pipe.DataLog.Checkpoint == entity.DataLogCheckpointSpecialActionExecuted {
 		pipe.StepAttribution(spanCtx)
 		pipe.ProcessNextStep(spanCtx)
 		return

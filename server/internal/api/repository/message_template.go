@@ -59,7 +59,7 @@ func (repo *RepositoryImpl) InsertMessageTemplate(ctx context.Context, workspace
 	return nil
 }
 
-func (repo *RepositoryImpl) GetMessageTemplate(ctx context.Context, workspaceID string, id string, version *int, tx *sql.Tx) (template *entity.MessageTemplate, err error) {
+func (repo *RepositoryImpl) GetMessageTemplate(ctx context.Context, workspaceID string, id string, version *int64, tx *sql.Tx) (template *entity.MessageTemplate, err error) {
 
 	builder := sq.Select("*").From("message_template").Where(sq.Eq{"id": id})
 

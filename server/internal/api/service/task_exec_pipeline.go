@@ -37,6 +37,7 @@ type ITaskExecPipeline interface {
 	ReleaseUsersLock() error
 	GetUserIDs() []string
 	AddDataLogGenerated(dataLog *entity.DataLog)
+	GetDataLogsGenerated() []*entity.DataLog
 	SetError(key string, err string, retryable bool)
 	HasError() bool
 
@@ -530,6 +531,9 @@ func (pipe *TaskExecPipeline) InsertChildDataLog(ctx context.Context, kind strin
 
 func (pipeline *TaskExecPipeline) AddDataLogGenerated(dataLog *entity.DataLog) {
 	pipeline.DataLogsGenerated = append(pipeline.DataLogsGenerated, dataLog)
+}
+func (pipeline *TaskExecPipeline) GetDataLogsGenerated() []*entity.DataLog {
+	return pipeline.DataLogsGenerated
 }
 
 type TaskExecPipelineProps struct {

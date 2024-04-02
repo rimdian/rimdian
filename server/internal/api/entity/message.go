@@ -18,6 +18,9 @@ var (
 	MessageStatusClicked      = int64(70)
 	MessageStatusUnsubscribed = int64(80)
 	MessageStatusComplained   = int64(90)
+
+	DoubleOptInKeyword = "DOUBLE_OPT_IN_LINK"
+	UnsubscribeKeyword = "UNSUBSCRIBE_LINK"
 )
 
 type Message struct {

@@ -31,6 +31,7 @@ type Pipeline interface {
 	ReleaseUsersLock() error
 	GetUserIDs() []string
 	AddDataLogGenerated(dataLog *entity.DataLog)
+	GetDataLogsGenerated() []*entity.DataLog
 	SetError(key string, err string, retryable bool)
 	HasError() bool
 	DataLogEnqueue(ctx context.Context, replayID *string, origin int, originID string, workspaceID string, jsonItems []string, isSync bool)

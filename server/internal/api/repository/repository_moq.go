@@ -173,6 +173,9 @@ var _ Repository = &RepositoryMock{}
 //			FindEventualUsersToMergeWithFunc: func(ctx context.Context, workspace *entity.Workspace, withUser *entity.User, withReconciliationKeys entity.MapOfInterfaces, tx *sql.Tx) ([]*entity.User, error) {
 //				panic("mock out the FindEventualUsersToMergeWith method")
 //			},
+//			FindMessageByIDFunc: func(ctx context.Context, workspace *entity.Workspace, id string, userID string, tx *sql.Tx) (*entity.Message, error) {
+//				panic("mock out the FindMessageByID method")
+//			},
 //			FindOrderByIDFunc: func(ctx context.Context, workspace *entity.Workspace, orderID string, userID string, tx *sql.Tx) (*entity.Order, error) {
 //				panic("mock out the FindOrderByID method")
 //			},
@@ -292,6 +295,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			InsertDeviceFunc: func(ctx context.Context, device *entity.Device, tx *sql.Tx) error {
 //				panic("mock out the InsertDevice method")
+//			},
+//			InsertMessageFunc: func(ctx context.Context, message *entity.Message, tx *sql.Tx) error {
+//				panic("mock out the InsertMessage method")
 //			},
 //			InsertMessageTemplateFunc: func(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) error {
 //				panic("mock out the InsertMessageTemplate method")
@@ -515,6 +521,9 @@ var _ Repository = &RepositoryMock{}
 //			UpdateDeviceFunc: func(ctx context.Context, device *entity.Device, tx *sql.Tx) error {
 //				panic("mock out the UpdateDevice method")
 //			},
+//			UpdateMessageFunc: func(ctx context.Context, message *entity.Message, tx *sql.Tx) error {
+//				panic("mock out the UpdateMessage method")
+//			},
 //			UpdateOrderFunc: func(ctx context.Context, order *entity.Order, tx *sql.Tx) error {
 //				panic("mock out the UpdateOrder method")
 //			},
@@ -717,6 +726,9 @@ type RepositoryMock struct {
 	// FindEventualUsersToMergeWithFunc mocks the FindEventualUsersToMergeWith method.
 	FindEventualUsersToMergeWithFunc func(ctx context.Context, workspace *entity.Workspace, withUser *entity.User, withReconciliationKeys entity.MapOfInterfaces, tx *sql.Tx) ([]*entity.User, error)
 
+	// FindMessageByIDFunc mocks the FindMessageByID method.
+	FindMessageByIDFunc func(ctx context.Context, workspace *entity.Workspace, id string, userID string, tx *sql.Tx) (*entity.Message, error)
+
 	// FindOrderByIDFunc mocks the FindOrderByID method.
 	FindOrderByIDFunc func(ctx context.Context, workspace *entity.Workspace, orderID string, userID string, tx *sql.Tx) (*entity.Order, error)
 
@@ -836,6 +848,9 @@ type RepositoryMock struct {
 
 	// InsertDeviceFunc mocks the InsertDevice method.
 	InsertDeviceFunc func(ctx context.Context, device *entity.Device, tx *sql.Tx) error
+
+	// InsertMessageFunc mocks the InsertMessage method.
+	InsertMessageFunc func(ctx context.Context, message *entity.Message, tx *sql.Tx) error
 
 	// InsertMessageTemplateFunc mocks the InsertMessageTemplate method.
 	InsertMessageTemplateFunc func(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) error
@@ -1058,6 +1073,9 @@ type RepositoryMock struct {
 
 	// UpdateDeviceFunc mocks the UpdateDevice method.
 	UpdateDeviceFunc func(ctx context.Context, device *entity.Device, tx *sql.Tx) error
+
+	// UpdateMessageFunc mocks the UpdateMessage method.
+	UpdateMessageFunc func(ctx context.Context, message *entity.Message, tx *sql.Tx) error
 
 	// UpdateOrderFunc mocks the UpdateOrder method.
 	UpdateOrderFunc func(ctx context.Context, order *entity.Order, tx *sql.Tx) error
@@ -1654,6 +1672,19 @@ type RepositoryMock struct {
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
+		// FindMessageByID holds details about calls to the FindMessageByID method.
+		FindMessageByID []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Workspace is the workspace argument value.
+			Workspace *entity.Workspace
+			// ID is the id argument value.
+			ID string
+			// UserID is the userID argument value.
+			UserID string
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
 		// FindOrderByID holds details about calls to the FindOrderByID method.
 		FindOrderByID []struct {
 			// Ctx is the ctx argument value.
@@ -2041,6 +2072,15 @@ type RepositoryMock struct {
 			Ctx context.Context
 			// Device is the device argument value.
 			Device *entity.Device
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
+		// InsertMessage holds details about calls to the InsertMessage method.
+		InsertMessage []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Message is the message argument value.
+			Message *entity.Message
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
@@ -2806,6 +2846,15 @@ type RepositoryMock struct {
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
+		// UpdateMessage holds details about calls to the UpdateMessage method.
+		UpdateMessage []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Message is the message argument value.
+			Message *entity.Message
+			// Tx is the tx argument value.
+			Tx *sql.Tx
+		}
 		// UpdateOrder holds details about calls to the UpdateOrder method.
 		UpdateOrder []struct {
 			// Ctx is the ctx argument value.
@@ -2990,6 +3039,7 @@ type RepositoryMock struct {
 	lockFindCustomEventByID                   sync.RWMutex
 	lockFindDeviceByID                        sync.RWMutex
 	lockFindEventualUsersToMergeWith          sync.RWMutex
+	lockFindMessageByID                       sync.RWMutex
 	lockFindOrderByID                         sync.RWMutex
 	lockFindOrderItemsByOrderID               sync.RWMutex
 	lockFindPageviewByID                      sync.RWMutex
@@ -3030,6 +3080,7 @@ type RepositoryMock struct {
 	lockInsertCustomEvent                     sync.RWMutex
 	lockInsertDataLog                         sync.RWMutex
 	lockInsertDevice                          sync.RWMutex
+	lockInsertMessage                         sync.RWMutex
 	lockInsertMessageTemplate                 sync.RWMutex
 	lockInsertOrder                           sync.RWMutex
 	lockInsertOrderItem                       sync.RWMutex
@@ -3104,6 +3155,7 @@ type RepositoryMock struct {
 	lockUpdateCustomEvent                     sync.RWMutex
 	lockUpdateDataLog                         sync.RWMutex
 	lockUpdateDevice                          sync.RWMutex
+	lockUpdateMessage                         sync.RWMutex
 	lockUpdateOrder                           sync.RWMutex
 	lockUpdateOrderAttribution                sync.RWMutex
 	lockUpdateOrderItem                       sync.RWMutex
@@ -5317,6 +5369,54 @@ func (mock *RepositoryMock) FindEventualUsersToMergeWithCalls() []struct {
 	return calls
 }
 
+// FindMessageByID calls FindMessageByIDFunc.
+func (mock *RepositoryMock) FindMessageByID(ctx context.Context, workspace *entity.Workspace, id string, userID string, tx *sql.Tx) (*entity.Message, error) {
+	if mock.FindMessageByIDFunc == nil {
+		panic("RepositoryMock.FindMessageByIDFunc: method is nil but Repository.FindMessageByID was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		Workspace *entity.Workspace
+		ID        string
+		UserID    string
+		Tx        *sql.Tx
+	}{
+		Ctx:       ctx,
+		Workspace: workspace,
+		ID:        id,
+		UserID:    userID,
+		Tx:        tx,
+	}
+	mock.lockFindMessageByID.Lock()
+	mock.calls.FindMessageByID = append(mock.calls.FindMessageByID, callInfo)
+	mock.lockFindMessageByID.Unlock()
+	return mock.FindMessageByIDFunc(ctx, workspace, id, userID, tx)
+}
+
+// FindMessageByIDCalls gets all the calls that were made to FindMessageByID.
+// Check the length with:
+//
+//	len(mockedRepository.FindMessageByIDCalls())
+func (mock *RepositoryMock) FindMessageByIDCalls() []struct {
+	Ctx       context.Context
+	Workspace *entity.Workspace
+	ID        string
+	UserID    string
+	Tx        *sql.Tx
+} {
+	var calls []struct {
+		Ctx       context.Context
+		Workspace *entity.Workspace
+		ID        string
+		UserID    string
+		Tx        *sql.Tx
+	}
+	mock.lockFindMessageByID.RLock()
+	calls = mock.calls.FindMessageByID
+	mock.lockFindMessageByID.RUnlock()
+	return calls
+}
+
 // FindOrderByID calls FindOrderByIDFunc.
 func (mock *RepositoryMock) FindOrderByID(ctx context.Context, workspace *entity.Workspace, orderID string, userID string, tx *sql.Tx) (*entity.Order, error) {
 	if mock.FindOrderByIDFunc == nil {
@@ -6974,6 +7074,46 @@ func (mock *RepositoryMock) InsertDeviceCalls() []struct {
 	mock.lockInsertDevice.RLock()
 	calls = mock.calls.InsertDevice
 	mock.lockInsertDevice.RUnlock()
+	return calls
+}
+
+// InsertMessage calls InsertMessageFunc.
+func (mock *RepositoryMock) InsertMessage(ctx context.Context, message *entity.Message, tx *sql.Tx) error {
+	if mock.InsertMessageFunc == nil {
+		panic("RepositoryMock.InsertMessageFunc: method is nil but Repository.InsertMessage was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		Message *entity.Message
+		Tx      *sql.Tx
+	}{
+		Ctx:     ctx,
+		Message: message,
+		Tx:      tx,
+	}
+	mock.lockInsertMessage.Lock()
+	mock.calls.InsertMessage = append(mock.calls.InsertMessage, callInfo)
+	mock.lockInsertMessage.Unlock()
+	return mock.InsertMessageFunc(ctx, message, tx)
+}
+
+// InsertMessageCalls gets all the calls that were made to InsertMessage.
+// Check the length with:
+//
+//	len(mockedRepository.InsertMessageCalls())
+func (mock *RepositoryMock) InsertMessageCalls() []struct {
+	Ctx     context.Context
+	Message *entity.Message
+	Tx      *sql.Tx
+} {
+	var calls []struct {
+		Ctx     context.Context
+		Message *entity.Message
+		Tx      *sql.Tx
+	}
+	mock.lockInsertMessage.RLock()
+	calls = mock.calls.InsertMessage
+	mock.lockInsertMessage.RUnlock()
 	return calls
 }
 
@@ -10126,6 +10266,46 @@ func (mock *RepositoryMock) UpdateDeviceCalls() []struct {
 	mock.lockUpdateDevice.RLock()
 	calls = mock.calls.UpdateDevice
 	mock.lockUpdateDevice.RUnlock()
+	return calls
+}
+
+// UpdateMessage calls UpdateMessageFunc.
+func (mock *RepositoryMock) UpdateMessage(ctx context.Context, message *entity.Message, tx *sql.Tx) error {
+	if mock.UpdateMessageFunc == nil {
+		panic("RepositoryMock.UpdateMessageFunc: method is nil but Repository.UpdateMessage was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		Message *entity.Message
+		Tx      *sql.Tx
+	}{
+		Ctx:     ctx,
+		Message: message,
+		Tx:      tx,
+	}
+	mock.lockUpdateMessage.Lock()
+	mock.calls.UpdateMessage = append(mock.calls.UpdateMessage, callInfo)
+	mock.lockUpdateMessage.Unlock()
+	return mock.UpdateMessageFunc(ctx, message, tx)
+}
+
+// UpdateMessageCalls gets all the calls that were made to UpdateMessage.
+// Check the length with:
+//
+//	len(mockedRepository.UpdateMessageCalls())
+func (mock *RepositoryMock) UpdateMessageCalls() []struct {
+	Ctx     context.Context
+	Message *entity.Message
+	Tx      *sql.Tx
+} {
+	var calls []struct {
+		Ctx     context.Context
+		Message *entity.Message
+		Tx      *sql.Tx
+	}
+	mock.lockUpdateMessage.RLock()
+	calls = mock.calls.UpdateMessage
+	mock.lockUpdateMessage.RUnlock()
 	return calls
 }
 

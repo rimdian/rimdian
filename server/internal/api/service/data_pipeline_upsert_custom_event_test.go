@@ -194,10 +194,11 @@ func TestServiceImpl_DataPipelineUpsertCustomEvent(t *testing.T) {
 		dataLogInQueue.ComputeID(cfgSecretKey)
 
 		props := &DataPipelineProps{
-			Config:         cfg,
-			Logger:         logger,
-			NetClient:      netClientMock,
-			Repository:     repoMock,
+			Config:     cfg,
+			Logger:     logger,
+			NetClient:  netClientMock,
+			Repository: repoMock,
+			// TaskOrchestrator: svc.TaskOrchestrator,
 			Workspace:      demoWorkspace,
 			DataLogInQueue: dataLogInQueue,
 		}

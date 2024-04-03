@@ -36,7 +36,16 @@ func (pipe *DataLogPipeline) UpsertCustomEvent(ctx context.Context, isChild bool
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "custom_event", "create", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedCustomEvent.ID, pipe.DataLog.UpsertedCustomEvent.ExternalID, updatedFields, *pipe.DataLog.UpsertedCustomEvent.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "custom_event",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         pipe.DataLog.UpsertedCustomEvent.ID,
+				ItemExternalID: pipe.DataLog.UpsertedCustomEvent.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *pipe.DataLog.UpsertedCustomEvent.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		} else {
@@ -69,7 +78,16 @@ func (pipe *DataLogPipeline) UpsertCustomEvent(ctx context.Context, isChild bool
 	}
 
 	if isChild {
-		if err := pipe.InsertChildDataLog(spanCtx, "custom_event", "update", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedCustomEvent.ID, pipe.DataLog.UpsertedCustomEvent.ExternalID, updatedFields, *pipe.DataLog.UpsertedCustomEvent.UpdatedAt, tx); err != nil {
+		if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+			Kind:           "custom_event",
+			Action:         "update",
+			UserID:         pipe.DataLog.UpsertedUser.ID,
+			ItemID:         pipe.DataLog.UpsertedCustomEvent.ID,
+			ItemExternalID: pipe.DataLog.UpsertedCustomEvent.ExternalID,
+			UpdatedFields:  updatedFields,
+			EventAt:        *pipe.DataLog.UpsertedCustomEvent.UpdatedAt,
+			Tx:             tx,
+		}); err != nil {
 			return err
 		}
 	}

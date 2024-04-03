@@ -142,6 +142,9 @@ var _ Service = &ServiceMock{}
 //			IsOwnerOfOrganizationFunc: func(ctx context.Context, accountId string, organizationId string) (bool, int, error) {
 //				panic("mock out the IsOwnerOfOrganization method")
 //			},
+//			MessageSendFunc: func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+//				panic("mock out the MessageSend method")
+//			},
 //			MessageTemplateListFunc: func(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) ([]*entity.MessageTemplate, int, error) {
 //				panic("mock out the MessageTemplateList method")
 //			},
@@ -388,6 +391,9 @@ type ServiceMock struct {
 
 	// IsOwnerOfOrganizationFunc mocks the IsOwnerOfOrganization method.
 	IsOwnerOfOrganizationFunc func(ctx context.Context, accountId string, organizationId string) (bool, int, error)
+
+	// MessageSendFunc mocks the MessageSend method.
+	MessageSendFunc func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult
 
 	// MessageTemplateListFunc mocks the MessageTemplateList method.
 	MessageTemplateListFunc func(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) ([]*entity.MessageTemplate, int, error)
@@ -837,6 +843,13 @@ type ServiceMock struct {
 			// OrganizationId is the organizationId argument value.
 			OrganizationId string
 		}
+		// MessageSend holds details about calls to the MessageSend method.
+		MessageSend []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Data is the data argument value.
+			Data *dto.SendMessage
+		}
 		// MessageTemplateList holds details about calls to the MessageTemplateList method.
 		MessageTemplateList []struct {
 			// Ctx is the ctx argument value.
@@ -1224,6 +1237,7 @@ type ServiceMock struct {
 	lockInstallOrVerifyServer                   sync.RWMutex
 	lockIsAccountOfOrganization                 sync.RWMutex
 	lockIsOwnerOfOrganization                   sync.RWMutex
+	lockMessageSend                             sync.RWMutex
 	lockMessageTemplateList                     sync.RWMutex
 	lockMessageTemplateUpsert                   sync.RWMutex
 	lockOrganizationAccountCreateServiceAccount sync.RWMutex
@@ -2794,6 +2808,42 @@ func (mock *ServiceMock) IsOwnerOfOrganizationCalls() []struct {
 	mock.lockIsOwnerOfOrganization.RLock()
 	calls = mock.calls.IsOwnerOfOrganization
 	mock.lockIsOwnerOfOrganization.RUnlock()
+	return calls
+}
+
+// MessageSend calls MessageSendFunc.
+func (mock *ServiceMock) MessageSend(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+	if mock.MessageSendFunc == nil {
+		panic("ServiceMock.MessageSendFunc: method is nil but Service.MessageSend was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		Data *dto.SendMessage
+	}{
+		Ctx:  ctx,
+		Data: data,
+	}
+	mock.lockMessageSend.Lock()
+	mock.calls.MessageSend = append(mock.calls.MessageSend, callInfo)
+	mock.lockMessageSend.Unlock()
+	return mock.MessageSendFunc(ctx, data)
+}
+
+// MessageSendCalls gets all the calls that were made to MessageSend.
+// Check the length with:
+//
+//	len(mockedService.MessageSendCalls())
+func (mock *ServiceMock) MessageSendCalls() []struct {
+	Ctx  context.Context
+	Data *dto.SendMessage
+} {
+	var calls []struct {
+		Ctx  context.Context
+		Data *dto.SendMessage
+	}
+	mock.lockMessageSend.RLock()
+	calls = mock.calls.MessageSend
+	mock.lockMessageSend.RUnlock()
 	return calls
 }
 

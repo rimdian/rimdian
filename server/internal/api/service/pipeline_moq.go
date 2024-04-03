@@ -12,7 +12,6 @@ import (
 	"github.com/rimdian/rimdian/internal/common/httpClient"
 	"github.com/sirupsen/logrus"
 	"sync"
-	"time"
 )
 
 // Ensure, that PipelineMock does implement Pipeline.
@@ -58,7 +57,7 @@ var _ Pipeline = &PipelineMock{}
 //			HasErrorFunc: func() bool {
 //				panic("mock out the HasError method")
 //			},
-//			InsertChildDataLogFunc: func(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) error {
+//			InsertChildDataLogFunc: func(ctx context.Context, data entity.ChildDataLog) error {
 //				panic("mock out the InsertChildDataLog method")
 //			},
 //			LogFunc: func() *logrus.Logger {
@@ -123,7 +122,7 @@ type PipelineMock struct {
 	HasErrorFunc func() bool
 
 	// InsertChildDataLogFunc mocks the InsertChildDataLog method.
-	InsertChildDataLogFunc func(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) error
+	InsertChildDataLogFunc func(ctx context.Context, data entity.ChildDataLog) error
 
 	// LogFunc mocks the Log method.
 	LogFunc func() *logrus.Logger
@@ -219,22 +218,8 @@ type PipelineMock struct {
 		InsertChildDataLog []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// Kind is the kind argument value.
-			Kind string
-			// Action is the action argument value.
-			Action string
-			// UserID is the userID argument value.
-			UserID string
-			// ItemID is the itemID argument value.
-			ItemID string
-			// ItemExternalID is the itemExternalID argument value.
-			ItemExternalID string
-			// UpdatedFields is the updatedFields argument value.
-			UpdatedFields entity.UpdatedFields
-			// EventAt is the eventAt argument value.
-			EventAt time.Time
-			// Tx is the tx argument value.
-			Tx *sql.Tx
+			// Data is the data argument value.
+			Data entity.ChildDataLog
 		}
 		// Log holds details about calls to the Log method.
 		Log []struct {
@@ -660,35 +645,21 @@ func (mock *PipelineMock) HasErrorCalls() []struct {
 }
 
 // InsertChildDataLog calls InsertChildDataLogFunc.
-func (mock *PipelineMock) InsertChildDataLog(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) error {
+func (mock *PipelineMock) InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) error {
 	if mock.InsertChildDataLogFunc == nil {
 		panic("PipelineMock.InsertChildDataLogFunc: method is nil but Pipeline.InsertChildDataLog was just called")
 	}
 	callInfo := struct {
-		Ctx            context.Context
-		Kind           string
-		Action         string
-		UserID         string
-		ItemID         string
-		ItemExternalID string
-		UpdatedFields  entity.UpdatedFields
-		EventAt        time.Time
-		Tx             *sql.Tx
+		Ctx  context.Context
+		Data entity.ChildDataLog
 	}{
-		Ctx:            ctx,
-		Kind:           kind,
-		Action:         action,
-		UserID:         userID,
-		ItemID:         itemID,
-		ItemExternalID: itemExternalID,
-		UpdatedFields:  updatedFields,
-		EventAt:        eventAt,
-		Tx:             tx,
+		Ctx:  ctx,
+		Data: data,
 	}
 	mock.lockInsertChildDataLog.Lock()
 	mock.calls.InsertChildDataLog = append(mock.calls.InsertChildDataLog, callInfo)
 	mock.lockInsertChildDataLog.Unlock()
-	return mock.InsertChildDataLogFunc(ctx, kind, action, userID, itemID, itemExternalID, updatedFields, eventAt, tx)
+	return mock.InsertChildDataLogFunc(ctx, data)
 }
 
 // InsertChildDataLogCalls gets all the calls that were made to InsertChildDataLog.
@@ -696,26 +667,12 @@ func (mock *PipelineMock) InsertChildDataLog(ctx context.Context, kind string, a
 //
 //	len(mockedPipeline.InsertChildDataLogCalls())
 func (mock *PipelineMock) InsertChildDataLogCalls() []struct {
-	Ctx            context.Context
-	Kind           string
-	Action         string
-	UserID         string
-	ItemID         string
-	ItemExternalID string
-	UpdatedFields  entity.UpdatedFields
-	EventAt        time.Time
-	Tx             *sql.Tx
+	Ctx  context.Context
+	Data entity.ChildDataLog
 } {
 	var calls []struct {
-		Ctx            context.Context
-		Kind           string
-		Action         string
-		UserID         string
-		ItemID         string
-		ItemExternalID string
-		UpdatedFields  entity.UpdatedFields
-		EventAt        time.Time
-		Tx             *sql.Tx
+		Ctx  context.Context
+		Data entity.ChildDataLog
 	}
 	mock.lockInsertChildDataLog.RLock()
 	calls = mock.calls.InsertChildDataLog

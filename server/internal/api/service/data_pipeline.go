@@ -18,6 +18,7 @@ import (
 	"github.com/rimdian/rimdian/internal/common/dto"
 	common "github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rimdian/rimdian/internal/common/httpClient"
+	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
 	"github.com/rotisserie/eris"
 	"github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
@@ -34,7 +35,7 @@ type IDataLogPipeline interface {
 	GetQueueResult() *common.DataLogInQueueResult
 	Execute(ctx context.Context)
 	ProcessNextStep(ctx context.Context)
-	InsertChildDataLog(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) error
+	InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) error
 	EnsureUsersLock(ctx context.Context) error
 	ReleaseUsersLock() error
 	GetUserIDs() []string
@@ -94,12 +95,13 @@ type IDataLogPipeline interface {
 }
 
 type DataLogPipeline struct {
-	Config     *entity.Config
-	Logger     *logrus.Logger
-	NetClient  httpClient.HTTPClient
-	Repository repository.Repository
-	Workspace  *entity.Workspace
-	Apps       []*entity.App
+	Config           *entity.Config
+	Logger           *logrus.Logger
+	NetClient        httpClient.HTTPClient
+	Repository       repository.Repository
+	TaskOrchestrator taskorchestrator.Client
+	Workspace        *entity.Workspace
+	Apps             []*entity.App
 	// data received from the queue
 	DataLogInQueue *dto.DataLogInQueue
 	// data_log generated & persisted from the dDataLogInQueue
@@ -595,9 +597,9 @@ func (pipe *DataLogPipeline) EnsureUsersLock(ctx context.Context) error {
 }
 
 // generate a child DataLog, persist it in DB and add it to the list of generated data_logs
-func (pipe *DataLogPipeline) InsertChildDataLog(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) (err error) {
+func (pipe *DataLogPipeline) InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) (err error) {
 
-	childDataLog := entity.NewInternalDataLogChild(pipe.DataLog, userID, kind, action, itemID, itemExternalID, updatedFields, eventAt)
+	childDataLog := entity.NewInternalDataLogChild(pipe.DataLog, data)
 
 	// determine if this child data_log should be already considered as "done" or not
 	childDataLog.Checkpoint = entity.DataLogCheckpointDone
@@ -626,7 +628,7 @@ func (pipe *DataLogPipeline) InsertChildDataLog(ctx context.Context, kind string
 		}
 	}
 
-	if err = pipe.Repository.InsertDataLog(ctx, childDataLog.Context.WorkspaceID, childDataLog, tx); err != nil {
+	if err = pipe.Repository.InsertDataLog(ctx, childDataLog.Context.WorkspaceID, childDataLog, data.Tx); err != nil {
 		return err
 	}
 
@@ -639,12 +641,13 @@ func (pipeline *DataLogPipeline) AddDataLogGenerated(dataLog *entity.DataLog) {
 }
 
 type DataPipelineProps struct {
-	Config         *entity.Config
-	Logger         *logrus.Logger
-	NetClient      httpClient.HTTPClient
-	Repository     repository.Repository
-	Workspace      *entity.Workspace
-	DataLogInQueue *dto.DataLogInQueue
+	Config           *entity.Config
+	Logger           *logrus.Logger
+	NetClient        httpClient.HTTPClient
+	Repository       repository.Repository
+	TaskOrchestrator taskorchestrator.Client
+	Workspace        *entity.Workspace
+	DataLogInQueue   *dto.DataLogInQueue
 }
 
 func NewDataPipeline(props *DataPipelineProps) IDataLogPipeline {
@@ -654,6 +657,7 @@ func NewDataPipeline(props *DataPipelineProps) IDataLogPipeline {
 		Logger:            props.Logger,
 		NetClient:         props.NetClient,
 		Repository:        props.Repository,
+		TaskOrchestrator:  props.TaskOrchestrator,
 		Workspace:         props.Workspace,
 		DataLogInQueue:    props.DataLogInQueue,
 		QueueResult:       &dto.DataLogInQueueResult{},

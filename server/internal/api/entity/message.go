@@ -10,20 +10,26 @@ import (
 var (
 	MessageStatusPending      = int64(0)
 	MessageStatusScheduled    = int64(10)
-	MessageStatusRetrying     = int64(20)
-	MessageStatusSent         = int64(30)
-	MessageStatusFailed       = int64(40) // dropped, bounced, complained, spam
-	MessageStatusDelivered    = int64(50)
-	MessageStatusOpened       = int64(60)
-	MessageStatusClicked      = int64(70)
-	MessageStatusUnsubscribed = int64(80)
-	MessageStatusComplained   = int64(90)
+	MessageStatusQueued       = int64(20)
+	MessageStatusRetrying     = int64(30)
+	MessageStatusSent         = int64(40)
+	MessageStatusFailed       = int64(50) // dropped, bounced, complained, spam
+	MessageStatusDelivered    = int64(60)
+	MessageStatusOpened       = int64(70)
+	MessageStatusClicked      = int64(80)
+	MessageStatusUnsubscribed = int64(90)
+	MessageStatusComplained   = int64(100)
 
 	DoubleOptInKeyword = "double_opt_in_link"
 	UnsubscribeKeyword = "unsubscribe_link"
 
 	DoubleOptInPath      = "/double-opt-in"
 	UnsubscribeEmailPath = "/unsubscribe-email"
+
+	// computed fields should be excluded from SELECT/INSERT while cloning rows
+	MessageComputedFields []string = []string{
+		"created_at_trunc",
+	}
 )
 
 type Message struct {
@@ -65,6 +71,25 @@ type Message struct {
 	// attached in data pipeline for easy access:
 	SubscriptionList *SubscriptionList `db:"-" json:"-"`
 	MessageTemplate  *MessageTemplate  `db:"-" json:"-"`
+}
+
+func (message *Message) BeforeInsert() {
+	// set status
+	if message.Status == nil {
+		message.Status = &MessageStatusQueued
+	}
+
+	if message.StatusAt == nil {
+		message.StatusAt = &message.CreatedAt
+	}
+
+	if message.ScheduledAt != nil && message.ScheduledAt.After(time.Now()) {
+		message.Status = &MessageStatusScheduled
+	}
+
+	if message.IsTransactional == nil {
+		message.IsTransactional = BoolPtr(false)
+	}
 }
 
 func NewMessageFromDataLog(dataLog *DataLog, clockDifference time.Duration) (message *Message, err error) {
@@ -285,8 +310,8 @@ func NewMessageFromDataLog(dataLog *DataLog, clockDifference time.Duration) (mes
 		return nil, eris.New("message.channel is required")
 	}
 
-	if message.StatusAt.IsZero() {
-		return nil, eris.New("message.status_at is required")
+	if message.Status != nil && message.StatusAt.IsZero() {
+		return nil, eris.New("message.status_at is required with message.status")
 	}
 
 	return message, nil

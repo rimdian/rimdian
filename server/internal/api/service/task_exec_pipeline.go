@@ -32,7 +32,7 @@ type ITaskExecPipeline interface {
 	GetQueueResult() *common.DataLogInQueueResult
 	Execute(ctx context.Context)
 	ProcessNextStep(ctx context.Context)
-	InsertChildDataLog(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) error
+	InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) error
 	EnsureUsersLock(ctx context.Context) error
 	ReleaseUsersLock() error
 	GetUserIDs() []string
@@ -492,9 +492,9 @@ func (pipe *TaskExecPipeline) EnsureUsersLock(ctx context.Context) error {
 // generate a child DataLog, persist it in DB and add it to the list of generated data_logs
 // tasks can generate massive amounts of data_log children
 // for that reason they will trigger the eventual workflows+hooks asynchronously at the end  of the pipeline
-func (pipe *TaskExecPipeline) InsertChildDataLog(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) (err error) {
+func (pipe *TaskExecPipeline) InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) (err error) {
 
-	childDataLog := entity.NewTaskDataLog(pipe.Workspace.ID, pipe.Task.ID, userID, kind, action, itemID, itemExternalID, updatedFields, eventAt)
+	childDataLog := entity.NewTaskDataLog(pipe.Workspace.ID, pipe.Task.ID, data)
 
 	// determine if this child data_log should be already considered as "done" or not
 	childDataLog.Checkpoint = entity.DataLogCheckpointDone
@@ -521,7 +521,7 @@ func (pipe *TaskExecPipeline) InsertChildDataLog(ctx context.Context, kind strin
 		}
 	}
 
-	if err = pipe.Repository.InsertDataLog(ctx, childDataLog.Context.WorkspaceID, childDataLog, tx); err != nil {
+	if err = pipe.Repository.InsertDataLog(ctx, childDataLog.Context.WorkspaceID, childDataLog, data.Tx); err != nil {
 		return err
 	}
 

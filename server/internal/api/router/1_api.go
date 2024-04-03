@@ -102,6 +102,7 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 	r.Post("/api/organizationInvitation.consume", api.OrganizationInvitationConsume)
 	r.Post("/api/organizationInvitation.read", api.OrganizationInvitationRead)
 	r.Post("/api/app.getFromToken", api.AppFromToken) // get app from iframe ?token=xxx (for apps)
+	r.Post("/api/message.send", api.MessageSend)      // receives a message to send from the task queue
 
 	// ADMIN routes protected with token
 	r.Group(func(r chi.Router) {

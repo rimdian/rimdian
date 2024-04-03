@@ -2,6 +2,7 @@ package entity
 
 import (
 	"bytes"
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
@@ -47,6 +48,17 @@ const (
 	ItemKindSubscriptionListUser = "subscription_list_user"
 	ItemKindMessage              = "message"
 )
+
+type ChildDataLog struct {
+	Kind           string
+	Action         string
+	UserID         string
+	ItemID         string
+	ItemExternalID string
+	UpdatedFields  UpdatedFields
+	EventAt        time.Time
+	Tx             *sql.Tx
+}
 
 // The data_log table is used to store all the data received from the collector
 // it also acts as the timeline of items/events
@@ -95,10 +107,7 @@ func (dataLog *DataLog) IsPersisted() bool {
 }
 
 func (dataLog *DataLog) IsSpecialAction() bool {
-	if dataLog.Kind == ItemKindMessage {
-		return true
-	}
-	return false
+	return dataLog.Kind == ItemKindMessage
 }
 
 // some data_logs produce and process children synchronously
@@ -295,7 +304,7 @@ func ExtractFieldValueFromGJSON(fieldDefinition *TableColumn, result gjson.Resul
 	return
 }
 
-func NewInternalDataLogChild(parent *DataLog, userID string, kind string, action string, itemID string, itemExternalID string, updatedFields UpdatedFields, eventAt time.Time) *DataLog {
+func NewInternalDataLogChild(parent *DataLog, data ChildDataLog) *DataLog {
 
 	child := &DataLog{
 		Origin:   dto.DataLogOriginInternalDataLog,
@@ -311,14 +320,14 @@ func NewInternalDataLogChild(parent *DataLog, userID string, kind string, action
 		Checkpoint:     DataLogCheckpointPersisted,
 		Errors:         MapOfStrings{},
 		Hooks:          DataHooksState{},
-		UserID:         userID,
-		Kind:           kind,
-		Action:         action,
-		ItemID:         itemID,
-		ItemExternalID: itemExternalID,
-		UpdatedFields:  updatedFields,
-		EventAt:        eventAt,
-		EventAtTrunc:   eventAt.Truncate(time.Hour),
+		UserID:         data.UserID,
+		Kind:           data.Kind,
+		Action:         data.Action,
+		ItemID:         data.ItemID,
+		ItemExternalID: data.ItemExternalID,
+		UpdatedFields:  data.UpdatedFields,
+		EventAt:        data.EventAt,
+		EventAtTrunc:   data.EventAt.Truncate(time.Hour),
 	}
 
 	child.ID = dto.ComputeDataLogID(child.Context.WorkspaceID, child.Origin, child.Item)
@@ -326,7 +335,7 @@ func NewInternalDataLogChild(parent *DataLog, userID string, kind string, action
 	return child
 }
 
-func NewTaskDataLog(workspaceID string, taskID string, userID string, kind string, action string, itemID string, itemExternalID string, updatedFields UpdatedFields, eventAt time.Time) *DataLog {
+func NewTaskDataLog(workspaceID string, taskID string, data ChildDataLog) *DataLog {
 	return &DataLog{
 		Origin:   dto.DataLogOriginInternalTaskExec,
 		OriginID: taskID,
@@ -339,14 +348,14 @@ func NewTaskDataLog(workspaceID string, taskID string, userID string, kind strin
 		Checkpoint:     DataLogCheckpointDone,
 		Errors:         MapOfStrings{},
 		Hooks:          DataHooksState{},
-		UserID:         userID,
-		Kind:           kind,
-		Action:         action,
-		ItemID:         itemID,
-		ItemExternalID: itemExternalID,
-		UpdatedFields:  updatedFields,
-		EventAt:        eventAt,
-		EventAtTrunc:   eventAt.Truncate(time.Hour),
+		UserID:         data.UserID,
+		Kind:           data.Kind,
+		Action:         data.Action,
+		ItemID:         data.ItemID,
+		ItemExternalID: data.ItemExternalID,
+		UpdatedFields:  data.UpdatedFields,
+		EventAt:        data.EventAt,
+		EventAtTrunc:   data.EventAt.Truncate(time.Hour),
 	}
 }
 

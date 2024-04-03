@@ -7,14 +7,21 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"strings"
 	"time"
 
 	"aidanwoods.dev/go-paseto"
+	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/api/entity"
+	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
 	"github.com/rotisserie/eris"
-	"github.com/tidwall/sjson"
 	"go.opencensus.io/trace"
+)
+
+var (
+	SendMessageTimeoutInSecs  int64  = 25
+	SendMessageEndpoint       string = "/api/message.send"
+	TransactionalMessageQueue        = "messages_transactional"
+	MarketingMessageQueue            = "messages_marketing"
 )
 
 func (pipe *DataLogPipeline) StepExecuteSpecialAction(ctx context.Context) {
@@ -28,11 +35,14 @@ func (pipe *DataLogPipeline) StepExecuteSpecialAction(ctx context.Context) {
 		return
 	}
 
-	// don't lock users for sending messages
+	// don't acquire user lock for sending messages
 
 	switch pipe.DataLog.Kind {
 	case entity.ItemKindMessage:
-		SendMessage(spanCtx, pipe)
+		// only send messages on create
+		if pipe.DataLog.Action == "create" {
+			EnqueueMessage(spanCtx, pipe)
+		}
 	default:
 		pipe.SetError("server", fmt.Sprintf("unknown special action: %v", pipe.DataLog.Kind), true)
 		return
@@ -44,13 +54,13 @@ func (pipe *DataLogPipeline) StepExecuteSpecialAction(ctx context.Context) {
 	}
 }
 
-func SendMessage(ctx context.Context, pipe *DataLogPipeline) {
+func EnqueueMessage(ctx context.Context, pipe *DataLogPipeline) {
 
-	// spanCtx, span := trace.StartSpan(ctx, "SendMessage")
-	// defer span.End()
+	spanCtx, span := trace.StartSpan(ctx, "EnqueueMessage")
+	defer span.End()
 
 	if pipe.DataLog.UpsertedMessage == nil {
-		pipe.SetError("server", "SendMessage: no message object", true)
+		pipe.SetError("server", "EnqueueMessage: no message object", true)
 		return
 	}
 
@@ -60,17 +70,17 @@ func SendMessage(ctx context.Context, pipe *DataLogPipeline) {
 	}
 
 	if pipe.DataLog.UpsertedMessage.Channel != "email" {
-		pipe.SetError("server", fmt.Sprintf("SendMessage: channel not implemented: %v", pipe.DataLog.UpsertedMessage.Channel), true)
+		pipe.SetError("server", fmt.Sprintf("EnqueueMessage: channel not implemented: %v", pipe.DataLog.UpsertedMessage.Channel), true)
 		return
 	}
 
 	if pipe.DataLog.UpsertedMessage.MessageTemplate == nil {
-		pipe.SetError("server", "SendMessage: no message template object", true)
+		pipe.SetError("server", "EnqueueMessage: no message template object", true)
 		return
 	}
 
 	if pipe.DataLog.UpsertedUser.Email == nil || pipe.DataLog.UpsertedUser.Email.String == "" {
-		pipe.SetError("user", "SendMessage: user has no email address", false)
+		pipe.SetError("user", "EnqueueMessage: user has no email address", false)
 		return
 	}
 
@@ -85,52 +95,7 @@ func SendMessage(ctx context.Context, pipe *DataLogPipeline) {
 		return
 	}
 
-	// attach user data
-	jsonUser, err := json.Marshal(pipe.DataLog.UpsertedUser)
-	if err != nil {
-		pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
-		return
-	}
-
 	jsonData := string(jsonDataBytes)
-
-	if jsonData, err = sjson.SetRaw(jsonData, "user", string(jsonUser)); err != nil {
-		pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
-		return
-	}
-
-	// add double opt-in / unsubscribe link to the data
-	if pipe.DataLog.UpsertedMessage.SubscriptionList != nil {
-
-		// check if template has DoubleOptInKeyword
-		if strings.Contains(template.Email.Content, entity.DoubleOptInKeyword) {
-			doubleOptInLink, err := GenerateDoubleOptInLink(pipe.Config.COLLECTOR_ENDPOINT, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
-			if err != nil {
-				pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
-				return
-			}
-
-			jsonData, err = sjson.Set(jsonData, entity.DoubleOptInKeyword, doubleOptInLink)
-			if err != nil {
-				pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
-				return
-			}
-		}
-
-		if strings.Contains(template.Email.Content, entity.UnsubscribeKeyword) {
-			unsubLink, err := GenerateEmailUnsubscribeLink(pipe.Config.COLLECTOR_ENDPOINT, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
-			if err != nil {
-				pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
-				return
-			}
-
-			jsonData, err = sjson.Set(jsonData, entity.UnsubscribeKeyword, unsubLink)
-			if err != nil {
-				pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
-				return
-			}
-		}
-	}
 
 	// build content
 	subject, err := CompileNunjucksTemplate(template.Email.Subject, jsonData)
@@ -160,8 +125,51 @@ func SendMessage(ctx context.Context, pipe *DataLogPipeline) {
 	log.Printf("html: %v", html)
 	log.Printf("text: %v", text)
 
-	// send email
-	// TODO
+	queueName := MarketingMessageQueue
+
+	if pipe.DataLog.UpsertedMessage.IsTransactional != nil && *pipe.DataLog.UpsertedMessage.IsTransactional {
+		queueName = TransactionalMessageQueue
+	}
+
+	payload := dto.SendMessage{
+		WorkspaceID:         pipe.Workspace.ID,
+		MessageID:           pipe.DataLog.UpsertedMessage.ID,
+		MessageExternalID:   pipe.DataLog.UpsertedMessage.ExternalID,
+		UserID:              pipe.DataLog.UpsertedUser.ID,
+		UserExternalID:      pipe.DataLog.UpsertedUser.ExternalID,
+		UserIsAuthenticated: pipe.DataLog.UpsertedUser.IsAuthenticated,
+		Channel:             pipe.DataLog.UpsertedMessage.Channel,
+		ScheduledAt:         pipe.DataLog.UpsertedMessage.ScheduledAt,
+		Email: &dto.SendMessageEmail{
+			Subject:         subject,
+			HTML:            html,
+			Text:            text,
+			IsTransactional: *pipe.DataLog.UpsertedMessage.IsTransactional,
+			// TODO:
+			Provider: "sparkpost",
+			SparkPostCrendentials: &dto.SparkPostCrendentials{
+				EncryptedApiKey: "TODO",
+			},
+		},
+	}
+
+	// enqueue email
+	job := &taskorchestrator.TaskRequest{
+		QueueLocation:     pipe.Config.TASK_QUEUE_LOCATION,
+		QueueName:         queueName,
+		PostEndpoint:      pipe.Config.API_ENDPOINT + SendMessageEndpoint + "?workspace_id=" + pipe.Workspace.ID,
+		TaskTimeoutInSecs: &TaskTimeoutInSecs,
+		Payload:           payload,
+	}
+
+	if payload.ScheduledAt != nil {
+		job.ScheduleTime = payload.ScheduledAt
+	}
+
+	if err := pipe.TaskOrchestrator.PostRequest(spanCtx, job); err != nil {
+		pipe.SetError("server", fmt.Sprintf("enqueue message err %v", err), true)
+		return
+	}
 }
 
 func CompileNunjucksTemplate(templateString string, jsonData string) (result string, err error) {

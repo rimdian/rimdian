@@ -4,7 +4,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rimdian/rimdian/internal/api/repository"
@@ -26,7 +25,7 @@ type Pipeline interface {
 	GetQueueResult() *common.DataLogInQueueResult
 	Execute(ctx context.Context)
 	ProcessNextStep(ctx context.Context)
-	InsertChildDataLog(ctx context.Context, kind string, action string, userID string, itemID string, itemExternalID string, updatedFields entity.UpdatedFields, eventAt time.Time, tx *sql.Tx) error
+	InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) error
 	EnsureUsersLock(ctx context.Context) error
 	ReleaseUsersLock() error
 	GetUserIDs() []string

@@ -209,6 +209,11 @@ type Repository interface {
 	InsertMessageTemplate(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) (err error)
 	GetMessageTemplate(ctx context.Context, workspaceID string, id string, version *int64, tx *sql.Tx) (template *entity.MessageTemplate, err error)
 
+	// message
+	FindMessageByID(ctx context.Context, workspace *entity.Workspace, id string, userID string, tx *sql.Tx) (message *entity.Message, err error)
+	InsertMessage(ctx context.Context, message *entity.Message, tx *sql.Tx) (err error)
+	UpdateMessage(ctx context.Context, message *entity.Message, tx *sql.Tx) (err error)
+
 	// user segments
 	InsertUserSegment(ctx context.Context, userSegment *entity.UserSegment, tx *sql.Tx) (err error)
 	DeleteUserSegment(ctx context.Context, userID string, segmentID string, tx *sql.Tx) (err error)

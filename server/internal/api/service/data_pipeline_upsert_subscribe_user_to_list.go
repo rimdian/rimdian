@@ -43,7 +43,16 @@ func (pipe *DataLogPipeline) UpsertSubscriptionListUser(ctx context.Context, isC
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "subscription_list_user", "create", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID, pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID, updatedFields, *pipe.DataLog.UpsertedSubscriptionListUser.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "subscription_list_user",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID,
+				ItemExternalID: pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *pipe.DataLog.UpsertedSubscriptionListUser.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		} else {
@@ -109,7 +118,16 @@ func (pipe *DataLogPipeline) UpsertSubscriptionListUser(ctx context.Context, isC
 	}
 
 	if isChild {
-		if err := pipe.InsertChildDataLog(spanCtx, "subscription_list_user", "update", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID, pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID, updatedFields, *pipe.DataLog.UpsertedSubscriptionListUser.UpdatedAt, tx); err != nil {
+		if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+			Kind:           "subscription_list_user",
+			Action:         "update",
+			UserID:         pipe.DataLog.UpsertedUser.ID,
+			ItemID:         pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID,
+			ItemExternalID: pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID,
+			UpdatedFields:  updatedFields,
+			EventAt:        *pipe.DataLog.UpsertedSubscriptionListUser.UpdatedAt,
+			Tx:             tx,
+		}); err != nil {
 			return err
 		}
 	}

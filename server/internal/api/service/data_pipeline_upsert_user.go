@@ -337,7 +337,16 @@ func (pipe *DataLogPipeline) UpsertUser(ctx context.Context, isChild bool, tx *s
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "user", "create", upsertedUser.ID, upsertedUser.ID, upsertedUser.ExternalID, updatedFields, *upsertedUser.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "user",
+				Action:         "create",
+				UserID:         upsertedUser.ID,
+				ItemID:         upsertedUser.ID,
+				ItemExternalID: upsertedUser.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *upsertedUser.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		} else {
@@ -371,7 +380,16 @@ func (pipe *DataLogPipeline) UpsertUser(ctx context.Context, isChild bool, tx *s
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "user", "update", upsertedUser.ID, upsertedUser.ID, upsertedUser.ExternalID, updatedFields, *upsertedUser.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "user",
+				Action:         "update",
+				UserID:         upsertedUser.ID,
+				ItemID:         upsertedUser.ID,
+				ItemExternalID: upsertedUser.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *upsertedUser.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		}

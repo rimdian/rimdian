@@ -133,7 +133,16 @@ func ComputeSegmentsForGivenUsers(ctx context.Context, pipe Pipeline) {
 							return 500, err
 						}
 
-						if err = pipe.InsertChildDataLog(spanCtx, "segment", "enter", userID, segment.ID, segment.ID, entity.UpdatedFields{}, now, tx); err != nil {
+						if err = pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+							Kind:           "segment",
+							Action:         "enter",
+							UserID:         userID,
+							ItemID:         segment.ID,
+							ItemExternalID: segment.ID,
+							UpdatedFields:  entity.UpdatedFields{},
+							EventAt:        now,
+							Tx:             tx,
+						}); err != nil {
 							return 500, err
 						}
 					}
@@ -146,7 +155,16 @@ func ComputeSegmentsForGivenUsers(ctx context.Context, pipe Pipeline) {
 							return 500, err
 						}
 
-						if err = pipe.InsertChildDataLog(spanCtx, "segment", "exit", userID, segment.ID, segment.ID, entity.UpdatedFields{}, now, tx); err != nil {
+						if err = pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+							Kind:           "segment",
+							Action:         "exit",
+							UserID:         userID,
+							ItemID:         segment.ID,
+							ItemExternalID: segment.ID,
+							UpdatedFields:  entity.UpdatedFields{},
+							EventAt:        now,
+							Tx:             tx,
+						}); err != nil {
 							return 500, err
 						}
 					}

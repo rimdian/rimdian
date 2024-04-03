@@ -495,7 +495,16 @@ func ReattributeUsersOrders(ctx context.Context, pipe Pipeline) {
 						return 500, eris.Wrap(err, "ReattributeUsersOrders")
 					}
 
-					if err := pipe.InsertChildDataLog(spanCtx, "user", "update", user.ID, user.ID, user.ExternalID, updatedFields, *user.UpdatedAt, tx); err != nil {
+					if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+						Kind:           "user",
+						Action:         "update",
+						UserID:         user.ID,
+						ItemID:         user.ID,
+						ItemExternalID: user.ExternalID,
+						UpdatedFields:  updatedFields,
+						EventAt:        *user.UpdatedAt,
+						Tx:             tx,
+					}); err != nil {
 						return 500, eris.Wrap(err, "ReattributeUsersOrders")
 					}
 				}

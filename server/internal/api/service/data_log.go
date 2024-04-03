@@ -132,12 +132,13 @@ func (svc *ServiceImpl) DataLogImportFromQueue(ctx context.Context, dataLogInQue
 	}
 
 	props := &DataPipelineProps{
-		Config:         svc.Config,
-		Logger:         svc.Logger,
-		NetClient:      svc.NetClient,
-		Repository:     svc.Repo,
-		Workspace:      workspace,
-		DataLogInQueue: dataLogInQueue,
+		Config:           svc.Config,
+		Logger:           svc.Logger,
+		NetClient:        svc.NetClient,
+		Repository:       svc.Repo,
+		TaskOrchestrator: svc.TaskOrchestrator,
+		Workspace:        workspace,
+		DataLogInQueue:   dataLogInQueue,
 	}
 
 	pipeline := NewDataPipeline(props)
@@ -177,12 +178,13 @@ func (svc *ServiceImpl) DataLogReprocessOne(ctx context.Context, accountID strin
 	}
 
 	props := &DataPipelineProps{
-		Config:         svc.Config,
-		Logger:         svc.Logger,
-		NetClient:      svc.NetClient,
-		Repository:     svc.Repo,
-		Workspace:      workspace,
-		DataLogInQueue: dataLogInQueue,
+		Config:           svc.Config,
+		Logger:           svc.Logger,
+		NetClient:        svc.NetClient,
+		Repository:       svc.Repo,
+		TaskOrchestrator: svc.TaskOrchestrator,
+		Workspace:        workspace,
+		DataLogInQueue:   dataLogInQueue,
 	}
 
 	pipeline := NewDataPipeline(props)

@@ -36,7 +36,16 @@ func (pipe *DataLogPipeline) UpsertOrder(ctx context.Context, isChild bool, tx *
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "order", "create", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedOrder.ID, pipe.DataLog.UpsertedOrder.ExternalID, updatedFields, *pipe.DataLog.UpsertedOrder.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "order",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         pipe.DataLog.UpsertedOrder.ID,
+				ItemExternalID: pipe.DataLog.UpsertedOrder.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *pipe.DataLog.UpsertedOrder.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		} else {
@@ -56,7 +65,16 @@ func (pipe *DataLogPipeline) UpsertOrder(ctx context.Context, isChild bool, tx *
 			}
 
 			// items are always children
-			if err := pipe.InsertChildDataLog(spanCtx, "order_item", "create", pipe.DataLog.UpsertedUser.ID, orderItem.ID, orderItem.ExternalID, entity.UpdatedFields{}, *pipe.DataLog.UpsertedOrder.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "order_item",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         orderItem.ID,
+				ItemExternalID: orderItem.ExternalID,
+				UpdatedFields:  entity.UpdatedFields{},
+				EventAt:        *pipe.DataLog.UpsertedOrder.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		}
@@ -92,7 +110,16 @@ func (pipe *DataLogPipeline) UpsertOrder(ctx context.Context, isChild bool, tx *
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "order", "update", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedOrder.ID, pipe.DataLog.UpsertedOrder.ExternalID, updatedFields, *pipe.DataLog.UpsertedOrder.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "order",
+				Action:         "update",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         pipe.DataLog.UpsertedOrder.ID,
+				ItemExternalID: pipe.DataLog.UpsertedOrder.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *pipe.DataLog.UpsertedOrder.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		}
@@ -121,7 +148,16 @@ func (pipe *DataLogPipeline) UpsertOrder(ctx context.Context, isChild bool, tx *
 			}
 
 			// items are always children
-			if err := pipe.InsertChildDataLog(spanCtx, "order_item", "delete", pipe.DataLog.UpsertedUser.ID, existingOrderItem.ID, existingOrderItem.ExternalID, entity.UpdatedFields{}, *pipe.DataLog.UpsertedOrder.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "order_item",
+				Action:         "delete",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         existingOrderItem.ID,
+				ItemExternalID: existingOrderItem.ExternalID,
+				UpdatedFields:  entity.UpdatedFields{},
+				EventAt:        *pipe.DataLog.UpsertedOrder.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		}
@@ -144,7 +180,16 @@ func (pipe *DataLogPipeline) UpsertOrder(ctx context.Context, isChild bool, tx *
 				return eris.Wrap(err, "OrderUpsert")
 			}
 			// items are always children
-			if err := pipe.InsertChildDataLog(spanCtx, "order_item", "create", pipe.DataLog.UpsertedUser.ID, orderItem.ID, orderItem.ExternalID, entity.UpdatedFields{}, *pipe.DataLog.UpsertedOrder.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "order_item",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         orderItem.ID,
+				ItemExternalID: orderItem.ExternalID,
+				UpdatedFields:  entity.UpdatedFields{},
+				EventAt:        *pipe.DataLog.UpsertedOrder.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		} else {
@@ -158,7 +203,16 @@ func (pipe *DataLogPipeline) UpsertOrder(ctx context.Context, isChild bool, tx *
 					return eris.Wrap(err, "OrderUpsert")
 				}
 
-				if err := pipe.InsertChildDataLog(spanCtx, "order_item", "create", pipe.DataLog.UpsertedUser.ID, foundOrderItem.ID, foundOrderItem.ExternalID, updatedFields, *pipe.DataLog.UpsertedOrder.UpdatedAt, tx); err != nil {
+				if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+					Kind:           "order_item",
+					Action:         "update",
+					UserID:         pipe.DataLog.UpsertedUser.ID,
+					ItemID:         foundOrderItem.ID,
+					ItemExternalID: foundOrderItem.ExternalID,
+					UpdatedFields:  updatedFields,
+					EventAt:        *pipe.DataLog.UpsertedOrder.UpdatedAt,
+					Tx:             tx,
+				}); err != nil {
 					return err
 				}
 			}

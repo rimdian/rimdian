@@ -3,72 +3,95 @@ package service
 import (
 	"context"
 	"database/sql"
+
+	"github.com/rimdian/rimdian/internal/api/entity"
+	"github.com/rotisserie/eris"
+	"go.opencensus.io/trace"
 )
 
 func (pipe *DataLogPipeline) UpsertMessage(ctx context.Context, isChild bool, tx *sql.Tx) (err error) {
 
-	// TODO
-	// spanCtx, span := trace.StartSpan(ctx, "UpsertMessage")
-	// defer span.End()
+	spanCtx, span := trace.StartSpan(ctx, "UpsertMessage")
+	defer span.End()
 
-	// // find eventual existing message
-	// var existingMessage *entity.Message
-	// updatedFields := []*entity.UpdatedField{}
+	// find eventual existing message
+	var existingMessage *entity.Message
+	updatedFields := []*entity.UpdatedField{}
 
-	// existingMessage, err = pipe.Repository.FindMessage(spanCtx, pipe.DataLog.UpsertedMessage.SubscriptionListID, pipe.DataLog.UpsertedMessage.UserID, tx)
+	existingMessage, err = pipe.Repository.FindMessageByID(spanCtx, pipe.Workspace, pipe.DataLog.UpsertedMessage.ID, pipe.DataLog.UpsertedMessage.UserID, tx)
 
-	// if err != nil {
-	// 	return eris.Wrap(err, "MessageUpsert")
-	// }
+	if err != nil {
+		return eris.Wrap(err, "MessageUpsert")
+	}
 
-	// // insert new message
-	// if existingMessage == nil {
+	// insert new message
+	if existingMessage == nil {
 
-	// 	// just for insert: clear fields timestamp if object is new, to avoid storing extra data
-	// 	pipe.DataLog.UpsertedMessage.FieldsTimestamp = entity.FieldsTimestamp{}
+		// just for insert: clear fields timestamp if object is new, to avoid storing extra data
+		pipe.DataLog.UpsertedMessage.FieldsTimestamp = entity.FieldsTimestamp{}
 
-	// 	if err = pipe.Repository.InsertMessage(spanCtx, pipe.DataLog.UpsertedMessage, tx); err != nil {
-	// 		return
-	// 	}
+		pipe.DataLog.UpsertedMessage.BeforeInsert()
 
-	// 	if isChild {
-	// 		if err := pipe.InsertChildDataLog(spanCtx, "message", "create", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedMessage.SubscriptionListID, pipe.DataLog.UpsertedMessage.SubscriptionListID, updatedFields, *pipe.DataLog.UpsertedMessage.UpdatedAt, tx); err != nil {
-	// 			return err
-	// 		}
-	// 	} else {
-	// 		pipe.DataLog.Action = "create"
-	// 	}
+		if err = pipe.Repository.InsertMessage(spanCtx, pipe.DataLog.UpsertedMessage, tx); err != nil {
+			return
+		}
 
-	// 	return
-	// }
+		if isChild {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "message",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         pipe.DataLog.UpsertedMessage.ID,
+				ItemExternalID: pipe.DataLog.UpsertedMessage.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *pipe.DataLog.UpsertedMessage.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
+				return err
+			}
+		} else {
+			pipe.DataLog.Action = "create"
+		}
 
-	// // merge fields if message already exists
-	// updatedFields = pipe.DataLog.UpsertedMessage.MergeInto(existingMessage)
-	// pipe.DataLog.UpsertedMessage = existingMessage
+		return
+	}
 
-	// // abort if no fields were updated
-	// if len(updatedFields) == 0 {
-	// 	if !isChild {
-	// 		pipe.DataLog.Action = "noop"
-	// 	}
-	// 	return nil
-	// }
+	// merge fields if message already exists
+	updatedFields = pipe.DataLog.UpsertedMessage.MergeInto(existingMessage)
+	pipe.DataLog.UpsertedMessage = existingMessage
 
-	// if !isChild {
-	// 	pipe.DataLog.Action = "update"
-	// 	pipe.DataLog.UpdatedFields = updatedFields
-	// }
+	// abort if no fields were updated
+	if len(updatedFields) == 0 {
+		if !isChild {
+			pipe.DataLog.Action = "noop"
+		}
+		return nil
+	}
 
-	// // persist changes
-	// if err = pipe.Repository.UpdateMessage(spanCtx, pipe.DataLog.UpsertedMessage, tx); err != nil {
-	// 	return eris.Wrap(err, "MessageUpsert")
-	// }
+	if !isChild {
+		pipe.DataLog.Action = "update"
+		pipe.DataLog.UpdatedFields = updatedFields
+	}
 
-	// if isChild {
-	// 	if err := pipe.InsertChildDataLog(spanCtx, "message", "update", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedMessage.SubscriptionListID, pipe.DataLog.UpsertedMessage.SubscriptionListID, updatedFields, *pipe.DataLog.UpsertedMessage.UpdatedAt, tx); err != nil {
-	// 		return err
-	// 	}
-	// }
+	// persist changes
+	if err = pipe.Repository.UpdateMessage(spanCtx, pipe.DataLog.UpsertedMessage, tx); err != nil {
+		return eris.Wrap(err, "MessageUpsert")
+	}
+
+	if isChild {
+		if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+			Kind:           "message",
+			Action:         "update",
+			UserID:         pipe.DataLog.UpsertedUser.ID,
+			ItemID:         pipe.DataLog.UpsertedMessage.ID,
+			ItemExternalID: pipe.DataLog.UpsertedMessage.ExternalID,
+			UpdatedFields:  updatedFields,
+			EventAt:        *pipe.DataLog.UpsertedMessage.UpdatedAt,
+			Tx:             tx,
+		}); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

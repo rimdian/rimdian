@@ -35,7 +35,16 @@ func (pipe *DataLogPipeline) UpsertPostview(ctx context.Context, isChild bool, t
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "postview", "create", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedPostview.ID, pipe.DataLog.UpsertedPostview.ExternalID, updatedFields, *pipe.DataLog.UpsertedPostview.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "postview",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         pipe.DataLog.UpsertedPostview.ID,
+				ItemExternalID: pipe.DataLog.UpsertedPostview.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *pipe.DataLog.UpsertedPostview.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		} else {
@@ -68,7 +77,16 @@ func (pipe *DataLogPipeline) UpsertPostview(ctx context.Context, isChild bool, t
 	}
 
 	if isChild {
-		if err := pipe.InsertChildDataLog(spanCtx, "postview", "update", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedPostview.ID, pipe.DataLog.UpsertedPostview.ExternalID, updatedFields, *pipe.DataLog.UpsertedPostview.UpdatedAt, tx); err != nil {
+		if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+			Kind:           "postview",
+			Action:         "update",
+			UserID:         pipe.DataLog.UpsertedUser.ID,
+			ItemID:         pipe.DataLog.UpsertedPostview.ID,
+			ItemExternalID: pipe.DataLog.UpsertedPostview.ExternalID,
+			UpdatedFields:  updatedFields,
+			EventAt:        *pipe.DataLog.UpsertedPostview.UpdatedAt,
+			Tx:             tx,
+		}); err != nil {
 			return err
 		}
 	}

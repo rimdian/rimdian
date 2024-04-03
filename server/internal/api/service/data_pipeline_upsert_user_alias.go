@@ -67,7 +67,16 @@ func (pipe *DataLogPipeline) UpsertUserAlias(ctx context.Context, isChild bool, 
 	}
 
 	if isChild {
-		if err := pipe.InsertChildDataLog(spanCtx, "user_alias", "create", paramsToUserID, paramsToUserID, pipe.DataLog.UserAlias.ToUserExternalID, aliasUpdatedFields, *aliasAt, tx); err != nil {
+		if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+			Kind:           "user_alias",
+			Action:         "create",
+			UserID:         paramsToUserID,
+			ItemID:         paramsToUserID,
+			ItemExternalID: pipe.DataLog.UserAlias.ToUserExternalID,
+			UpdatedFields:  aliasUpdatedFields,
+			EventAt:        *aliasAt,
+			Tx:             tx,
+		}); err != nil {
 			return err
 		}
 	} else {
@@ -113,7 +122,16 @@ func (pipe *DataLogPipeline) UpsertUserAlias(ctx context.Context, isChild bool, 
 		}
 
 		// we need to generate+insert a datalog user create here
-		if err := pipe.InsertChildDataLog(spanCtx, "user", "create", upsertUser.ID, upsertUser.ID, upsertUser.ExternalID, nil, upsertUser.CreatedAt, tx); err != nil {
+		if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+			Kind:           "user",
+			Action:         "create",
+			UserID:         upsertUser.ID,
+			ItemID:         upsertUser.ID,
+			ItemExternalID: upsertUser.ExternalID,
+			UpdatedFields:  nil,
+			EventAt:        upsertUser.CreatedAt,
+			Tx:             tx,
+		}); err != nil {
 			return err
 		}
 
@@ -132,7 +150,16 @@ func (pipe *DataLogPipeline) UpsertUserAlias(ctx context.Context, isChild bool, 
 				return eris.Wrap(err, "UserAlias")
 			}
 
-			if err := pipe.InsertChildDataLog(spanCtx, "user", "update", upsertUser.ID, upsertUser.ID, upsertUser.ExternalID, updatedFields, *upsertUser.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "user",
+				Action:         "update",
+				UserID:         upsertUser.ID,
+				ItemID:         upsertUser.ID,
+				ItemExternalID: upsertUser.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *upsertUser.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		}

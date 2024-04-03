@@ -36,7 +36,16 @@ func (pipe *DataLogPipeline) UpsertCart(ctx context.Context, isChild bool, tx *s
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "cart", "create", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedCart.ID, pipe.DataLog.UpsertedCart.ExternalID, updatedFields, *pipe.DataLog.UpsertedCart.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "cart",
+				Action:         "update",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         pipe.DataLog.UpsertedCart.ID,
+				ItemExternalID: pipe.DataLog.UpsertedCart.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *pipe.DataLog.UpsertedCart.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		} else {
@@ -56,7 +65,16 @@ func (pipe *DataLogPipeline) UpsertCart(ctx context.Context, isChild bool, tx *s
 			}
 
 			// items are always children
-			if err := pipe.InsertChildDataLog(spanCtx, "cart_item", "create", pipe.DataLog.UpsertedUser.ID, cartItem.ID, cartItem.ExternalID, entity.UpdatedFields{}, *pipe.DataLog.UpsertedCart.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "cart_item",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         cartItem.ID,
+				ItemExternalID: cartItem.ExternalID,
+				UpdatedFields:  entity.UpdatedFields{},
+				EventAt:        *pipe.DataLog.UpsertedCart.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		}
@@ -92,7 +110,16 @@ func (pipe *DataLogPipeline) UpsertCart(ctx context.Context, isChild bool, tx *s
 		}
 
 		if isChild {
-			if err := pipe.InsertChildDataLog(spanCtx, "cart", "update", pipe.DataLog.UpsertedUser.ID, pipe.DataLog.UpsertedCart.ID, pipe.DataLog.UpsertedCart.ExternalID, updatedFields, *pipe.DataLog.UpsertedCart.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "cart",
+				Action:         "update",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         pipe.DataLog.UpsertedCart.ID,
+				ItemExternalID: pipe.DataLog.UpsertedCart.ExternalID,
+				UpdatedFields:  updatedFields,
+				EventAt:        *pipe.DataLog.UpsertedCart.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		}
@@ -121,7 +148,16 @@ func (pipe *DataLogPipeline) UpsertCart(ctx context.Context, isChild bool, tx *s
 			}
 
 			// items are always children
-			if err := pipe.InsertChildDataLog(spanCtx, "cart_item", "delete", pipe.DataLog.UpsertedUser.ID, existingCartItem.ID, existingCartItem.ExternalID, entity.UpdatedFields{}, *pipe.DataLog.UpsertedCart.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "cart_item",
+				Action:         "delete",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         existingCartItem.ID,
+				ItemExternalID: existingCartItem.ExternalID,
+				UpdatedFields:  entity.UpdatedFields{},
+				EventAt:        *pipe.DataLog.UpsertedCart.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		}
@@ -144,7 +180,16 @@ func (pipe *DataLogPipeline) UpsertCart(ctx context.Context, isChild bool, tx *s
 				return eris.Wrap(err, "CartUpsert (update)")
 			}
 			// items are always children
-			if err := pipe.InsertChildDataLog(spanCtx, "cart_item", "create", pipe.DataLog.UpsertedUser.ID, cartItem.ID, cartItem.ExternalID, entity.UpdatedFields{}, *pipe.DataLog.UpsertedCart.UpdatedAt, tx); err != nil {
+			if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+				Kind:           "cart_item",
+				Action:         "create",
+				UserID:         pipe.DataLog.UpsertedUser.ID,
+				ItemID:         cartItem.ID,
+				ItemExternalID: cartItem.ExternalID,
+				UpdatedFields:  entity.UpdatedFields{},
+				EventAt:        *pipe.DataLog.UpsertedCart.UpdatedAt,
+				Tx:             tx,
+			}); err != nil {
 				return err
 			}
 		} else {
@@ -158,7 +203,16 @@ func (pipe *DataLogPipeline) UpsertCart(ctx context.Context, isChild bool, tx *s
 					return eris.Wrap(err, "CartUpsert")
 				}
 
-				if err := pipe.InsertChildDataLog(spanCtx, "cart_item", "update", pipe.DataLog.UpsertedUser.ID, foundCartItem.ID, foundCartItem.ExternalID, updatedFields, *pipe.DataLog.UpsertedCart.UpdatedAt, tx); err != nil {
+				if err := pipe.InsertChildDataLog(spanCtx, entity.ChildDataLog{
+					Kind:           "cart_item",
+					Action:         "update",
+					UserID:         pipe.DataLog.UpsertedUser.ID,
+					ItemID:         foundCartItem.ID,
+					ItemExternalID: foundCartItem.ExternalID,
+					UpdatedFields:  updatedFields,
+					EventAt:        *pipe.DataLog.UpsertedCart.UpdatedAt,
+					Tx:             tx,
+				}); err != nil {
 					return err
 				}
 			}

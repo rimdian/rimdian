@@ -447,14 +447,21 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 		return
 	}
 
-	// attach subscription list + email_template to message
-	if message.SubscriptionListID != nil {
-		message.SubscriptionList, err = pipe.Repository.GetSubscriptionList(ctx, pipe.Workspace.ID, *message.SubscriptionListID, nil)
+	// attach user to the message.data
+	if pipe.DataLog.UpsertedUser != nil {
+		message.Data["user"] = pipe.DataLog.UpsertedUser
+		// jsonUser, err := json.Marshal(pipe.DataLog.UpsertedUser)
+		// if err != nil {
+		// 	pipe.SetError("server", fmt.Sprintf("attach user json err %v", err), false)
+		// 	return
+		// }
 
-		if err != nil {
-			pipe.SetError("message", err.Error(), false)
-			return
-		}
+		// jsonData := string(jsonDataBytes)
+
+		// if jsonData, err = sjson.SetRaw(jsonData, "user", string(jsonUser)); err != nil {
+		// 	pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
+		// 	return
+		// }
 	}
 
 	if message.MessageTemplateID != nil {
@@ -463,6 +470,47 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 		if err != nil {
 			pipe.SetError("message", err.Error(), false)
 			return
+		}
+	}
+
+	// attach subscription list + email_template to message
+	if message.SubscriptionListID != nil {
+		message.SubscriptionList, err = pipe.Repository.GetSubscriptionList(ctx, pipe.Workspace.ID, *message.SubscriptionListID, nil)
+
+		if err != nil {
+			pipe.SetError("message", err.Error(), false)
+			return
+		}
+
+		if message.MessageTemplate == nil {
+			pipe.SetError("message", "message has no message_template_id", false)
+			return
+		}
+
+		// add double opt-in / unsubscribe link to the data
+		if message.MessageTemplate.Channel == "email" {
+
+			// check if template contains a double optin link
+			if strings.Contains(message.MessageTemplate.Email.Content, entity.DoubleOptInKeyword) {
+				doubleOptInLink, err := GenerateDoubleOptInLink(pipe.Config.COLLECTOR_ENDPOINT, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+				if err != nil {
+					pipe.SetError("server", fmt.Sprintf("GenerateDoubleOptInLink err %v", err), false)
+					return
+				}
+
+				message.Data[entity.DoubleOptInKeyword] = doubleOptInLink
+			}
+
+			// check if template contains an unsubscribe link
+			if strings.Contains(message.MessageTemplate.Email.Content, entity.UnsubscribeKeyword) {
+				unsubLink, err := GenerateEmailUnsubscribeLink(pipe.Config.COLLECTOR_ENDPOINT, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+				if err != nil {
+					pipe.SetError("server", fmt.Sprintf("GenerateEmailUnsubscribeLink err %v", err), false)
+					return
+				}
+
+				message.Data[entity.UnsubscribeKeyword] = unsubLink
+			}
 		}
 	}
 

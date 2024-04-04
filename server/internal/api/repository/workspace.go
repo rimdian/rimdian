@@ -134,6 +134,7 @@ func (repo *RepositoryImpl) InsertWorkspace(ctx context.Context, workspace *enti
 		"data_hooks",
 		"license_key",
 		"files_settings",
+		"messaging_settings",
 	).Values(
 		workspace.ID,
 		workspace.Name,
@@ -164,6 +165,7 @@ func (repo *RepositoryImpl) InsertWorkspace(ctx context.Context, workspace *enti
 		workspace.DataHooks,
 		workspace.LicenseKey,
 		workspace.FilesSettings,
+		workspace.MessagingSettings,
 	).ToSql()
 
 	if err != nil {
@@ -259,6 +261,7 @@ func (repo *RepositoryImpl) UpdateWorkspace(ctx context.Context, workspace *enti
 		Set("data_hooks", workspace.DataHooks).
 		Set("license_key", workspace.LicenseKey).
 		Set("files_settings", workspace.FilesSettings).
+		Set("messaging_settings", workspace.MessagingSettings).
 		Where(sq.Eq{"id": workspace.ID}).
 		ToSql()
 

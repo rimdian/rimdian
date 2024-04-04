@@ -591,7 +591,10 @@ const DrawerEmailTemplate = (props: {
                                     text: TextBlockDefinition,
                                     heading: HeadingBlockDefinition
                                   }}
-                                  savedBlocks={workspaceCtx.workspace.emailBlocks || []}
+                                  savedBlocks={
+                                    workspaceCtx.workspace.messaging_settings
+                                      .email_template_blocks || []
+                                  }
                                   templateDataValue={getFieldValue('test_data')}
                                   selectedBlockId={divider.id}
                                   value={rootBlock}

@@ -127,6 +127,7 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 
 		r.Post("/api/workspace.create", api.WorkspaceCreate)
 		r.Post("/api/workspace.update", api.WorkspaceUpdate)
+		r.Post("/api/workspace.settings", api.WorkspaceSettings)
 		r.Post("/api/workspace.createOrResetDemo", api.WorkspaceCreateOrResetDemo)
 		r.Get("/api/workspace.showTables", api.WorkspaceShowTables)
 		r.Get("/api/workspace.list", api.WorkspaceList)

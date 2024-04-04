@@ -33,7 +33,7 @@ var (
 		Name:             "Test App",
 		Homepage:         "https://docs.rimdian.com",
 		Author:           "Rimdian",
-		IconURL:          "https://eu.captainmetrics.com/images/apps/test.png",
+		IconURL:          "https://cdn-eu.rimdian.com/images/rimdian-email.png",
 		ShortDescription: "Test app",
 		Description:      "Test app",
 		Version:          "1.0.0",

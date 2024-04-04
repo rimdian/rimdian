@@ -5,9 +5,12 @@ import (
 	"database/sql"
 	"log"
 
+	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
+	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
+	"google.golang.org/api/option"
 )
 
 type Migration39 struct {
@@ -79,6 +82,20 @@ func (m *Migration39) UpdateSystem(ctx context.Context, cfg *entity.Config, syst
 		if err != nil {
 			log.Printf("error inserting task: %v", err)
 		}
+
+		// add column: messaging_settings JSON NOT NULL
+		_, err = systemConnection.ExecContext(ctx, `ALTER TABLE workspace ADD COLUMN messaging_settings JSON NOT NULL AFTER files_settings`)
+		if err != nil {
+			log.Printf("error adding column messaging_settings: %v", err)
+			return err
+		}
+
+		// set messaging_settings to {}
+		_, err = systemConnection.ExecContext(ctx, `UPDATE workspace SET messaging_settings = '{}'`)
+		if err != nil {
+			log.Printf("error setting messaging_settings: %v", err)
+			return err
+		}
 	}
 
 	return nil
@@ -119,7 +136,22 @@ func (m *Migration39) UpdateWorkspace(ctx context.Context, cfg *entity.Config, w
 
 	}
 
-	return nil
+	serviceAccount := option.WithCredentialsJSON([]byte(cfg.GCLOUD_JSON_CREDENTIALS))
+
+	cloudTaskClient, err := cloudtasks.NewClient(ctx, serviceAccount)
+	if err != nil {
+		return err
+	}
+
+	taskOrchestrator := taskorchestrator.NewClient(cfg.GCLOUD_PROJECT, cfg.ENV, cloudTaskClient)
+
+	queueName := taskOrchestrator.GetTransactionalMessageQueueNameForWorkspace(workspace.ID)
+	if err = taskOrchestrator.EnsureQueue(ctx, cfg.TASK_QUEUE_LOCATION, queueName, 50); err != nil {
+		return err
+	}
+
+	queueName = taskOrchestrator.GetMarketingMessageQueueNameForWorkspace(workspace.ID)
+	return taskOrchestrator.EnsureQueue(ctx, cfg.TASK_QUEUE_LOCATION, queueName, 50)
 }
 
 func NewMigration39() entity.MajorMigrationInterface {

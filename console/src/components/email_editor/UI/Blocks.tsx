@@ -2,10 +2,11 @@ import { ReactNode } from 'react'
 import { BlockDefinitionMap, BlockDefinitionInterface, BlockInterface } from '../Block'
 import { Collapse, Tooltip } from 'antd'
 import { truncate } from 'lodash'
+import { EmailTemplateBlock } from 'interfaces'
 
 export interface BlocksProps {
   blockDefinitions: BlockDefinitionMap
-  savedBlocks: BlockDefinitionInterface[]
+  savedBlocks: EmailTemplateBlock[]
   renderBlockForMenu: (blockDefinition: BlockDefinitionInterface) => ReactNode
   renderSavedBlockForMenu: (block: BlockInterface, renderMenu: ReactNode) => ReactNode
 }

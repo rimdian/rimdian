@@ -15,6 +15,7 @@ import uuid from 'short-uuid'
 import { BlockDefinitionInterface, BlockInterface, BlockDefinitionMap } from './Block'
 import { cloneDeep, get, isEqual, remove, set } from 'lodash'
 import './UI/editor.css'
+import { EmailTemplateBlock } from 'interfaces'
 
 const EditorContext = createContext<EditorContextValue | null>(null)
 
@@ -28,7 +29,7 @@ export function useEditorContext(): EditorContextValue {
 
 export interface EditorContextValue {
   blockDefinitions: BlockDefinitionMap
-  savedBlocks: BlockDefinitionInterface[]
+  savedBlocks: EmailTemplateBlock[]
   templateDataValue: string
   currentTree: BlockInterface
   selectedBlockId: string
@@ -56,7 +57,7 @@ export interface SelectedBlockButtonsProp {
 export interface EditorProps {
   children: ReactNode
   blockDefinitions: BlockDefinitionMap
-  savedBlocks: BlockDefinitionInterface[]
+  savedBlocks: EmailTemplateBlock[]
   templateDataValue: string
   value: BlockInterface
   onChange: (newValue: BlockInterface) => void

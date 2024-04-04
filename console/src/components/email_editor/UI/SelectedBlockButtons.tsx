@@ -3,6 +3,7 @@ import { SelectedBlockButtonsProp } from '../Editor'
 import { Tooltip, Popconfirm, Modal, Form, Button, Spin, Input, message, Select } from 'antd'
 import { DragOutlined, DeleteOutlined, CopyOutlined, SaveOutlined } from '@ant-design/icons'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
+import { EmailTemplateBlock } from 'interfaces'
 
 const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
   const [saveVisible, setSaveVisible] = useState(false)
@@ -142,6 +143,8 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
 
               <Form.Item noStyle shouldUpdate={true}>
                 {({ getFieldValue }: any) => {
+                  const blocks =
+                    workspaceCtx.workspace.messaging_settings.email_template_blocks || []
                   return (
                     <>
                       {getFieldValue('operation') === 'update' && (
@@ -153,17 +156,17 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
                           <Select
                             onChange={(val: any) => {
                               form.setFieldsValue({
-                                name: workspaceCtx.workspace.emailBlocks.find(
-                                  (x: any) => x.id === val
-                                ).name
+                                name: blocks.find((x: EmailTemplateBlock) => x.id === val)?.name
                               })
                             }}
-                            options={workspaceCtx.workspace.emailBlocks.map((b: any) => {
-                              return {
-                                label: b.name,
-                                value: b.id
+                            options={workspaceCtx.workspace.messaging_settings.email_template_blocks.map(
+                              (b: EmailTemplateBlock) => {
+                                return {
+                                  label: b.name,
+                                  value: b.id
+                                }
                               }
-                            })}
+                            )}
                           />
                         </Form.Item>
                       )}

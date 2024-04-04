@@ -256,6 +256,9 @@ var _ Service = &ServiceMock{}
 //			WorkspaceListFunc: func(ctx context.Context, accountID string, organizationID string) (*dto.WorkspaceListResult, int, error) {
 //				panic("mock out the WorkspaceList method")
 //			},
+//			WorkspaceSettingsUpdateFunc: func(ctx context.Context, accountID string, payload *dto.WorkspaceSettingsUpdate) (*entity.Workspace, int, error) {
+//				panic("mock out the WorkspaceSettingsUpdate method")
+//			},
 //			WorkspaceShowFunc: func(ctx context.Context, accountID string, workspaceID string) (*dto.WorkspaceShowResult, int, error) {
 //				panic("mock out the WorkspaceShow method")
 //			},
@@ -505,6 +508,9 @@ type ServiceMock struct {
 
 	// WorkspaceListFunc mocks the WorkspaceList method.
 	WorkspaceListFunc func(ctx context.Context, accountID string, organizationID string) (*dto.WorkspaceListResult, int, error)
+
+	// WorkspaceSettingsUpdateFunc mocks the WorkspaceSettingsUpdate method.
+	WorkspaceSettingsUpdateFunc func(ctx context.Context, accountID string, payload *dto.WorkspaceSettingsUpdate) (*entity.Workspace, int, error)
 
 	// WorkspaceShowFunc mocks the WorkspaceShow method.
 	WorkspaceShowFunc func(ctx context.Context, accountID string, workspaceID string) (*dto.WorkspaceShowResult, int, error)
@@ -1169,6 +1175,15 @@ type ServiceMock struct {
 			// OrganizationID is the organizationID argument value.
 			OrganizationID string
 		}
+		// WorkspaceSettingsUpdate holds details about calls to the WorkspaceSettingsUpdate method.
+		WorkspaceSettingsUpdate []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AccountID is the accountID argument value.
+			AccountID string
+			// Payload is the payload argument value.
+			Payload *dto.WorkspaceSettingsUpdate
+		}
 		// WorkspaceShow holds details about calls to the WorkspaceShow method.
 		WorkspaceShow []struct {
 			// Ctx is the ctx argument value.
@@ -1275,6 +1290,7 @@ type ServiceMock struct {
 	lockWorkspaceCreateOrResetDemo              sync.RWMutex
 	lockWorkspaceGetSecretKey                   sync.RWMutex
 	lockWorkspaceList                           sync.RWMutex
+	lockWorkspaceSettingsUpdate                 sync.RWMutex
 	lockWorkspaceShow                           sync.RWMutex
 	lockWorkspaceShowTables                     sync.RWMutex
 	lockWorkspaceUpdate                         sync.RWMutex
@@ -4296,6 +4312,46 @@ func (mock *ServiceMock) WorkspaceListCalls() []struct {
 	mock.lockWorkspaceList.RLock()
 	calls = mock.calls.WorkspaceList
 	mock.lockWorkspaceList.RUnlock()
+	return calls
+}
+
+// WorkspaceSettingsUpdate calls WorkspaceSettingsUpdateFunc.
+func (mock *ServiceMock) WorkspaceSettingsUpdate(ctx context.Context, accountID string, payload *dto.WorkspaceSettingsUpdate) (*entity.Workspace, int, error) {
+	if mock.WorkspaceSettingsUpdateFunc == nil {
+		panic("ServiceMock.WorkspaceSettingsUpdateFunc: method is nil but Service.WorkspaceSettingsUpdate was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		AccountID string
+		Payload   *dto.WorkspaceSettingsUpdate
+	}{
+		Ctx:       ctx,
+		AccountID: accountID,
+		Payload:   payload,
+	}
+	mock.lockWorkspaceSettingsUpdate.Lock()
+	mock.calls.WorkspaceSettingsUpdate = append(mock.calls.WorkspaceSettingsUpdate, callInfo)
+	mock.lockWorkspaceSettingsUpdate.Unlock()
+	return mock.WorkspaceSettingsUpdateFunc(ctx, accountID, payload)
+}
+
+// WorkspaceSettingsUpdateCalls gets all the calls that were made to WorkspaceSettingsUpdate.
+// Check the length with:
+//
+//	len(mockedService.WorkspaceSettingsUpdateCalls())
+func (mock *ServiceMock) WorkspaceSettingsUpdateCalls() []struct {
+	Ctx       context.Context
+	AccountID string
+	Payload   *dto.WorkspaceSettingsUpdate
+} {
+	var calls []struct {
+		Ctx       context.Context
+		AccountID string
+		Payload   *dto.WorkspaceSettingsUpdate
+	}
+	mock.lockWorkspaceSettingsUpdate.RLock()
+	calls = mock.calls.WorkspaceSettingsUpdate
+	mock.lockWorkspaceSettingsUpdate.RUnlock()
 	return calls
 }
 

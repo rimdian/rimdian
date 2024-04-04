@@ -70,6 +70,7 @@ type Service interface {
 	WorkspaceCreate(ctx context.Context, accountID string, workspaceDTO *dto.WorkspaceCreate) (workspace *entity.Workspace, code int, err error)
 	WorkspaceCreateOrResetDemo(ctx context.Context, accountID string, workspaceDemoDTO *dto.WorkspaceCreateOrResetDemo) (workspace *entity.Workspace, code int, err error)
 	WorkspaceUpdate(ctx context.Context, accountID string, payload *dto.WorkspaceUpdate) (workspace *entity.Workspace, code int, err error)
+	WorkspaceSettingsUpdate(ctx context.Context, accountID string, payload *dto.WorkspaceSettingsUpdate) (updatedWorkspace *entity.Workspace, code int, err error)
 	WorkspaceGetSecretKey(ctx context.Context, accountID string, workspaceID string) (result *dto.WorkspaceSecretKeyResult, code int, err error)
 	// domain
 	DomainUpsert(ctx context.Context, accountID string, domainDTO *dto.Domain) (updatedWorkspace *entity.Workspace, code int, err error)

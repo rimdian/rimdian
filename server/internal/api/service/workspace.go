@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"fmt"
 	"io"
@@ -13,8 +14,79 @@ import (
 	"github.com/rimdian/rimdian/internal/api/common"
 	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/api/entity"
+	"github.com/rimdian/rimdian/internal/common/httpClient"
 	"github.com/rotisserie/eris"
+	mail "github.com/xhit/go-simple-mail/v2"
+	"go.opencensus.io/trace"
 )
+
+func (svc *ServiceImpl) WorkspaceSettingsUpdate(ctx context.Context, accountID string, payload *dto.WorkspaceSettingsUpdate) (updatedWorkspace *entity.Workspace, code int, err error) {
+
+	if payload == nil {
+		return nil, 400, eris.New("workspace settings payload is missing")
+	}
+
+	// fetch workspace
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, payload.ID, accountID)
+
+	if err != nil {
+		return nil, code, eris.Wrap(err, "WorkspaceSettingsUpdate")
+	}
+
+	// transactional email provider
+	if payload.TransactionalEmailProvider != nil {
+		if err := payload.TransactionalEmailProvider.Validate(); err != nil {
+			return nil, 400, eris.Wrap(err, "WorkspaceSettingsUpdate")
+		}
+
+		if payload.TransactionalEmailProvider.Provider == "smtp" {
+			if workspace.MessagingSettings.TransactionalEmailProvider, err = SetSMTPProvider(payload.TransactionalEmailProvider, svc.Config.SECRET_KEY); err != nil {
+				return nil, 500, eris.Wrap(err, "WorkspaceSettingsUpdate")
+			}
+		}
+
+		if payload.TransactionalEmailProvider.Provider == "sparkpost" {
+			if workspace.MessagingSettings.TransactionalEmailProvider, err = SetSparkpostProvider(ctx, payload.TransactionalEmailProvider, svc.Config.SECRET_KEY, svc.NetClient); err != nil {
+				return nil, 500, eris.Wrap(err, "WorkspaceSettingsUpdate")
+			}
+		}
+	}
+
+	// marketing email provider
+	if payload.MarketingEmailProvider != nil {
+		if err := payload.MarketingEmailProvider.Validate(); err != nil {
+			return nil, 400, eris.Wrap(err, "WorkspaceSettingsUpdate")
+		}
+
+		if payload.MarketingEmailProvider.Provider == "smtp" {
+			if workspace.MessagingSettings.MarketingEmailProvider, err = SetSMTPProvider(payload.MarketingEmailProvider, svc.Config.SECRET_KEY); err != nil {
+				return nil, 500, eris.Wrap(err, "WorkspaceSettingsUpdate")
+			}
+		}
+
+		if payload.MarketingEmailProvider.Provider == "sparkpost" {
+			if workspace.MessagingSettings.MarketingEmailProvider, err = SetSparkpostProvider(ctx, payload.MarketingEmailProvider, svc.Config.SECRET_KEY, svc.NetClient); err != nil {
+				return nil, 500, eris.Wrap(err, "WorkspaceSettingsUpdate")
+			}
+		}
+	}
+
+	// email template blocks
+	if payload.EmailTemplateBlocks != nil {
+		for _, block := range *payload.EmailTemplateBlocks {
+			if err := block.Validate(); err != nil {
+				return nil, 400, eris.Wrap(err, "WorkspaceSettingsUpdate")
+			}
+		}
+		workspace.MessagingSettings.EmailTemplateBlocks = *payload.EmailTemplateBlocks
+	}
+
+	if err := svc.Repo.UpdateWorkspace(ctx, workspace, nil); err != nil {
+		return nil, 500, eris.Wrap(err, "WorkspaceSettingsUpdate")
+	}
+
+	return workspace, 200, nil
+}
 
 func (svc *ServiceImpl) WorkspaceCreateOrResetDemo(ctx context.Context, accountID string, workspaceDemoDTO *dto.WorkspaceCreateOrResetDemo) (workspace *entity.Workspace, code int, err error) {
 
@@ -136,6 +208,9 @@ func (svc *ServiceImpl) WorkspaceCreate(ctx context.Context, accountID string, w
 		DataHooks:     entity.DataHooks{},
 
 		FilesSettings: entity.FilesSettings{},
+		MessagingSettings: entity.MessagingSettings{
+			EmailTemplateBlocks: []*entity.EmailTemplateBlock{},
+		},
 	}
 
 	// append organization ID to the workspace ID
@@ -552,9 +627,114 @@ func (svc *ServiceImpl) doCreateWorkspaceInDB(ctx context.Context, workspace *en
 // ensure Google Tasks Queues historical & live exist
 func (svc *ServiceImpl) EnsureGoogleTasksQueues(ctx context.Context, workspaceID string) (err error) {
 	queueName := svc.TaskOrchestrator.GetHistoricalQueueNameForWorkspace(workspaceID)
-	if err = svc.TaskOrchestrator.EnsureQueue(ctx, svc.Config.TASK_QUEUE_LOCATION, queueName); err != nil {
+	if err = svc.TaskOrchestrator.EnsureQueue(ctx, svc.Config.TASK_QUEUE_LOCATION, queueName, 200); err != nil {
 		return err
 	}
+
 	queueName = svc.TaskOrchestrator.GetLiveQueueNameForWorkspace(workspaceID)
-	return svc.TaskOrchestrator.EnsureQueue(ctx, svc.Config.TASK_QUEUE_LOCATION, queueName)
+	if err = svc.TaskOrchestrator.EnsureQueue(ctx, svc.Config.TASK_QUEUE_LOCATION, queueName, 200); err != nil {
+		return err
+	}
+
+	queueName = svc.TaskOrchestrator.GetTransactionalMessageQueueNameForWorkspace(workspaceID)
+	if err = svc.TaskOrchestrator.EnsureQueue(ctx, svc.Config.TASK_QUEUE_LOCATION, queueName, 50); err != nil {
+		return err
+	}
+
+	queueName = svc.TaskOrchestrator.GetMarketingMessageQueueNameForWorkspace(workspaceID)
+	return svc.TaskOrchestrator.EnsureQueue(ctx, svc.Config.TASK_QUEUE_LOCATION, queueName, 50)
+}
+
+func SetSparkpostProvider(ctx context.Context, payload *entity.EmailProvider, secretKey string, netClient httpClient.HTTPClient) (provider *entity.EmailProvider, err error) {
+
+	spanCtx, span := trace.StartSpan(ctx, "SetSparkpostProvider")
+	defer span.End()
+
+	if err = payload.Validate(); err != nil {
+		return nil, eris.Wrap(err, "SetSMTPProvider")
+	}
+
+	// test Sparkpost
+
+	req, _ := http.NewRequestWithContext(spanCtx, "GET", *payload.Host+"/api/v1/webhooks", nil)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", *payload.Password)
+
+	respBatch, err := netClient.Do(req)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "SetSparkpostProvider")
+	}
+
+	defer respBatch.Body.Close()
+
+	if respBatch.StatusCode != 200 {
+		return nil, eris.Errorf("SetSparkpostProvider error: %v", respBatch.StatusCode)
+	}
+
+	// encrypt password
+	encryptedPassword, err := common.EncryptString(*payload.Password, secretKey)
+	if err != nil {
+		return nil, eris.Wrap(err, "SetSparkpostProvider")
+	}
+
+	return &entity.EmailProvider{
+		Provider:          "sparkpost",
+		Host:              payload.Host,       // API endpoint
+		EncryptedPassword: &encryptedPassword, // API key
+	}, nil
+}
+
+func SetSMTPProvider(payload *entity.EmailProvider, secretKey string) (provider *entity.EmailProvider, err error) {
+
+	if err = payload.Validate(); err != nil {
+		return nil, eris.Wrap(err, "SetSMTPProvider")
+	}
+
+	// test SMTP
+	server := mail.NewSMTPClient()
+	server.Host = *payload.Host
+	server.Port = *payload.Port
+	server.Username = *payload.Username
+	server.Password = *payload.Password
+
+	switch *payload.Encryption {
+	case "SSL":
+		server.Encryption = mail.EncryptionSSLTLS
+	case "STARTTLS":
+		server.Encryption = mail.EncryptionSTARTTLS
+	default:
+		server.Encryption = mail.EncryptionNone
+	}
+
+	server.Authentication = mail.AuthPlain
+	server.KeepAlive = false
+	server.ConnectTimeout = 5 * time.Second
+	server.SendTimeout = 5 * time.Second
+	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	_, err = server.Connect()
+
+	if err != nil {
+		return nil, eris.Wrap(err, "SetSMTPProvider")
+	}
+
+	// encrypt username + password
+	encryptedUsername, err := common.EncryptString(*payload.Username, secretKey)
+	if err != nil {
+		return nil, eris.Wrap(err, "SetSMTPProvider")
+	}
+
+	encryptedPassword, err := common.EncryptString(*payload.Password, secretKey)
+	if err != nil {
+		return nil, eris.Wrap(err, "SetSMTPProvider")
+	}
+
+	return &entity.EmailProvider{
+		Provider:          "smtp",
+		Host:              payload.Host,
+		Port:              payload.Port,
+		Encryption:        payload.Encryption,
+		EncryptedUsername: &encryptedUsername,
+		EncryptedPassword: &encryptedPassword,
+	}, nil
 }

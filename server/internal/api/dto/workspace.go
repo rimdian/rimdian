@@ -69,6 +69,15 @@ type WorkspaceUpdate struct {
 	FilesSettings           FilesSettingsUpdate `json:"files_settings"`
 }
 
+// new version of workspace update
+// each setting is a pointer to allow for partial updates
+type WorkspaceSettingsUpdate struct {
+	ID                         string                      `json:"id"`
+	EmailTemplateBlocks        *entity.EmailTemplateBlocks `json:"email_template_blocks,omitempty"`
+	TransactionalEmailProvider *entity.EmailProvider       `json:"transactional_email_provider,omitempty"`
+	MarketingEmailProvider     *entity.EmailProvider       `json:"marketing_email_provider,omitempty"`
+}
+
 type WorkspaceListResult struct {
 	Workspaces []*entity.Workspace `json:"workspaces"`
 }

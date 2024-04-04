@@ -6,6 +6,7 @@ import BlockWorkspaceSettings from './block_settings'
 import BlockDomains from 'components/domain/block_list'
 import CSS from 'utils/css'
 import BlockDataHooks from 'components/data_hooks/block_list'
+import BlockMessagingSettings from './block_messaging_settings'
 
 const RouteWorkspaceConfiguration = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -50,6 +51,11 @@ const RouteWorkspaceConfiguration = () => {
               key: 'data-hooks',
               label: 'Data hooks',
               children: <BlockDataHooks />
+            },
+            {
+              key: 'messaging-settings',
+              label: 'Messaging settings',
+              children: <BlockMessagingSettings />
             },
             {
               key: 'settings',

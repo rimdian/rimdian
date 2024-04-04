@@ -118,6 +118,130 @@ func (x FilesSettings) Value() (driver.Value, error) {
 	return json.Marshal(x)
 }
 
+type EmailTemplateBlocks []*EmailTemplateBlock
+
+type EmailTemplateBlock struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Content string `json:"content"` // json tree
+}
+
+func (x *EmailTemplateBlock) Validate() error {
+	x.ID = strings.TrimSpace(x.ID)
+	x.Name = strings.TrimSpace(x.Name)
+	x.Content = strings.TrimSpace(x.Content)
+	if x.ID == "" {
+		return eris.New("email template block id is required")
+	}
+	if x.Name == "" {
+		return eris.New("email template block name is required")
+	}
+	if x.Content == "" {
+		return eris.New("email template block content is required")
+	}
+	return nil
+}
+
+type EmailProvider struct {
+	Provider          string  `json:"provider"` // sparkpost, smtp...
+	EncryptedUsername *string `json:"encrypted_username,omitempty"`
+	EncryptedPassword *string `json:"encrypted_password,omitempty"`
+	Host              *string `json:"host,omitempty"`
+	Port              *int    `json:"port,omitempty"`
+	Encryption        *string `json:"encryption,omitempty"` // tls, ssl
+
+	// attached server-side for updates
+	Username *string `json:"username,omitempty"`
+	Password *string `json:"password,omitempty"`
+}
+
+func (x *EmailProvider) Validate() error {
+	// trim spaces
+	x.Provider = strings.TrimSpace(x.Provider)
+
+	if x.Provider != "smtp" && x.Provider != "sparkpost" {
+		return eris.New("email provider is not valid")
+	}
+
+	if x.Provider == "smtp" {
+		if x.Host == nil {
+			return eris.New("email provider host is required")
+		}
+		if x.Port == nil {
+			return eris.New("email provider port is required")
+		}
+		if x.Encryption == nil {
+			return eris.New("email provider encryption is required")
+		}
+		if *x.Encryption != "none" && *x.Encryption != "TLS" && *x.Encryption != "SSL" && *x.Encryption != "STARTTLS" {
+			return eris.New("email provider encryption is not valid")
+		}
+		if x.Username == nil {
+			return eris.New("email provider username is required")
+		}
+		if x.Password == nil {
+			return eris.New("email provider password is required")
+		}
+
+		// trim spaces
+		*x.Host = strings.TrimSpace(*x.Host)
+		if !govalidator.IsURL(*x.Host) {
+			return eris.New("email provider host is not valid")
+		}
+
+		*x.Username = strings.TrimSpace(*x.Username)
+		*x.Password = strings.TrimSpace(*x.Password)
+	}
+
+	if x.Provider == "sparkpost" {
+		if x.Password == nil {
+			return eris.New("email provider API key is required")
+		}
+
+		if x.Host == nil {
+			return eris.New("email provider host is required")
+		}
+
+		// trim spaces
+		*x.Host = strings.TrimSpace(*x.Host)
+
+		if !govalidator.IsRequestURI(*x.Host) {
+			return eris.New("email provider host is not valid")
+		}
+
+	}
+
+	return nil
+}
+
+type MessagingSettings struct {
+	EmailTemplateBlocks        EmailTemplateBlocks `json:"email_template_blocks"`
+	TransactionalEmailProvider *EmailProvider      `json:"transactional_email_provider,omitempty"`
+	MarketingEmailProvider     *EmailProvider      `json:"marketing_email_provider,omitempty"`
+}
+
+func (x *MessagingSettings) Scan(val interface{}) error {
+
+	var data []byte
+
+	if b, ok := val.([]byte); ok {
+		// VERY IMPORTANT: we need to clone the bytes here
+		// The sql driver will reuse the same bytes RAM slots for future queries
+		// Thank you St Antoine De Padoue for helping me find this bug
+		data = bytes.Clone(b)
+	} else if s, ok := val.(string); ok {
+		data = []byte(s)
+	} else if val == nil {
+		return nil
+	}
+
+	return json.Unmarshal(data, x)
+}
+
+func (x MessagingSettings) Value() (driver.Value, error) {
+	return json.Marshal(x)
+}
+
 type Workspace struct {
 	ID               string     `db:"id" json:"id"`
 	Name             string     `db:"name" json:"name"`
@@ -152,6 +276,7 @@ type Workspace struct {
 	DataHooks                      DataHooks              `db:"data_hooks" json:"data_hooks"`
 	LicenseKey                     *string                `db:"license_key" json:"license_key,omitempty"`
 	FilesSettings                  FilesSettings          `db:"files_settings" json:"files_settings"`
+	MessagingSettings              MessagingSettings      `db:"messaging_settings" json:"messaging_settings"`
 
 	// Attached server-side
 	CubeJSToken string       `json:"cubejs_token,omitempty"`
@@ -894,6 +1019,7 @@ var WorkspaceSchema string = `CREATE ROWSTORE TABLE IF NOT EXISTS workspace (
 	data_hooks JSON,
 	license_key VARCHAR(1024),
 	files_settings JSON NOT NULL,
+	messaging_settings JSON NOT NULL,
 	
 	PRIMARY KEY (id),
     SHARD KEY (id)
@@ -932,6 +1058,7 @@ var WorkspaceSchemaMYSQL string = `CREATE TABLE IF NOT EXISTS workspace (
 	data_hooks JSON,
 	license_key VARCHAR(1024),
 	files_settings JSON NOT NULL,
+	messaging_settings JSON NOT NULL,
 	
 	PRIMARY KEY (id)
     -- SHARD KEY (id)

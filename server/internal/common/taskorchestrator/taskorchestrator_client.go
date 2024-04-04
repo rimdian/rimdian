@@ -60,10 +60,12 @@ func (t *TaskRequest) Validate() error {
 }
 
 type Client interface {
-	EnsureQueue(ctx context.Context, queueLocation string, queueName string) error
+	EnsureQueue(ctx context.Context, queueLocation string, queueName string, maxConcurrent int32) error
 	PostRequest(ctx context.Context, taskRequest *TaskRequest) error
 	GetHistoricalQueueNameForWorkspace(workspaceID string) string
 	GetLiveQueueNameForWorkspace(workspaceID string) string
+	GetTransactionalMessageQueueNameForWorkspace(workspaceID string) string
+	GetMarketingMessageQueueNameForWorkspace(workspaceID string) string
 	GetTaskRunningJob(ctx context.Context, queueLocation string, queueName string, taskID string) (jobInfo *dto.TaskExecJobInfoInfo, err error)
 }
 
@@ -163,7 +165,15 @@ func (client *ClientImpl) GetLiveQueueNameForWorkspace(workspaceID string) strin
 	return strings.ReplaceAll(workspaceID+"-data-imports-live", "_", "-")
 }
 
-func (client *ClientImpl) EnsureQueue(ctx context.Context, queueLocation string, queueName string) error {
+func (client *ClientImpl) GetTransactionalMessageQueueNameForWorkspace(workspaceID string) string {
+	return strings.ReplaceAll(workspaceID+"-messages-transactional", "_", "-")
+}
+
+func (client *ClientImpl) GetMarketingMessageQueueNameForWorkspace(workspaceID string) string {
+	return strings.ReplaceAll(workspaceID+"-messages-marketing", "_", "-")
+}
+
+func (client *ClientImpl) EnsureQueue(ctx context.Context, queueLocation string, queueName string, maxConcurrentDispatches int32) error {
 
 	queuePath := fmt.Sprintf("projects/%s/locations/%s/queues/%s", client.GcloudProject, queueLocation, queueName)
 
@@ -181,8 +191,9 @@ func (client *ClientImpl) EnsureQueue(ctx context.Context, queueLocation string,
 			Queue: &cloudtaskspb.Queue{
 				Name: queuePath,
 				RateLimits: &cloudtaskspb.RateLimits{
-					MaxDispatchesPerSecond: 200,
-					MaxBurstSize:           200,
+					MaxDispatchesPerSecond:  200,
+					MaxBurstSize:            200,
+					MaxConcurrentDispatches: maxConcurrentDispatches,
 				},
 				RetryConfig: &cloudtaskspb.RetryConfig{
 					MaxAttempts: 100,

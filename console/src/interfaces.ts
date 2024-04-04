@@ -733,7 +733,7 @@ export interface Workspace {
   data_hooks: DataHook[]
   license_key?: string
   files_settings: FilesSettings
-  emailBlocks: any // TODO
+  messaging_settings: MessagingSettings
 
   // joined
   cubejs_token: string
@@ -1137,4 +1137,25 @@ export interface SubscriptionList {
   db_created_at: string
   db_updated_at: string
   users_count?: number
+}
+
+export interface EmailTemplateBlock {
+  id: string
+  name: string
+  content: string // json tree
+}
+
+export interface EmailProvider {
+  provider: string // sparkpost, smtp...
+  encrypted_username?: string
+  encrypted_password?: string
+  host?: string
+  port?: number
+  encryption?: string // none, TLS, SSL, STARTTLS
+}
+
+export interface MessagingSettings {
+  email_template_blocks: EmailTemplateBlock[]
+  transactional_email_provider?: EmailProvider
+  marketing_email_provider?: EmailProvider
 }

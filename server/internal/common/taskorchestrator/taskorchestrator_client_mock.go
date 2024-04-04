@@ -15,34 +15,40 @@ var _ Client = &ClientMock{}
 
 // ClientMock is a mock implementation of Client.
 //
-// 	func TestSomethingThatUsesClient(t *testing.T) {
+//	func TestSomethingThatUsesClient(t *testing.T) {
 //
-// 		// make and configure a mocked Client
-// 		mockedClient := &ClientMock{
-// 			EnsureQueueFunc: func(ctx context.Context, queueLocation string, queueName string) error {
-// 				panic("mock out the EnsureQueue method")
-// 			},
-// 			GetHistoricalQueueNameForWorkspaceFunc: func(workspaceID string) string {
-// 				panic("mock out the GetHistoricalQueueNameForWorkspace method")
-// 			},
-// 			GetLiveQueueNameForWorkspaceFunc: func(workspaceID string) string {
-// 				panic("mock out the GetLiveQueueNameForWorkspace method")
-// 			},
-// 			GetTaskRunningJobFunc: func(ctx context.Context, queueLocation string, queueName string, taskID string) (*dto.TaskRunningJobInfo, error) {
-// 				panic("mock out the GetTaskRunningJob method")
-// 			},
-// 			PostRequestFunc: func(ctx context.Context, taskRequest *TaskRequest) error {
-// 				panic("mock out the PostRequest method")
-// 			},
-// 		}
+//		// make and configure a mocked Client
+//		mockedClient := &ClientMock{
+//			EnsureQueueFunc: func(ctx context.Context, queueLocation string, queueName string, maxConcurrent int32) error {
+//				panic("mock out the EnsureQueue method")
+//			},
+//			GetHistoricalQueueNameForWorkspaceFunc: func(workspaceID string) string {
+//				panic("mock out the GetHistoricalQueueNameForWorkspace method")
+//			},
+//			GetLiveQueueNameForWorkspaceFunc: func(workspaceID string) string {
+//				panic("mock out the GetLiveQueueNameForWorkspace method")
+//			},
+//			GetMarketingMessageQueueNameForWorkspaceFunc: func(workspaceID string) string {
+//				panic("mock out the GetMarketingMessageQueueNameForWorkspace method")
+//			},
+//			GetTaskRunningJobFunc: func(ctx context.Context, queueLocation string, queueName string, taskID string) (*dto.TaskExecJobInfoInfo, error) {
+//				panic("mock out the GetTaskRunningJob method")
+//			},
+//			GetTransactionalMessageQueueNameForWorkspaceFunc: func(workspaceID string) string {
+//				panic("mock out the GetTransactionalMessageQueueNameForWorkspace method")
+//			},
+//			PostRequestFunc: func(ctx context.Context, taskRequest *TaskRequest) error {
+//				panic("mock out the PostRequest method")
+//			},
+//		}
 //
-// 		// use mockedClient in code that requires Client
-// 		// and then make assertions.
+//		// use mockedClient in code that requires Client
+//		// and then make assertions.
 //
-// 	}
+//	}
 type ClientMock struct {
 	// EnsureQueueFunc mocks the EnsureQueue method.
-	EnsureQueueFunc func(ctx context.Context, queueLocation string, queueName string) error
+	EnsureQueueFunc func(ctx context.Context, queueLocation string, queueName string, maxConcurrent int32) error
 
 	// GetHistoricalQueueNameForWorkspaceFunc mocks the GetHistoricalQueueNameForWorkspace method.
 	GetHistoricalQueueNameForWorkspaceFunc func(workspaceID string) string
@@ -50,8 +56,14 @@ type ClientMock struct {
 	// GetLiveQueueNameForWorkspaceFunc mocks the GetLiveQueueNameForWorkspace method.
 	GetLiveQueueNameForWorkspaceFunc func(workspaceID string) string
 
+	// GetMarketingMessageQueueNameForWorkspaceFunc mocks the GetMarketingMessageQueueNameForWorkspace method.
+	GetMarketingMessageQueueNameForWorkspaceFunc func(workspaceID string) string
+
 	// GetTaskRunningJobFunc mocks the GetTaskRunningJob method.
 	GetTaskRunningJobFunc func(ctx context.Context, queueLocation string, queueName string, taskID string) (*dto.TaskExecJobInfoInfo, error)
+
+	// GetTransactionalMessageQueueNameForWorkspaceFunc mocks the GetTransactionalMessageQueueNameForWorkspace method.
+	GetTransactionalMessageQueueNameForWorkspaceFunc func(workspaceID string) string
 
 	// PostRequestFunc mocks the PostRequest method.
 	PostRequestFunc func(ctx context.Context, taskRequest *TaskRequest) error
@@ -66,6 +78,8 @@ type ClientMock struct {
 			QueueLocation string
 			// QueueName is the queueName argument value.
 			QueueName string
+			// MaxConcurrent is the maxConcurrent argument value.
+			MaxConcurrent int32
 		}
 		// GetHistoricalQueueNameForWorkspace holds details about calls to the GetHistoricalQueueNameForWorkspace method.
 		GetHistoricalQueueNameForWorkspace []struct {
@@ -74,6 +88,11 @@ type ClientMock struct {
 		}
 		// GetLiveQueueNameForWorkspace holds details about calls to the GetLiveQueueNameForWorkspace method.
 		GetLiveQueueNameForWorkspace []struct {
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+		}
+		// GetMarketingMessageQueueNameForWorkspace holds details about calls to the GetMarketingMessageQueueNameForWorkspace method.
+		GetMarketingMessageQueueNameForWorkspace []struct {
 			// WorkspaceID is the workspaceID argument value.
 			WorkspaceID string
 		}
@@ -88,6 +107,11 @@ type ClientMock struct {
 			// TaskID is the taskID argument value.
 			TaskID string
 		}
+		// GetTransactionalMessageQueueNameForWorkspace holds details about calls to the GetTransactionalMessageQueueNameForWorkspace method.
+		GetTransactionalMessageQueueNameForWorkspace []struct {
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+		}
 		// PostRequest holds details about calls to the PostRequest method.
 		PostRequest []struct {
 			// Ctx is the ctx argument value.
@@ -96,15 +120,17 @@ type ClientMock struct {
 			TaskRequest *TaskRequest
 		}
 	}
-	lockEnsureQueue                        sync.RWMutex
-	lockGetHistoricalQueueNameForWorkspace sync.RWMutex
-	lockGetLiveQueueNameForWorkspace       sync.RWMutex
-	lockGetTaskRunningJob                  sync.RWMutex
-	lockPostRequest                        sync.RWMutex
+	lockEnsureQueue                                  sync.RWMutex
+	lockGetHistoricalQueueNameForWorkspace           sync.RWMutex
+	lockGetLiveQueueNameForWorkspace                 sync.RWMutex
+	lockGetMarketingMessageQueueNameForWorkspace     sync.RWMutex
+	lockGetTaskRunningJob                            sync.RWMutex
+	lockGetTransactionalMessageQueueNameForWorkspace sync.RWMutex
+	lockPostRequest                                  sync.RWMutex
 }
 
 // EnsureQueue calls EnsureQueueFunc.
-func (mock *ClientMock) EnsureQueue(ctx context.Context, queueLocation string, queueName string) error {
+func (mock *ClientMock) EnsureQueue(ctx context.Context, queueLocation string, queueName string, maxConcurrent int32) error {
 	if mock.EnsureQueueFunc == nil {
 		panic("ClientMock.EnsureQueueFunc: method is nil but Client.EnsureQueue was just called")
 	}
@@ -112,29 +138,34 @@ func (mock *ClientMock) EnsureQueue(ctx context.Context, queueLocation string, q
 		Ctx           context.Context
 		QueueLocation string
 		QueueName     string
+		MaxConcurrent int32
 	}{
 		Ctx:           ctx,
 		QueueLocation: queueLocation,
 		QueueName:     queueName,
+		MaxConcurrent: maxConcurrent,
 	}
 	mock.lockEnsureQueue.Lock()
 	mock.calls.EnsureQueue = append(mock.calls.EnsureQueue, callInfo)
 	mock.lockEnsureQueue.Unlock()
-	return mock.EnsureQueueFunc(ctx, queueLocation, queueName)
+	return mock.EnsureQueueFunc(ctx, queueLocation, queueName, maxConcurrent)
 }
 
 // EnsureQueueCalls gets all the calls that were made to EnsureQueue.
 // Check the length with:
-//     len(mockedClient.EnsureQueueCalls())
+//
+//	len(mockedClient.EnsureQueueCalls())
 func (mock *ClientMock) EnsureQueueCalls() []struct {
 	Ctx           context.Context
 	QueueLocation string
 	QueueName     string
+	MaxConcurrent int32
 } {
 	var calls []struct {
 		Ctx           context.Context
 		QueueLocation string
 		QueueName     string
+		MaxConcurrent int32
 	}
 	mock.lockEnsureQueue.RLock()
 	calls = mock.calls.EnsureQueue
@@ -160,7 +191,8 @@ func (mock *ClientMock) GetHistoricalQueueNameForWorkspace(workspaceID string) s
 
 // GetHistoricalQueueNameForWorkspaceCalls gets all the calls that were made to GetHistoricalQueueNameForWorkspace.
 // Check the length with:
-//     len(mockedClient.GetHistoricalQueueNameForWorkspaceCalls())
+//
+//	len(mockedClient.GetHistoricalQueueNameForWorkspaceCalls())
 func (mock *ClientMock) GetHistoricalQueueNameForWorkspaceCalls() []struct {
 	WorkspaceID string
 } {
@@ -191,7 +223,8 @@ func (mock *ClientMock) GetLiveQueueNameForWorkspace(workspaceID string) string 
 
 // GetLiveQueueNameForWorkspaceCalls gets all the calls that were made to GetLiveQueueNameForWorkspace.
 // Check the length with:
-//     len(mockedClient.GetLiveQueueNameForWorkspaceCalls())
+//
+//	len(mockedClient.GetLiveQueueNameForWorkspaceCalls())
 func (mock *ClientMock) GetLiveQueueNameForWorkspaceCalls() []struct {
 	WorkspaceID string
 } {
@@ -201,6 +234,38 @@ func (mock *ClientMock) GetLiveQueueNameForWorkspaceCalls() []struct {
 	mock.lockGetLiveQueueNameForWorkspace.RLock()
 	calls = mock.calls.GetLiveQueueNameForWorkspace
 	mock.lockGetLiveQueueNameForWorkspace.RUnlock()
+	return calls
+}
+
+// GetMarketingMessageQueueNameForWorkspace calls GetMarketingMessageQueueNameForWorkspaceFunc.
+func (mock *ClientMock) GetMarketingMessageQueueNameForWorkspace(workspaceID string) string {
+	if mock.GetMarketingMessageQueueNameForWorkspaceFunc == nil {
+		panic("ClientMock.GetMarketingMessageQueueNameForWorkspaceFunc: method is nil but Client.GetMarketingMessageQueueNameForWorkspace was just called")
+	}
+	callInfo := struct {
+		WorkspaceID string
+	}{
+		WorkspaceID: workspaceID,
+	}
+	mock.lockGetMarketingMessageQueueNameForWorkspace.Lock()
+	mock.calls.GetMarketingMessageQueueNameForWorkspace = append(mock.calls.GetMarketingMessageQueueNameForWorkspace, callInfo)
+	mock.lockGetMarketingMessageQueueNameForWorkspace.Unlock()
+	return mock.GetMarketingMessageQueueNameForWorkspaceFunc(workspaceID)
+}
+
+// GetMarketingMessageQueueNameForWorkspaceCalls gets all the calls that were made to GetMarketingMessageQueueNameForWorkspace.
+// Check the length with:
+//
+//	len(mockedClient.GetMarketingMessageQueueNameForWorkspaceCalls())
+func (mock *ClientMock) GetMarketingMessageQueueNameForWorkspaceCalls() []struct {
+	WorkspaceID string
+} {
+	var calls []struct {
+		WorkspaceID string
+	}
+	mock.lockGetMarketingMessageQueueNameForWorkspace.RLock()
+	calls = mock.calls.GetMarketingMessageQueueNameForWorkspace
+	mock.lockGetMarketingMessageQueueNameForWorkspace.RUnlock()
 	return calls
 }
 
@@ -228,7 +293,8 @@ func (mock *ClientMock) GetTaskRunningJob(ctx context.Context, queueLocation str
 
 // GetTaskRunningJobCalls gets all the calls that were made to GetTaskRunningJob.
 // Check the length with:
-//     len(mockedClient.GetTaskRunningJobCalls())
+//
+//	len(mockedClient.GetTaskRunningJobCalls())
 func (mock *ClientMock) GetTaskRunningJobCalls() []struct {
 	Ctx           context.Context
 	QueueLocation string
@@ -244,6 +310,38 @@ func (mock *ClientMock) GetTaskRunningJobCalls() []struct {
 	mock.lockGetTaskRunningJob.RLock()
 	calls = mock.calls.GetTaskRunningJob
 	mock.lockGetTaskRunningJob.RUnlock()
+	return calls
+}
+
+// GetTransactionalMessageQueueNameForWorkspace calls GetTransactionalMessageQueueNameForWorkspaceFunc.
+func (mock *ClientMock) GetTransactionalMessageQueueNameForWorkspace(workspaceID string) string {
+	if mock.GetTransactionalMessageQueueNameForWorkspaceFunc == nil {
+		panic("ClientMock.GetTransactionalMessageQueueNameForWorkspaceFunc: method is nil but Client.GetTransactionalMessageQueueNameForWorkspace was just called")
+	}
+	callInfo := struct {
+		WorkspaceID string
+	}{
+		WorkspaceID: workspaceID,
+	}
+	mock.lockGetTransactionalMessageQueueNameForWorkspace.Lock()
+	mock.calls.GetTransactionalMessageQueueNameForWorkspace = append(mock.calls.GetTransactionalMessageQueueNameForWorkspace, callInfo)
+	mock.lockGetTransactionalMessageQueueNameForWorkspace.Unlock()
+	return mock.GetTransactionalMessageQueueNameForWorkspaceFunc(workspaceID)
+}
+
+// GetTransactionalMessageQueueNameForWorkspaceCalls gets all the calls that were made to GetTransactionalMessageQueueNameForWorkspace.
+// Check the length with:
+//
+//	len(mockedClient.GetTransactionalMessageQueueNameForWorkspaceCalls())
+func (mock *ClientMock) GetTransactionalMessageQueueNameForWorkspaceCalls() []struct {
+	WorkspaceID string
+} {
+	var calls []struct {
+		WorkspaceID string
+	}
+	mock.lockGetTransactionalMessageQueueNameForWorkspace.RLock()
+	calls = mock.calls.GetTransactionalMessageQueueNameForWorkspace
+	mock.lockGetTransactionalMessageQueueNameForWorkspace.RUnlock()
 	return calls
 }
 
@@ -267,7 +365,8 @@ func (mock *ClientMock) PostRequest(ctx context.Context, taskRequest *TaskReques
 
 // PostRequestCalls gets all the calls that were made to PostRequest.
 // Check the length with:
-//     len(mockedClient.PostRequestCalls())
+//
+//	len(mockedClient.PostRequestCalls())
 func (mock *ClientMock) PostRequestCalls() []struct {
 	Ctx         context.Context
 	TaskRequest *TaskRequest

@@ -1,8 +1,10 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -111,7 +113,17 @@ func (svc *ServiceImpl) SendEmailWithSparkpost(ctx context.Context, data *dto.Se
 		msg.Content.Text = &data.Email.Text
 	}
 
-	req, _ := http.NewRequestWithContext(spanCtx, "POST", *data.Email.EmailProvider.Host+"/api/v1/webhooks", nil)
+	// marshal
+	jsonData, err := json.Marshal(msg)
+	if err != nil {
+		return &common.DataLogInQueueResult{
+			HasError:         true,
+			QueueShouldRetry: false,
+			Error:            fmt.Sprintf("SendEmailWithSparkpost error: %v", err),
+		}
+	}
+
+	req, _ := http.NewRequestWithContext(spanCtx, "POST", *data.Email.EmailProvider.Host+"/api/v1/transmissions", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", *data.Email.EmailProvider.Password)
 

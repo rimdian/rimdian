@@ -202,6 +202,12 @@ var _ Service = &ServiceMock{}
 //			SegmentUpdateFunc: func(ctx context.Context, accountID string, segmentDTO *dto.Segment) (int, error) {
 //				panic("mock out the SegmentUpdate method")
 //			},
+//			SendEmailWithSMTPFunc: func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+//				panic("mock out the SendEmailWithSMTP method")
+//			},
+//			SendEmailWithSparkpostFunc: func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+//				panic("mock out the SendEmailWithSparkpost method")
+//			},
 //			SendSystemEmailFunc: func(ctx context.Context, systemEmail *dto.SystemEmail) error {
 //				panic("mock out the SendSystemEmail method")
 //			},
@@ -454,6 +460,12 @@ type ServiceMock struct {
 
 	// SegmentUpdateFunc mocks the SegmentUpdate method.
 	SegmentUpdateFunc func(ctx context.Context, accountID string, segmentDTO *dto.Segment) (int, error)
+
+	// SendEmailWithSMTPFunc mocks the SendEmailWithSMTP method.
+	SendEmailWithSMTPFunc func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult
+
+	// SendEmailWithSparkpostFunc mocks the SendEmailWithSparkpost method.
+	SendEmailWithSparkpostFunc func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult
 
 	// SendSystemEmailFunc mocks the SendSystemEmail method.
 	SendSystemEmailFunc func(ctx context.Context, systemEmail *dto.SystemEmail) error
@@ -1017,6 +1029,20 @@ type ServiceMock struct {
 			// SegmentDTO is the segmentDTO argument value.
 			SegmentDTO *dto.Segment
 		}
+		// SendEmailWithSMTP holds details about calls to the SendEmailWithSMTP method.
+		SendEmailWithSMTP []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Data is the data argument value.
+			Data *dto.SendMessage
+		}
+		// SendEmailWithSparkpost holds details about calls to the SendEmailWithSparkpost method.
+		SendEmailWithSparkpost []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Data is the data argument value.
+			Data *dto.SendMessage
+		}
 		// SendSystemEmail holds details about calls to the SendSystemEmail method.
 		SendSystemEmail []struct {
 			// Ctx is the ctx argument value.
@@ -1272,6 +1298,8 @@ type ServiceMock struct {
 	lockSegmentList                             sync.RWMutex
 	lockSegmentPreview                          sync.RWMutex
 	lockSegmentUpdate                           sync.RWMutex
+	lockSendEmailWithSMTP                       sync.RWMutex
+	lockSendEmailWithSparkpost                  sync.RWMutex
 	lockSendSystemEmail                         sync.RWMutex
 	lockSubscriptionListCreate                  sync.RWMutex
 	lockSubscriptionListList                    sync.RWMutex
@@ -3600,6 +3628,78 @@ func (mock *ServiceMock) SegmentUpdateCalls() []struct {
 	mock.lockSegmentUpdate.RLock()
 	calls = mock.calls.SegmentUpdate
 	mock.lockSegmentUpdate.RUnlock()
+	return calls
+}
+
+// SendEmailWithSMTP calls SendEmailWithSMTPFunc.
+func (mock *ServiceMock) SendEmailWithSMTP(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+	if mock.SendEmailWithSMTPFunc == nil {
+		panic("ServiceMock.SendEmailWithSMTPFunc: method is nil but Service.SendEmailWithSMTP was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		Data *dto.SendMessage
+	}{
+		Ctx:  ctx,
+		Data: data,
+	}
+	mock.lockSendEmailWithSMTP.Lock()
+	mock.calls.SendEmailWithSMTP = append(mock.calls.SendEmailWithSMTP, callInfo)
+	mock.lockSendEmailWithSMTP.Unlock()
+	return mock.SendEmailWithSMTPFunc(ctx, data)
+}
+
+// SendEmailWithSMTPCalls gets all the calls that were made to SendEmailWithSMTP.
+// Check the length with:
+//
+//	len(mockedService.SendEmailWithSMTPCalls())
+func (mock *ServiceMock) SendEmailWithSMTPCalls() []struct {
+	Ctx  context.Context
+	Data *dto.SendMessage
+} {
+	var calls []struct {
+		Ctx  context.Context
+		Data *dto.SendMessage
+	}
+	mock.lockSendEmailWithSMTP.RLock()
+	calls = mock.calls.SendEmailWithSMTP
+	mock.lockSendEmailWithSMTP.RUnlock()
+	return calls
+}
+
+// SendEmailWithSparkpost calls SendEmailWithSparkpostFunc.
+func (mock *ServiceMock) SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+	if mock.SendEmailWithSparkpostFunc == nil {
+		panic("ServiceMock.SendEmailWithSparkpostFunc: method is nil but Service.SendEmailWithSparkpost was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		Data *dto.SendMessage
+	}{
+		Ctx:  ctx,
+		Data: data,
+	}
+	mock.lockSendEmailWithSparkpost.Lock()
+	mock.calls.SendEmailWithSparkpost = append(mock.calls.SendEmailWithSparkpost, callInfo)
+	mock.lockSendEmailWithSparkpost.Unlock()
+	return mock.SendEmailWithSparkpostFunc(ctx, data)
+}
+
+// SendEmailWithSparkpostCalls gets all the calls that were made to SendEmailWithSparkpost.
+// Check the length with:
+//
+//	len(mockedService.SendEmailWithSparkpostCalls())
+func (mock *ServiceMock) SendEmailWithSparkpostCalls() []struct {
+	Ctx  context.Context
+	Data *dto.SendMessage
+} {
+	var calls []struct {
+		Ctx  context.Context
+		Data *dto.SendMessage
+	}
+	mock.lockSendEmailWithSparkpost.RLock()
+	calls = mock.calls.SendEmailWithSparkpost
+	mock.lockSendEmailWithSparkpost.RUnlock()
 	return calls
 }
 

@@ -26,7 +26,7 @@ const OpenTrackingBlockDefinition: BlockDefinitionInterface = {
     )
   },
 
-  renderEditor: (props: BlockEditorRendererProps) => {
+  renderEditor: (_props: BlockEditorRendererProps) => {
     return (
       <div
         style={{
@@ -37,7 +37,7 @@ const OpenTrackingBlockDefinition: BlockDefinitionInterface = {
           borderRadius: '4px'
         }}
       >
-        OPEN_TRACKING_PIXEL
+        OPEN TRACKING PIXEL
       </div>
     )
   },

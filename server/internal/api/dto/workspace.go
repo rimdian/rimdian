@@ -76,6 +76,7 @@ type WorkspaceSettingsUpdate struct {
 	EmailTemplateBlocks        *entity.EmailTemplateBlocks `json:"email_template_blocks,omitempty"`
 	TransactionalEmailProvider *entity.EmailProvider       `json:"transactional_email_provider,omitempty"`
 	MarketingEmailProvider     *entity.EmailProvider       `json:"marketing_email_provider,omitempty"`
+	// TODO: add more settings here
 }
 
 type WorkspaceListResult struct {

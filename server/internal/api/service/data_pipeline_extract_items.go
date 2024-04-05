@@ -492,9 +492,9 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 
 			// check if template contains a double optin link
 			if strings.Contains(message.MessageTemplate.Email.Content, entity.DoubleOptInKeyword) {
-				doubleOptInLink, err := GenerateDoubleOptInLink(pipe.Config.COLLECTOR_ENDPOINT, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+				doubleOptInLink, err := GenerateEmailLink(pipe.Config.COLLECTOR_ENDPOINT, entity.DoubleOptInPath, pipe.Workspace.ID, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
 				if err != nil {
-					pipe.SetError("server", fmt.Sprintf("GenerateDoubleOptInLink err %v", err), false)
+					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
 					return
 				}
 
@@ -503,13 +503,24 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 
 			// check if template contains an unsubscribe link
 			if strings.Contains(message.MessageTemplate.Email.Content, entity.UnsubscribeKeyword) {
-				unsubLink, err := GenerateEmailUnsubscribeLink(pipe.Config.COLLECTOR_ENDPOINT, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+				unsubLink, err := GenerateEmailLink(pipe.Config.COLLECTOR_ENDPOINT, entity.UnsubscribeEmailPath, pipe.Workspace.ID, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
 				if err != nil {
-					pipe.SetError("server", fmt.Sprintf("GenerateEmailUnsubscribeLink err %v", err), false)
+					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
 					return
 				}
 
 				message.Data[entity.UnsubscribeKeyword] = unsubLink
+			}
+
+			// check if template contains an unsubscribe link
+			if strings.Contains(message.MessageTemplate.Email.Content, entity.OpenTrackingPixelKeyword) {
+				openTrackingPixelSrc, err := GenerateEmailLink(pipe.Config.COLLECTOR_ENDPOINT, entity.OpenTrackingEmailPath, pipe.Workspace.ID, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+				if err != nil {
+					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
+					return
+				}
+
+				message.Data[entity.OpenTrackingPixelKeyword] = openTrackingPixelSrc
 			}
 		}
 	}

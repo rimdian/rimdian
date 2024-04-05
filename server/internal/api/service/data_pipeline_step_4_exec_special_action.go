@@ -105,11 +105,14 @@ func EnqueueMessage(ctx context.Context, pipe *DataLogPipeline) {
 		return
 	}
 
-	html, err := CompileNunjucksTemplate(template.Email.Content, jsonData)
+	var html string
+	if template.Email.Content != "" {
+		html, err = CompileNunjucksTemplate(template.Email.Content, jsonData)
 
-	if err != nil {
-		pipe.SetError("server", fmt.Sprintf("nunjucks html err %v", err), false)
-		return
+		if err != nil {
+			pipe.SetError("server", fmt.Sprintf("nunjucks html err %v", err), false)
+			return
+		}
 	}
 
 	var text string
@@ -126,9 +129,27 @@ func EnqueueMessage(ctx context.Context, pipe *DataLogPipeline) {
 	log.Printf("text: %v", text)
 
 	queueName := MarketingMessageQueue
+	isTransactional := false
 
 	if pipe.DataLog.UpsertedMessage.IsTransactional != nil && *pipe.DataLog.UpsertedMessage.IsTransactional {
+		isTransactional = true
 		queueName = TransactionalMessageQueue
+	}
+
+	// email provider
+	var emailProvider entity.EmailProvider
+	if isTransactional {
+		if pipe.Workspace.MessagingSettings.TransactionalEmailProvider == nil {
+			pipe.SetError("server", "no transactional email provider", false)
+			return
+		}
+		emailProvider = *pipe.Workspace.MessagingSettings.TransactionalEmailProvider
+	} else {
+		if pipe.Workspace.MessagingSettings.MarketingEmailProvider == nil {
+			pipe.SetError("server", "no marketing email provider", false)
+			return
+		}
+		emailProvider = *pipe.Workspace.MessagingSettings.MarketingEmailProvider
 	}
 
 	payload := dto.SendMessage{
@@ -141,15 +162,15 @@ func EnqueueMessage(ctx context.Context, pipe *DataLogPipeline) {
 		Channel:             pipe.DataLog.UpsertedMessage.Channel,
 		ScheduledAt:         pipe.DataLog.UpsertedMessage.ScheduledAt,
 		Email: &dto.SendMessageEmail{
+			FromAdrress:     template.Email.FromAdrress,
+			FromName:        template.Email.FromName,
+			ReplyTo:         template.Email.ReplyTo,
+			ToAdrress:       pipe.DataLog.UpsertedUser.Email.String,
 			Subject:         subject,
 			HTML:            html,
 			Text:            text,
-			IsTransactional: *pipe.DataLog.UpsertedMessage.IsTransactional,
-			// TODO:
-			Provider: "sparkpost",
-			SparkPostCrendentials: &dto.SparkPostCrendentials{
-				EncryptedApiKey: "TODO",
-			},
+			IsTransactional: isTransactional,
+			EmailProvider:   emailProvider,
 		},
 	}
 
@@ -197,15 +218,18 @@ func CompileNunjucksTemplate(templateString string, jsonData string) (result str
 	return string(output), nil
 }
 
-func GenerateDoubleOptInLink(endpoint string, secretKey string, list *entity.SubscriptionList, user *entity.User) (token string, err error) {
+func GenerateEmailLink(endpoint string, path string, secretKey string, workspaceID string, list *entity.SubscriptionList, user *entity.User) (token string, err error) {
 
 	// create a token with custom claims
 	pasetoToken := paseto.NewToken()
 	pasetoToken.SetAudience(endpoint)
 	pasetoToken.SetIssuedAt(time.Now())
-	pasetoToken.SetString("lid", list.ID)
-	pasetoToken.SetString("lname", list.Name)
+	pasetoToken.SetString("wid", workspaceID)
 	pasetoToken.SetString("email", user.Email.String)
+	if list != nil {
+		pasetoToken.SetString("lid", list.ID)
+		pasetoToken.SetString("lname", list.Name)
+	}
 
 	if user.IsAuthenticated {
 		pasetoToken.SetString("auth_uid", user.ExternalID)
@@ -215,32 +239,8 @@ func GenerateDoubleOptInLink(endpoint string, secretKey string, list *entity.Sub
 
 	key, err := paseto.V4SymmetricKeyFromBytes([]byte(secretKey))
 	if err != nil {
-		return "", eris.Wrap(err, "GenerateDoubleOptInLink V4SymmetricKeyFromBytes")
+		return "", eris.Wrap(err, "GenerateEmailLink V4SymmetricKeyFromBytes")
 	}
 
-	return endpoint + entity.DoubleOptInPath + "?token=" + pasetoToken.V4Encrypt(key, nil), nil
-}
-
-func GenerateEmailUnsubscribeLink(endpoint string, secretKey string, list *entity.SubscriptionList, user *entity.User) (token string, err error) {
-
-	// create a token with custom claims
-	pasetoToken := paseto.NewToken()
-	pasetoToken.SetAudience(endpoint)
-	pasetoToken.SetIssuedAt(time.Now())
-	pasetoToken.SetString("lid", list.ID)
-	pasetoToken.SetString("lname", list.Name)
-	pasetoToken.SetString("email", user.Email.String)
-
-	if user.IsAuthenticated {
-		pasetoToken.SetString("auth_uid", user.ExternalID)
-	} else {
-		pasetoToken.SetString("anon_uid", user.ExternalID)
-	}
-
-	key, err := paseto.V4SymmetricKeyFromBytes([]byte(secretKey))
-	if err != nil {
-		return "", eris.Wrap(err, "GenerateEmailUnsubscribeLink V4SymmetricKeyFromBytes")
-	}
-
-	return endpoint + entity.UnsubscribeEmailPath + "?token=" + pasetoToken.V4Encrypt(key, nil), nil
+	return endpoint + path + "?token=" + pasetoToken.V4Encrypt(key, nil), nil
 }

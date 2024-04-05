@@ -4,6 +4,7 @@ import { Tooltip, Popconfirm, Modal, Form, Button, Spin, Input, message, Select 
 import { DragOutlined, DeleteOutlined, CopyOutlined, SaveOutlined } from '@ant-design/icons'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { EmailTemplateBlock } from 'interfaces'
+import uuid from 'short-uuid'
 
 const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
   const [saveVisible, setSaveVisible] = useState(false)
@@ -26,18 +27,29 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
       .then((values: any) => {
         setLoading(true)
 
-        const data: any = {
-          workspace_id: workspaceCtx.workspace.id,
-          block: JSON.stringify(props.block),
-          name: values.name
+        const blocks = [...workspaceCtx.workspace.messaging_settings.email_template_blocks]
+
+        if (values.operation === 'create') {
+          blocks.push({
+            id: uuid.generate(),
+            name: values.name,
+            content: JSON.stringify(props.block)
+          })
+        } else {
+          const block = blocks.find((x: EmailTemplateBlock) => x.id === values.id)
+          if (block) {
+            block.name = values.name
+            block.content = JSON.stringify(props.block)
+          }
         }
 
-        if (values.operation === 'update') {
-          data.id = values.id
+        const data: any = {
+          id: workspaceCtx.workspace.id,
+          email_template_blocks: blocks
         }
 
         workspaceCtx
-          .apiPOST('/emailBlock.' + values.operation, data)
+          .apiPOST('/workspace.settings', data)
           .then(() => {
             if (values.operation === 'create') {
               message.success('The block has been saved!')

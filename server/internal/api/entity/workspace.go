@@ -214,6 +214,26 @@ func (x *EmailProvider) Validate() error {
 	return nil
 }
 
+func (x *EmailProvider) Decrypt(secretKey string) error {
+	if x.EncryptedUsername != nil {
+		decryptedUsername, err := common.DecryptFromHexString(*x.EncryptedUsername, secretKey)
+		if err != nil {
+			return err
+		}
+		x.Username = &decryptedUsername
+	}
+
+	if x.EncryptedPassword != nil {
+		decryptedPassword, err := common.DecryptFromHexString(*x.EncryptedPassword, secretKey)
+		if err != nil {
+			return err
+		}
+		x.Password = &decryptedPassword
+	}
+
+	return nil
+}
+
 type MessagingSettings struct {
 	EmailTemplateBlocks        EmailTemplateBlocks `json:"email_template_blocks"`
 	TransactionalEmailProvider *EmailProvider      `json:"transactional_email_provider,omitempty"`

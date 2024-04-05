@@ -20,11 +20,13 @@ var (
 	MessageStatusUnsubscribed = int64(90)
 	MessageStatusComplained   = int64(100)
 
-	DoubleOptInKeyword = "double_opt_in_link"
-	UnsubscribeKeyword = "unsubscribe_link"
+	DoubleOptInKeyword       = "double_opt_in_link"
+	UnsubscribeKeyword       = "unsubscribe_link"
+	OpenTrackingPixelKeyword = "open_tracking_pixel_src"
 
-	DoubleOptInPath      = "/double-opt-in"
-	UnsubscribeEmailPath = "/unsubscribe-email"
+	DoubleOptInPath       = "/double-opt-in"
+	UnsubscribeEmailPath  = "/unsubscribe-email"
+	OpenTrackingEmailPath = "/open-email"
 
 	// computed fields should be excluded from SELECT/INSERT while cloning rows
 	MessageComputedFields []string = []string{

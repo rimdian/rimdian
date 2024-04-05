@@ -126,6 +126,8 @@ type Service interface {
 
 	// message
 	MessageSend(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult)
+	SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult)
+	SendEmailWithSMTP(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult)
 
 	// data hook
 	DataHookUpdate(ctx context.Context, accountID string, dataHookDTO *dto.DataHook) (updatedWorkspace *entity.Workspace, code int, err error)

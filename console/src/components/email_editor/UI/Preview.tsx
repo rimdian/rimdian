@@ -784,7 +784,7 @@ const treeToMjmlJSON = (
       return {
         tagName: 'mj-image',
         attributes: {
-          src: 'OPEN_TRACKING_PIXEL_SRC',
+          src: '{{ open_tracking_pixel_src }}',
           alt: '',
           height: '1px',
           width: '1px'

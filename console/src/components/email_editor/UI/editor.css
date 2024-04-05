@@ -331,6 +331,11 @@ body:not(.smooth-dnd-no-user-select) .rmdeditor-block-content.rmdeditor-selected
     /* box-shadow: 0px 0px 8px 0px rgba(3,169,244,1); */
 }
 
+.rmdeditor-ui-saved-block-delete {
+    float: right;
+}
+
+
 .rmdeditor-ui-block.rmdeditor-square {
     vertical-align: middle;
 }

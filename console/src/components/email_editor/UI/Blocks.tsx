@@ -42,13 +42,18 @@ export const Blocks = (props: BlocksProps) => {
           key="2"
           style={{ paddingLeft: 0, paddingRight: 0, paddingTop: 12, marginBottom: 0 }}
         >
-          {props.savedBlocks.map((b: any, i: number) => {
+          {props.savedBlocks.map((b: EmailTemplateBlock, i: number) => {
             return (
               <div key={i}>
                 {props.renderSavedBlockForMenu(
-                  JSON.parse(b.block),
+                  JSON.parse(b.content),
                   <Tooltip title={b.name}>
                     <div className="rmdeditor-ui-saved-block">
+                      {/* <Popconfirm title="Are you sure to delete this block?" onConfirm={() => {}}>
+                        <div className="rmdeditor-ui-saved-block-delete">
+                          <FontAwesomeIcon icon={faTrashAlt} />{' '}
+                        </div>
+                      </Popconfirm> */}
                       {truncate(b.name, { length: 20 })}
                     </div>
                   </Tooltip>

@@ -36,7 +36,6 @@ const FindBlockById = (currentBlock: BlockInterface, id: string): BlockInterface
 export const Layout = (props: any): JSX.Element => {
   const editor: EditorContextValue = useEditorContext()
   const [isPreview, setIsPreview] = useState(false)
-  // const [fullscreen, setFullscreen] = useState(false)
 
   // console.log('render')
 

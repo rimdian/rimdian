@@ -82,6 +82,11 @@ func NewCollector(cfg *Config, taskClient taskorchestrator.Client, netClient htt
 	r.Post("/bypass", collector.Sync)          // bypass task queue and hit API directly
 	r.Post("/sync", collector.Sync)            // bypass task queue and hit API directly
 
+	// message tracking
+	r.Get("/double-opt-in", collector.DoubleOptIn)
+	r.Get("/unsubscribe-email", collector.UnsubscribeEmail)
+	r.Get("/open-email", collector.OpenEmail)
+
 	return collector
 }
 
@@ -96,6 +101,36 @@ func (collector *Collector) AsyncHistorical(w http.ResponseWriter, r *http.Reque
 // sync will bypass the tasks queue and hit the API directly
 func (collector *Collector) Sync(w http.ResponseWriter, r *http.Request) {
 	collector.ForwardData(QueueSync, w, r)
+}
+
+// email double opt-in link
+func (collector *Collector) DoubleOptIn(w http.ResponseWriter, r *http.Request) {
+	// TODO: implement
+	// 1. verify token
+	// 2. posts a message datalog to confirm email
+	// 3. show success message
+
+	w.Write([]byte("TODO"))
+}
+
+// email unsubscribe link
+func (collector *Collector) UnsubscribeEmail(w http.ResponseWriter, r *http.Request) {
+	// TODO: implement
+	// 1. verify token
+	// 2. posts a message datalog to unsubscribe email
+	// 3. show success message
+
+	w.Write([]byte("TODO"))
+}
+
+// email open tracking
+func (collector *Collector) OpenEmail(w http.ResponseWriter, r *http.Request) {
+	// TODO: implement
+	// 1. verify token
+	// 2. posts a message datalog to unsubscribe email
+	// 3. show success message
+
+	w.Write([]byte("TODO"))
 }
 
 func (collector *Collector) ForwardData(mode string, w http.ResponseWriter, r *http.Request) {

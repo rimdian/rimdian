@@ -240,7 +240,10 @@ func (collector *Collector) OpenEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("TODO"))
+	// return a 1x1 transparent PNG pixel
+	w.Header().Set("Content-Type", "image/png")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lPAAAAABJRU5ErkJggg=="))
 }
 
 func (collector *Collector) ForwardData(mode string, w http.ResponseWriter, r *http.Request) {

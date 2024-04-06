@@ -51,6 +51,7 @@ const (
 type EmailTokenClaims struct {
 	IssuedAt             time.Time `json:"iat"`
 	WorkspaceID          string    `json:"wid"`
+	Channel              string    `json:"ch"` // email...
 	DataLogID            string    `json:"dlid"`
 	MessageExternalID    string    `json:"mxid"`
 	Email                string    `json:"email"`
@@ -72,6 +73,9 @@ func (x *EmailTokenClaims) Validate() error {
 	}
 	if x.MessageExternalID == "" {
 		return errors.New("missing message_external_id")
+	}
+	if x.Channel == "" {
+		return errors.New("missing channel")
 	}
 	if x.Email == "" {
 		return errors.New("missing email")

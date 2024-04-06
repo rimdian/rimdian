@@ -50,6 +50,7 @@ func GenerateEmailLink(opts GenerateEmailLinkOptions) (token string, err error) 
 
 	// claims should follow the dto.EmailTokenClaims struct
 	pasetoToken.SetIssuedAt(time.Now())
+	pasetoToken.SetString("ch", "email") // channel
 	pasetoToken.SetString("dlid", opts.DataLogID)
 	pasetoToken.SetString("mxid", opts.MessageExternalID)
 	pasetoToken.SetString("wid", opts.WorkspaceID)

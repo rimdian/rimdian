@@ -191,7 +191,8 @@ func (pipe *DataLogPipeline) CreateDataLogFromQueue(ctx context.Context) {
 		"cart",
 		"postview",
 		"custom_event",
-		"subscription_list_user") {
+		"subscription_list_user",
+		"message") {
 		// check if kind starts with "app_"
 		if strings.HasPrefix(pipe.DataLog.Kind, "app_") || strings.HasPrefix(pipe.DataLog.Kind, "appx_") {
 			return

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"aidanwoods.dev/go-paseto"
 	"github.com/asaskevich/govalidator"
 	"github.com/rimdian/rimdian/internal/api/common"
 	"github.com/rimdian/rimdian/internal/common/auth"
@@ -41,7 +42,60 @@ const (
 	DataLogOriginInternalDataLog                    // 2 = Internal data_log item (ie: user_alias)
 	DataLogOriginInternalWorkflow                   // 3 = Internal workflow
 	DataLogOriginInternalTaskExec                   // 4 = Internal task_exec
+
+	DoubleOptInPath       = "/double-opt-in"
+	UnsubscribeEmailPath  = "/unsubscribe-email"
+	OpenTrackingEmailPath = "/open-email"
 )
+
+type EmailTokenClaims struct {
+	IssuedAt             time.Time `json:"iat"`
+	WorkspaceID          string    `json:"wid"`
+	DataLogID            string    `json:"dlid"`
+	MessageExternalID    string    `json:"mxid"`
+	Email                string    `json:"email"`
+	SubscriptionListID   string    `json:"lid"`
+	SubscriptionListName string    `json:"lname"`
+	AuthUID              *string   `json:"auth_uxid,omitempty"`
+	AnonUID              *string   `json:"anon_uxid,omitempty"`
+	// computed
+	UserExternalID  string
+	IsAuthenticated bool
+}
+
+func (x *EmailTokenClaims) Validate() error {
+	if x.WorkspaceID == "" {
+		return errors.New("missing workspace_id")
+	}
+	if x.DataLogID == "" {
+		return errors.New("missing datalog_id")
+	}
+	if x.MessageExternalID == "" {
+		return errors.New("missing message_external_id")
+	}
+	if x.Email == "" {
+		return errors.New("missing email")
+	}
+	if x.SubscriptionListID == "" {
+		return errors.New("missing list_id")
+	}
+	if x.SubscriptionListName == "" {
+		return errors.New("missing list_name")
+	}
+
+	// set computed fields
+	if x.AuthUID != nil {
+		x.UserExternalID = *x.AuthUID
+		x.IsAuthenticated = true
+	} else if x.AnonUID != nil {
+		x.UserExternalID = *x.AnonUID
+		x.IsAuthenticated = false
+	} else {
+		return errors.New("missing auth or anon user ID")
+	}
+
+	return nil
+}
 
 type DataLogInQueue struct {
 	ID       string         `json:"id"` // hash of the payload
@@ -54,6 +108,143 @@ type DataLogInQueue struct {
 
 func (x *DataLogInQueue) ComputeID(secretKey string) {
 	x.ID = ComputeDataLogID(secretKey, x.Origin, x.Item)
+}
+
+func NewDataLogInQueueFromEmailToken(route string, token string, ip string, apiEndpoint string, secretKey string) (row *DataLogInQueue, claims *EmailTokenClaims, code int, err error) {
+
+	if token == "" {
+		return nil, nil, http.StatusUnauthorized, errors.New("missing token")
+	}
+
+	// 1. verify token
+	parser := paseto.NewParser()
+	parser.AddRule(paseto.ForAudience(apiEndpoint))
+
+	key, err := paseto.V4SymmetricKeyFromBytes([]byte(secretKey))
+	if err != nil {
+		return nil, nil, http.StatusUnauthorized, err
+	}
+
+	pasetoToken, err := parser.ParseV4Local(key, token, nil)
+
+	if err != nil {
+		return nil, nil, http.StatusUnauthorized, err
+	}
+
+	// extract claims
+	if err := json.Unmarshal(pasetoToken.ClaimsJSON(), &claims); err != nil {
+		return nil, nil, http.StatusUnauthorized, err
+	}
+
+	// if authUID == nil && anonUID == nil {
+	// 	return nil, http.StatusUnauthorized, errors.New("missing auth or anon user ID in token")
+	// }
+
+	if err := claims.Validate(); err != nil {
+		return nil, nil, http.StatusUnauthorized, err
+	}
+
+	var item string
+	now := time.Now().Format(time.RFC3339)
+
+	switch route {
+	case DoubleOptInPath:
+		// status 1 = active subscription + reset eventual comment
+		item = fmt.Sprintf(`{
+			"kind": "subscription_list_user",
+			"subscription_list_user": {
+				"subscription_list_id": "%v",
+				"status": 1,
+				"comment": null,
+				"created_at": "%v",
+				"updated_at": "%v"
+			},
+			"user": {
+				"external_id": "%v",
+				"is_authenticated": %t,
+				"created_at": "%v"
+			}
+		}`,
+			claims.SubscriptionListID,
+			claims.IssuedAt.Format(time.RFC3339),
+			now,
+			claims.UserExternalID,
+			claims.IsAuthenticated,
+			now,
+		)
+
+	case UnsubscribeEmailPath:
+		// status 3 = unsubscribed
+		item = fmt.Sprintf(`{
+			"kind": "subscription_list_user",
+			"subscription_list_user": {
+				"subscription_list_id": "%v",
+				"status": 3,
+				"comment": "unsubscribed",
+				"created_at": "%v",
+				"updated_at": "%v"
+			},
+			"user": {
+				"external_id": "%v",
+				"is_authenticated": %t,
+				"created_at": "%v"
+			}
+		}`,
+			claims.SubscriptionListID,
+			claims.IssuedAt.Format(time.RFC3339),
+			now,
+			claims.UserExternalID,
+			claims.IsAuthenticated,
+			now,
+		)
+
+	case OpenTrackingEmailPath:
+		// set first_open_at to now
+		item = fmt.Sprintf(`{
+			"kind": "message",
+			"message": {
+				"external_id": "%v",
+				"created_at": "%v",
+				"updated_at": "%v",
+				"channel": "email",
+				"first_open_at": "%v"
+			},
+			"user": {
+				"external_id": "%v",
+				"is_authenticated": %t,
+				"created_at": "%v"
+			}
+		}`,
+			claims.MessageExternalID,
+			claims.IssuedAt.Format(time.RFC3339),
+			now,
+			now,
+			claims.UserExternalID,
+			claims.IsAuthenticated,
+			now,
+		)
+
+	default:
+		return nil, nil, http.StatusUnauthorized, errors.New("invalid route")
+	}
+
+	origin := DataLogOriginInternalDataLog
+
+	// create the row
+	row = &DataLogInQueue{
+		ID:       ComputeDataLogID(secretKey, origin, item),
+		Origin:   origin,
+		OriginID: claims.DataLogID,
+		Context: DataLogContext{
+			WorkspaceID:      claims.WorkspaceID,
+			ReceivedAt:       time.Now(),
+			IP:               ip,
+			HeadersAndParams: MapOfStrings{},
+		},
+		Item: item,
+	}
+
+	return row, claims, 200, nil
 }
 
 func NewDataLogInQueueFromRequest(r *http.Request, secretKey string) (rows []*DataLogInQueue, code int, err error) {

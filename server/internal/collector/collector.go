@@ -23,6 +23,7 @@ import (
 	"github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rimdian/rimdian/internal/common/httpClient"
 	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
+	"github.com/rimdian/rimdian/internal/common/utils"
 	"github.com/rotisserie/eris"
 	"github.com/sirupsen/logrus"
 )
@@ -83,9 +84,9 @@ func NewCollector(cfg *Config, taskClient taskorchestrator.Client, netClient htt
 	r.Post("/sync", collector.Sync)            // bypass task queue and hit API directly
 
 	// message tracking
-	r.Get("/double-opt-in", collector.DoubleOptIn)
-	r.Get("/unsubscribe-email", collector.UnsubscribeEmail)
-	r.Get("/open-email", collector.OpenEmail)
+	r.Get(dto.DoubleOptInPath, collector.DoubleOptIn)
+	r.Get(dto.UnsubscribeEmailPath, collector.UnsubscribeEmail)
+	r.Get(dto.OpenTrackingEmailPath, collector.OpenEmail)
 
 	return collector
 }
@@ -105,30 +106,139 @@ func (collector *Collector) Sync(w http.ResponseWriter, r *http.Request) {
 
 // email double opt-in link
 func (collector *Collector) DoubleOptIn(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement
-	// 1. verify token
-	// 2. posts a message datalog to confirm email
-	// 3. show success message
+	token := r.URL.Query().Get("token")
 
-	w.Write([]byte("TODO"))
+	ip := utils.GetIPAdress(r)
+
+	row, claims, code, err := dto.NewDataLogInQueueFromEmailToken(dto.DoubleOptInPath, token, ip, collector.Config.API_ENDPOINT, collector.Config.SECRET_KEY)
+	if err != nil {
+		log.Printf("DoubleOptIn err  %+v\n", err)
+		http.Error(w, err.Error(), code)
+		return
+	}
+
+	log.Printf("row %+v\n", row)
+	log.Printf("claims %+v\n", claims)
+
+	// push row to live queue
+	cloudTask := &taskorchestrator.TaskRequest{
+		QueueLocation:    collector.Config.TASK_QUEUE_LOCATION,
+		QueueName:        collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
+		PostEndpoint:     fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
+		Payload:          row,
+		DeduplicationKey: &row.ID,
+	}
+
+	// 28 secs max (graceful shutdown is at 30 secs)
+	retry := retrier.New(retrier.ConstantBackoff(14, 2*time.Second), nil)
+
+	errRetry := retry.Run(func() error {
+		err := collector.TaskOrchestratorClient.PostRequest(context.Background(), cloudTask)
+		// ignore error if it contains "AlreadyExists", its a duplicated task
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			return nil
+		}
+		return err
+	})
+
+	if errRetry != nil {
+		log.Printf("Task error: %v", errRetry)
+		http.Error(w, "Task error", 500)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Subscription confirmed!"))
 }
 
 // email unsubscribe link
 func (collector *Collector) UnsubscribeEmail(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement
-	// 1. verify token
-	// 2. posts a message datalog to unsubscribe email
-	// 3. show success message
+	token := r.URL.Query().Get("token")
+
+	ip := utils.GetIPAdress(r)
+
+	row, claims, code, err := dto.NewDataLogInQueueFromEmailToken(dto.UnsubscribeEmailPath, token, ip, collector.Config.API_ENDPOINT, collector.Config.SECRET_KEY)
+	if err != nil {
+		log.Printf("UnsubscribeEmail err  %+v\n", err)
+		http.Error(w, err.Error(), code)
+		return
+	}
+
+	log.Printf("row %+v\n", row)
+	log.Printf("claims %+v\n", claims)
+
+	// push row to live queue
+	cloudTask := &taskorchestrator.TaskRequest{
+		QueueLocation:    collector.Config.TASK_QUEUE_LOCATION,
+		QueueName:        collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
+		PostEndpoint:     fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
+		Payload:          row,
+		DeduplicationKey: &row.ID,
+	}
+
+	// 28 secs max (graceful shutdown is at 30 secs)
+	retry := retrier.New(retrier.ConstantBackoff(14, 2*time.Second), nil)
+
+	errRetry := retry.Run(func() error {
+		err := collector.TaskOrchestratorClient.PostRequest(context.Background(), cloudTask)
+		// ignore error if it contains "AlreadyExists", its a duplicated task
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			return nil
+		}
+		return err
+	})
+
+	if errRetry != nil {
+		log.Printf("Task error: %v", errRetry)
+		http.Error(w, "Task error", 500)
+		return
+	}
 
 	w.Write([]byte("TODO"))
 }
 
 // email open tracking
 func (collector *Collector) OpenEmail(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement
-	// 1. verify token
-	// 2. posts a message datalog to unsubscribe email
-	// 3. show success message
+	token := r.URL.Query().Get("token")
+
+	ip := utils.GetIPAdress(r)
+
+	row, claims, code, err := dto.NewDataLogInQueueFromEmailToken(dto.OpenTrackingEmailPath, token, ip, collector.Config.API_ENDPOINT, collector.Config.SECRET_KEY)
+	if err != nil {
+		log.Printf("OpenEmail err  %+v\n", err)
+		http.Error(w, err.Error(), code)
+		return
+	}
+
+	log.Printf("row %+v\n", row)
+	log.Printf("claims %+v\n", claims)
+
+	// push row to live queue
+	cloudTask := &taskorchestrator.TaskRequest{
+		QueueLocation:    collector.Config.TASK_QUEUE_LOCATION,
+		QueueName:        collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
+		PostEndpoint:     fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
+		Payload:          row,
+		DeduplicationKey: &row.ID,
+	}
+
+	// 28 secs max (graceful shutdown is at 30 secs)
+	retry := retrier.New(retrier.ConstantBackoff(14, 2*time.Second), nil)
+
+	errRetry := retry.Run(func() error {
+		err := collector.TaskOrchestratorClient.PostRequest(context.Background(), cloudTask)
+		// ignore error if it contains "AlreadyExists", its a duplicated task
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			return nil
+		}
+		return err
+	})
+
+	if errRetry != nil {
+		log.Printf("Task error: %v", errRetry)
+		http.Error(w, "Task error", 500)
+		return
+	}
 
 	w.Write([]byte("TODO"))
 }

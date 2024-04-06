@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"aidanwoods.dev/go-paseto"
 	"github.com/rotisserie/eris"
 	"github.com/tidwall/gjson"
 )
@@ -24,15 +25,53 @@ var (
 	UnsubscribeKeyword       = "unsubscribe_link"
 	OpenTrackingPixelKeyword = "open_tracking_pixel_src"
 
-	DoubleOptInPath       = "/double-opt-in"
-	UnsubscribeEmailPath  = "/unsubscribe-email"
-	OpenTrackingEmailPath = "/open-email"
-
 	// computed fields should be excluded from SELECT/INSERT while cloning rows
 	MessageComputedFields []string = []string{
 		"created_at_trunc",
 	}
 )
+
+type GenerateEmailLinkOptions struct {
+	DataLogID         string
+	MessageExternalID string
+	APIEndpoint       string
+	Path              string
+	SecretKey         string
+	WorkspaceID       string
+	SubscriptionList  *SubscriptionList
+	User              *User
+}
+
+func GenerateEmailLink(opts GenerateEmailLinkOptions) (token string, err error) {
+
+	// create a token with custom claims
+	pasetoToken := paseto.NewToken()
+	pasetoToken.SetAudience(opts.APIEndpoint)
+
+	// claims should follow the dto.EmailTokenClaims struct
+	pasetoToken.SetIssuedAt(time.Now())
+	pasetoToken.SetString("dlid", opts.DataLogID)
+	pasetoToken.SetString("mxid", opts.MessageExternalID)
+	pasetoToken.SetString("wid", opts.WorkspaceID)
+	pasetoToken.SetString("email", opts.User.Email.String)
+	if opts.SubscriptionList != nil {
+		pasetoToken.SetString("lid", opts.SubscriptionList.ID)
+		pasetoToken.SetString("lname", opts.SubscriptionList.Name)
+	}
+
+	if opts.User.IsAuthenticated {
+		pasetoToken.SetString("auth_uxid", opts.User.ExternalID)
+	} else {
+		pasetoToken.SetString("anon_uxid", opts.User.ExternalID)
+	}
+
+	key, err := paseto.V4SymmetricKeyFromBytes([]byte(opts.SecretKey))
+	if err != nil {
+		return "", eris.Wrap(err, "GenerateEmailLink V4SymmetricKeyFromBytes")
+	}
+
+	return opts.APIEndpoint + opts.Path + "?token=" + pasetoToken.V4Encrypt(key, nil), nil
+}
 
 type Message struct {
 	ID               string          `db:"id" json:"id"`

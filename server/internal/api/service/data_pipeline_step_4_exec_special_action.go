@@ -7,9 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"time"
 
-	"aidanwoods.dev/go-paseto"
 	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
@@ -216,31 +214,4 @@ func CompileNunjucksTemplate(templateString string, jsonData string) (result str
 	}
 
 	return string(output), nil
-}
-
-func GenerateEmailLink(endpoint string, path string, secretKey string, workspaceID string, list *entity.SubscriptionList, user *entity.User) (token string, err error) {
-
-	// create a token with custom claims
-	pasetoToken := paseto.NewToken()
-	pasetoToken.SetAudience(endpoint)
-	pasetoToken.SetIssuedAt(time.Now())
-	pasetoToken.SetString("wid", workspaceID)
-	pasetoToken.SetString("email", user.Email.String)
-	if list != nil {
-		pasetoToken.SetString("lid", list.ID)
-		pasetoToken.SetString("lname", list.Name)
-	}
-
-	if user.IsAuthenticated {
-		pasetoToken.SetString("auth_uid", user.ExternalID)
-	} else {
-		pasetoToken.SetString("anon_uid", user.ExternalID)
-	}
-
-	key, err := paseto.V4SymmetricKeyFromBytes([]byte(secretKey))
-	if err != nil {
-		return "", eris.Wrap(err, "GenerateEmailLink V4SymmetricKeyFromBytes")
-	}
-
-	return endpoint + path + "?token=" + pasetoToken.V4Encrypt(key, nil), nil
 }

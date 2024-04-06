@@ -492,7 +492,16 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 
 			// check if template contains a double optin link
 			if strings.Contains(message.MessageTemplate.Email.Content, entity.DoubleOptInKeyword) {
-				doubleOptInLink, err := GenerateEmailLink(pipe.Config.COLLECTOR_ENDPOINT, entity.DoubleOptInPath, pipe.Workspace.ID, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+				doubleOptInLink, err := entity.GenerateEmailLink(entity.GenerateEmailLinkOptions{
+					DataLogID:         pipe.DataLog.ID,
+					MessageExternalID: message.ExternalID,
+					APIEndpoint:       pipe.Config.API_ENDPOINT,
+					Path:              dto.DoubleOptInPath,
+					WorkspaceID:       pipe.Workspace.ID,
+					SecretKey:         pipe.Config.SECRET_KEY,
+					SubscriptionList:  pipe.DataLog.UpsertedMessage.SubscriptionList,
+					User:              pipe.DataLog.UpsertedUser,
+				})
 				if err != nil {
 					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
 					return
@@ -503,7 +512,17 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 
 			// check if template contains an unsubscribe link
 			if strings.Contains(message.MessageTemplate.Email.Content, entity.UnsubscribeKeyword) {
-				unsubLink, err := GenerateEmailLink(pipe.Config.COLLECTOR_ENDPOINT, entity.UnsubscribeEmailPath, pipe.Workspace.ID, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+				unsubLink, err := entity.GenerateEmailLink(entity.GenerateEmailLinkOptions{
+					DataLogID:         pipe.DataLog.ID,
+					MessageExternalID: message.ExternalID,
+					APIEndpoint:       pipe.Config.API_ENDPOINT,
+					Path:              dto.UnsubscribeEmailPath,
+					WorkspaceID:       pipe.Workspace.ID,
+					SecretKey:         pipe.Config.SECRET_KEY,
+					SubscriptionList:  pipe.DataLog.UpsertedMessage.SubscriptionList,
+					User:              pipe.DataLog.UpsertedUser,
+				})
+
 				if err != nil {
 					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
 					return
@@ -514,7 +533,17 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 
 			// check if template contains an unsubscribe link
 			if strings.Contains(message.MessageTemplate.Email.Content, entity.OpenTrackingPixelKeyword) {
-				openTrackingPixelSrc, err := GenerateEmailLink(pipe.Config.COLLECTOR_ENDPOINT, entity.OpenTrackingEmailPath, pipe.Workspace.ID, pipe.Config.SECRET_KEY, pipe.DataLog.UpsertedMessage.SubscriptionList, pipe.DataLog.UpsertedUser)
+				openTrackingPixelSrc, err := entity.GenerateEmailLink(entity.GenerateEmailLinkOptions{
+					DataLogID:         pipe.DataLog.ID,
+					MessageExternalID: message.ExternalID,
+					APIEndpoint:       pipe.Config.API_ENDPOINT,
+					Path:              dto.OpenTrackingEmailPath,
+					WorkspaceID:       pipe.Workspace.ID,
+					SecretKey:         pipe.Config.SECRET_KEY,
+					SubscriptionList:  pipe.DataLog.UpsertedMessage.SubscriptionList,
+					User:              pipe.DataLog.UpsertedUser,
+				})
+
 				if err != nil {
 					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
 					return

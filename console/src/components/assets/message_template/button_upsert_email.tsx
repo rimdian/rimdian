@@ -325,7 +325,8 @@ const DrawerEmailTemplate = (props: {
                           utm_source: values.utm_source,
                           utm_medium: values.utm_medium,
                           utm_campaign: values.utm_campaign,
-                          utm_content: values.utm_content
+                          utm_content: values.utm_content,
+                          utm_id: '{{ rmd_utm_id }}'
                         }
 
                         const result = ExportHTML(values.email.visual_editor_tree, urlParams)

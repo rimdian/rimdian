@@ -790,7 +790,6 @@ const treeToMjmlJSON = (
           width: '1px'
         }
       }
-      break
 
     default:
       console.log('mjml not implemented', block)

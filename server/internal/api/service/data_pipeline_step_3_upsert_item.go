@@ -177,21 +177,6 @@ func (pipe *DataLogPipeline) StepUpsertItem(ctx context.Context) {
 			}
 		}
 
-		if pipe.DataLog.UpsertedMessage != nil {
-			isChild := true
-			if pipe.DataLog.Kind == "message" {
-				isChild = false
-			}
-
-			// user_id might have been updated by user_alias
-			// so we need to update it
-			pipe.DataLog.UpsertedMessage.UserID = pipe.DataLog.UpsertedUser.ID
-
-			if txErr = pipe.UpsertMessage(spanCtx, isChild, tx); txErr != nil {
-				return 500, txErr
-			}
-		}
-
 		if pipe.DataLog.UpsertedAppItem != nil {
 			isChild := true
 			if strings.HasPrefix(pipe.DataLog.Kind, "app_") || strings.HasPrefix(pipe.DataLog.Kind, "appx_") {
@@ -206,6 +191,23 @@ func (pipe *DataLogPipeline) StepUpsertItem(ctx context.Context) {
 			}
 
 			if txErr = pipe.UpsertAppItem(spanCtx, isChild, tx); txErr != nil {
+				return 500, txErr
+			}
+		}
+
+		// other items can emit messages, so we need to upsert them first
+		// ex: new sessions that have a rimdian utm_id will update the message.first_click_at
+		if pipe.DataLog.UpsertedMessage != nil {
+			isChild := true
+			if pipe.DataLog.Kind == "message" {
+				isChild = false
+			}
+
+			// user_id might have been updated by user_alias
+			// so we need to update it
+			pipe.DataLog.UpsertedMessage.UserID = pipe.DataLog.UpsertedUser.ID
+
+			if txErr = pipe.UpsertMessage(spanCtx, isChild, tx); txErr != nil {
 				return 500, txErr
 			}
 		}

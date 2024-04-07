@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
@@ -49,6 +50,21 @@ func (pipe *DataLogPipeline) UpsertSession(ctx context.Context, isChild bool, tx
 			}
 		} else {
 			pipe.DataLog.Action = "create"
+		}
+
+		// process eventual rimdian utm_id
+		if pipe.DataLog.UpsertedSession.UTMID != nil && strings.HasPrefix(pipe.DataLog.UpsertedSession.UTMID.String, "rmd~") {
+			// format: rmd~CHANNEL~ENTITY_EXTERNAL_ID
+			bits := strings.Split(pipe.DataLog.UpsertedSession.UTMID.String, "~")
+			if len(bits) > 2 {
+				channel := bits[1] // msg = entity type is message
+				entityExternalID := bits[2]
+				if channel == "email" {
+					// update message "first click at"
+					pipe.DataLog.UpsertedMessage = entity.NewMessageFromUTMID(channel, entityExternalID, pipe.DataLog.UpsertedSession.UserID, *pipe.DataLog.UpsertedSession.UpdatedAt)
+					pipe.DataLog.UpsertedMessage.FirstClickAt = &pipe.DataLog.UpsertedSession.CreatedAt
+				}
+			}
 		}
 
 		return

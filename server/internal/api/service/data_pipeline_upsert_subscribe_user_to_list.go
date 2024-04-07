@@ -64,6 +64,12 @@ func (pipe *DataLogPipeline) UpsertSubscriptionListUser(ctx context.Context, isC
 		if pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionList.DoubleOptIn &&
 			*pipe.DataLog.UpsertedSubscriptionListUser.Status == entity.SubscriptionListUserStatusPaused {
 
+			// generate message external_id
+			messageExternalID, err := entity.GenerateShortID()
+			if err != nil {
+				return eris.Wrap(err, "SubscriptionListUserUpsert")
+			}
+
 			message := fmt.Sprintf(`{
 					"kind": "message",
 					"message": {
@@ -79,7 +85,7 @@ func (pipe *DataLogPipeline) UpsertSubscriptionListUser(ctx context.Context, isC
 						"created_at": "%s"
 					}
 				}`,
-				fmt.Sprintf("double_opt_in_%s", pipe.DataLog.ID),
+				messageExternalID,
 				pipe.DataLog.UpsertedSubscriptionListUser.CreatedAt.Format(time.RFC3339),
 				pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionList.Channel,
 				*pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionList.MessageTemplateID,

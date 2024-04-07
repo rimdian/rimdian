@@ -1,10 +1,13 @@
 package entity
 
 import (
+	"crypto/sha1"
+	"fmt"
 	"time"
 
 	"aidanwoods.dev/go-paseto"
 	"github.com/rotisserie/eris"
+	"github.com/teris-io/shortid"
 	"github.com/tidwall/gjson"
 )
 
@@ -74,6 +77,17 @@ func GenerateEmailLink(opts GenerateEmailLinkOptions) (token string, err error) 
 	return opts.APIEndpoint + opts.Path + "?token=" + pasetoToken.V4Encrypt(key, nil), nil
 }
 
+func GenerateShortID() (str string, err error) {
+	sid, err := shortid.New(1, shortid.DefaultABC, 777)
+	if err != nil {
+		return "", eris.Wrap(err, "GenerateShortID")
+	}
+	if str, err = sid.Generate(); err != nil {
+		return "", eris.Wrap(err, "GenerateShortID")
+	}
+	return
+}
+
 type Message struct {
 	ID               string          `db:"id" json:"id"`
 	ExternalID       string          `db:"external_id" json:"external_id"`
@@ -134,6 +148,18 @@ func (message *Message) BeforeInsert() {
 	}
 }
 
+func NewMessageFromUTMID(channel string, externalID string, userID string, updatedAt time.Time) (message *Message) {
+	return &Message{
+		ID:         fmt.Sprintf("%x", sha1.Sum([]byte(externalID))),
+		ExternalID: externalID,
+		CreatedAt:  time.Now(), // doesnt matter as it will be overwritten by the data pipeline
+		UpdatedAt:  &updatedAt,
+		Channel:    "email",
+		UserID:     userID,
+		Data:       MapOfInterfaces{},
+	}
+}
+
 func NewMessageFromDataLog(dataLog *DataLog, clockDifference time.Duration) (message *Message, err error) {
 
 	result := gjson.Get(dataLog.Item, "message")
@@ -157,6 +183,14 @@ func NewMessageFromDataLog(dataLog *DataLog, clockDifference time.Duration) (mes
 
 		keyString := key.String()
 		switch keyString {
+
+		case "external_id":
+			if value.Type == gjson.Null {
+				err = eris.New("message.external_id is required")
+				return false
+			}
+			message.ExternalID = value.String()
+			message.ID = fmt.Sprintf("%x", sha1.Sum([]byte(message.ExternalID)))
 
 		case "domain_id":
 			if value.Type == gjson.Null {
@@ -343,6 +377,9 @@ func NewMessageFromDataLog(dataLog *DataLog, clockDifference time.Duration) (mes
 	}
 
 	// Validation
+	if message.ExternalID == "" {
+		return nil, eris.New("message.external_id is required")
+	}
 
 	if message.CreatedAt.IsZero() {
 		return nil, eris.New("message.created_at is required")

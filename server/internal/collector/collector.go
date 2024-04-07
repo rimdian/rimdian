@@ -147,8 +147,12 @@ func (collector *Collector) DoubleOptIn(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// return a confirmation message
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Subscription confirmed!"))
+	w.Header().Set("Content-Type", "text/html")
+	msg := fmt.Sprintf("You have successfully subscribed to %v", claims.SubscriptionListName)
+	content := strings.ReplaceAll(SubscriptionListConfirmation, "MESSAGE", msg)
+	w.Write([]byte(content))
 }
 
 // email unsubscribe link
@@ -194,7 +198,12 @@ func (collector *Collector) UnsubscribeEmail(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	w.Write([]byte("TODO"))
+	// return a confirmation message
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/html")
+	msg := fmt.Sprintf("You have successfully unsubscribed to %v", claims.SubscriptionListName)
+	content := strings.ReplaceAll(SubscriptionListConfirmation, "MESSAGE", msg)
+	w.Write([]byte(content))
 }
 
 // email open tracking

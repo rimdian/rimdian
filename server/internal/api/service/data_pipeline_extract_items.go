@@ -447,6 +447,10 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 		return
 	}
 
+	// attach the utm_id to the data
+	// the utm_id is collected by the JS SDK with sessions, to track the message who generated the session
+	message.Data["rmd_utm_id"] = fmt.Sprintf("rmd~%v~%v", message.Channel, message.ExternalID)
+
 	// attach user to the message.data
 	if pipe.DataLog.UpsertedUser != nil {
 		message.Data["user"] = pipe.DataLog.UpsertedUser
@@ -471,6 +475,7 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 			pipe.SetError("message", err.Error(), false)
 			return
 		}
+
 	}
 
 	// attach subscription list + email_template to message

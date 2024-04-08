@@ -36,6 +36,7 @@ import { css, CSSInterpolation, injectGlobal } from '@emotion/css'
 import CSS from 'utils/css'
 import RouteDatabase from 'components/database/route_database'
 import RouteAssets from 'components/assets/route_assets'
+import RouteBroadcasts from 'components/broadcast/route_broadcast'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 dayjs.extend(utc)
@@ -113,6 +114,10 @@ const App = () => {
                         <Route
                           path="/orgs/:organizationId/workspaces/:workspaceId/users"
                           element={<RouteUsers />}
+                        />
+                        <Route
+                          path="/orgs/:organizationId/workspaces/:workspaceId/broadcasts"
+                          element={<RouteBroadcasts />}
                         />
                         <Route
                           path="/orgs/:organizationId/workspaces/:workspaceId/assets"

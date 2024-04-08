@@ -67,6 +67,12 @@ var _ Service = &ServiceMock{}
 //			AppStopFunc: func(ctx context.Context, accountID string, params *dto.AppDelete) (*entity.App, int, error) {
 //				panic("mock out the AppStop method")
 //			},
+//			BroadcastCampaignListFunc: func(ctx context.Context, accountID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, int, error) {
+//				panic("mock out the BroadcastCampaignList method")
+//			},
+//			BroadcastCampaignUpsertFunc: func(ctx context.Context, accountID string, data *dto.BroadcastCampaign) (int, error) {
+//				panic("mock out the BroadcastCampaignUpsert method")
+//			},
 //			ChannelCreateFunc: func(ctx context.Context, accountID string, channelDTO *dto.Channel) (*entity.Workspace, int, error) {
 //				panic("mock out the ChannelCreate method")
 //			},
@@ -325,6 +331,12 @@ type ServiceMock struct {
 
 	// AppStopFunc mocks the AppStop method.
 	AppStopFunc func(ctx context.Context, accountID string, params *dto.AppDelete) (*entity.App, int, error)
+
+	// BroadcastCampaignListFunc mocks the BroadcastCampaignList method.
+	BroadcastCampaignListFunc func(ctx context.Context, accountID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, int, error)
+
+	// BroadcastCampaignUpsertFunc mocks the BroadcastCampaignUpsert method.
+	BroadcastCampaignUpsertFunc func(ctx context.Context, accountID string, data *dto.BroadcastCampaign) (int, error)
 
 	// ChannelCreateFunc mocks the ChannelCreate method.
 	ChannelCreateFunc func(ctx context.Context, accountID string, channelDTO *dto.Channel) (*entity.Workspace, int, error)
@@ -661,6 +673,24 @@ type ServiceMock struct {
 			AccountID string
 			// Params is the params argument value.
 			Params *dto.AppDelete
+		}
+		// BroadcastCampaignList holds details about calls to the BroadcastCampaignList method.
+		BroadcastCampaignList []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AccountID is the accountID argument value.
+			AccountID string
+			// Params is the params argument value.
+			Params *dto.BroadcastCampaignListParams
+		}
+		// BroadcastCampaignUpsert holds details about calls to the BroadcastCampaignUpsert method.
+		BroadcastCampaignUpsert []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AccountID is the accountID argument value.
+			AccountID string
+			// Data is the data argument value.
+			Data *dto.BroadcastCampaign
 		}
 		// ChannelCreate holds details about calls to the ChannelCreate method.
 		ChannelCreate []struct {
@@ -1253,6 +1283,8 @@ type ServiceMock struct {
 	lockAppList                                 sync.RWMutex
 	lockAppMutateState                          sync.RWMutex
 	lockAppStop                                 sync.RWMutex
+	lockBroadcastCampaignList                   sync.RWMutex
+	lockBroadcastCampaignUpsert                 sync.RWMutex
 	lockChannelCreate                           sync.RWMutex
 	lockChannelDelete                           sync.RWMutex
 	lockChannelGroupDelete                      sync.RWMutex
@@ -1905,6 +1937,86 @@ func (mock *ServiceMock) AppStopCalls() []struct {
 	mock.lockAppStop.RLock()
 	calls = mock.calls.AppStop
 	mock.lockAppStop.RUnlock()
+	return calls
+}
+
+// BroadcastCampaignList calls BroadcastCampaignListFunc.
+func (mock *ServiceMock) BroadcastCampaignList(ctx context.Context, accountID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, int, error) {
+	if mock.BroadcastCampaignListFunc == nil {
+		panic("ServiceMock.BroadcastCampaignListFunc: method is nil but Service.BroadcastCampaignList was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.BroadcastCampaignListParams
+	}{
+		Ctx:       ctx,
+		AccountID: accountID,
+		Params:    params,
+	}
+	mock.lockBroadcastCampaignList.Lock()
+	mock.calls.BroadcastCampaignList = append(mock.calls.BroadcastCampaignList, callInfo)
+	mock.lockBroadcastCampaignList.Unlock()
+	return mock.BroadcastCampaignListFunc(ctx, accountID, params)
+}
+
+// BroadcastCampaignListCalls gets all the calls that were made to BroadcastCampaignList.
+// Check the length with:
+//
+//	len(mockedService.BroadcastCampaignListCalls())
+func (mock *ServiceMock) BroadcastCampaignListCalls() []struct {
+	Ctx       context.Context
+	AccountID string
+	Params    *dto.BroadcastCampaignListParams
+} {
+	var calls []struct {
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.BroadcastCampaignListParams
+	}
+	mock.lockBroadcastCampaignList.RLock()
+	calls = mock.calls.BroadcastCampaignList
+	mock.lockBroadcastCampaignList.RUnlock()
+	return calls
+}
+
+// BroadcastCampaignUpsert calls BroadcastCampaignUpsertFunc.
+func (mock *ServiceMock) BroadcastCampaignUpsert(ctx context.Context, accountID string, data *dto.BroadcastCampaign) (int, error) {
+	if mock.BroadcastCampaignUpsertFunc == nil {
+		panic("ServiceMock.BroadcastCampaignUpsertFunc: method is nil but Service.BroadcastCampaignUpsert was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		AccountID string
+		Data      *dto.BroadcastCampaign
+	}{
+		Ctx:       ctx,
+		AccountID: accountID,
+		Data:      data,
+	}
+	mock.lockBroadcastCampaignUpsert.Lock()
+	mock.calls.BroadcastCampaignUpsert = append(mock.calls.BroadcastCampaignUpsert, callInfo)
+	mock.lockBroadcastCampaignUpsert.Unlock()
+	return mock.BroadcastCampaignUpsertFunc(ctx, accountID, data)
+}
+
+// BroadcastCampaignUpsertCalls gets all the calls that were made to BroadcastCampaignUpsert.
+// Check the length with:
+//
+//	len(mockedService.BroadcastCampaignUpsertCalls())
+func (mock *ServiceMock) BroadcastCampaignUpsertCalls() []struct {
+	Ctx       context.Context
+	AccountID string
+	Data      *dto.BroadcastCampaign
+} {
+	var calls []struct {
+		Ctx       context.Context
+		AccountID string
+		Data      *dto.BroadcastCampaign
+	}
+	mock.lockBroadcastCampaignUpsert.RLock()
+	calls = mock.calls.BroadcastCampaignUpsert
+	mock.lockBroadcastCampaignUpsert.RUnlock()
 	return calls
 }
 

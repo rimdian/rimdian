@@ -77,16 +77,29 @@ const secondMenuCSS = {
     padding: 0,
 
     '& > li': {
+      position: 'relative',
       cursor: 'pointer',
       padding: CSS.S + ' ' + CSS.L,
       borderLeft: '2px solid rgba(0,0,0,0)',
+      '.chevron': {
+        position: 'absolute',
+        top: 16,
+        left: 7,
+        fontSize: '10px',
+        color: '#4e6cff',
+        opacity: 0
+      },
       '&:hover': {
-        borderLeft: '2px solid rgba(78,108,255,0.4);' //rgba(225,245,254 ,0.7);
+        '.chevron': {
+          opacity: 1
+        }
       }
     },
 
     '& > li.active': {
-      borderLeft: '2px solid rgba(78,108,255,0.7);' //rgba(225,245,254 ,0.7);
+      '.chevron': {
+        opacity: 1
+      }
     }
   })
 }
@@ -232,6 +245,7 @@ const RouteUsers = () => {
                 onClick={() => setSearchParams({})}
                 className={currentSegment && currentSegment.id === '_all' ? 'active' : ''}
               >
+                <FontAwesomeIcon className="chevron" icon={faChevronRight} />
                 All users
                 <span className={secondMenuCSS.counter}>
                   {workspaceCtx.segmentsMap._all &&
@@ -253,6 +267,7 @@ const RouteUsers = () => {
                         <Badge status="processing" />
                       </Tooltip>
                     )}
+                    <FontAwesomeIcon className="chevron" icon={faChevronRight} />
                     <Tag color={segment.color}>{segment.name}</Tag>
                     <span className={secondMenuCSS.counter}>
                       {workspaceCtx.segmentsMap.anonymous &&
@@ -283,6 +298,7 @@ const RouteUsers = () => {
                       onClick={() => setSearchParams({ list_id: list.id })}
                       className={currentList?.id === list.id ? 'active' : ''}
                     >
+                      <FontAwesomeIcon className="chevron" icon={faChevronRight} />
                       <Tag color={list.color}>{list.name}</Tag>
                       <span className={secondMenuCSS.counter}>
                         {numbro(list.users_count).format({

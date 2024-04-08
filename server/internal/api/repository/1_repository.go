@@ -204,6 +204,12 @@ type Repository interface {
 	UpdateSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) (err error)
 	GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) (userIDs []*dto.UserToImportToSubscriptionList, err error)
 
+	// broadcast campaigns
+	ListBroadcastCampaigns(ctx context.Context, workspaceID string, params *dto.BroadcastCampaignListParams) (campaigns []*entity.BroadcastCampaign, err error)
+	GetBroadcastCampaign(ctx context.Context, workspaceID string, campaignID string) (campaign *entity.BroadcastCampaign, err error)
+	UpdateBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) (err error)
+	InsertBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) (err error)
+
 	// message templates
 	ListMessageTemplates(ctx context.Context, workspaceID string, params *dto.MessageTemplateListParams) (templates []*entity.MessageTemplate, err error)
 	InsertMessageTemplate(ctx context.Context, workspaceID string, template *entity.MessageTemplate, tx *sql.Tx) (err error)

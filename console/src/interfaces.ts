@@ -1159,3 +1159,26 @@ export interface MessagingSettings {
   transactional_email_provider?: EmailProvider
   marketing_email_provider?: EmailProvider
 }
+
+export interface BroadcastCampaign {
+  id: string
+  name: string
+  channel: 'email'
+  templates: BroadcastCampaignTemplate[]
+  status: 'draft' | 'sending' | 'sent' | 'failed'
+  subscription_lists: BroadcastCampaignSubscriptionList[]
+  utm_source: string
+  utm_medium: string
+  scheduled_at: string
+  db_created_at: string
+  db_updated_at: string
+}
+
+export interface BroadcastCampaignTemplate {
+  template_id: string
+  percentage: number
+}
+
+export interface BroadcastCampaignSubscriptionList {
+  id: string
+}

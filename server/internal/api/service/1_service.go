@@ -124,6 +124,10 @@ type Service interface {
 	MessageTemplateList(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) (result []*entity.MessageTemplate, code int, err error)
 	MessageTemplateUpsert(ctx context.Context, accountID string, data *dto.MessageTemplate) (code int, err error)
 
+	// broadcast campaign
+	BroadcastCampaignList(ctx context.Context, accountID string, params *dto.BroadcastCampaignListParams) (broadcasts []*entity.BroadcastCampaign, code int, err error)
+	BroadcastCampaignUpsert(ctx context.Context, accountID string, data *dto.BroadcastCampaign) (code int, err error)
+
 	// message
 	MessageSend(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult)
 	SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult)

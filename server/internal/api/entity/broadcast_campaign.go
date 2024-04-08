@@ -18,16 +18,17 @@ var (
 )
 
 type BroadcastCampaign struct {
-	ID                string                             `json:"id"` // ID is the utm_campaign value
-	Name              string                             `json:"name"`
-	Channel           string                             `json:"channel"`   // email | sms | push
-	Templates         BroadcastCampaignTemplates         `json:"templates"` // templates for A/B testing
-	Status            string                             `json:"status"`    // draft | sending | sent | failed
-	SubscriptionLists BroadcastCampaignSubscriptionLists `json:"subscription_lists"`
-	UTMSource         string                             `json:"utm_source"`
-	UTMMedium         string                             `json:"utm_medium"`
-	DBCreatedAt       time.Time                          `json:"db_created_at"`
-	DBUpdatedAt       time.Time                          `json:"db_updated_at"`
+	ID                string                             `db:"id" json:"id"` // ID is the utm_campaign value
+	Name              string                             `db:"name" json:"name"`
+	Channel           string                             `db:"channel" json:"channel"`     // email | sms | push
+	Templates         BroadcastCampaignTemplates         `db:"templates" json:"templates"` // templates for A/B testing
+	Status            string                             `db:"status" json:"status"`       // draft | sending | sent | failed
+	SubscriptionLists BroadcastCampaignSubscriptionLists `db:"subscription_lists" json:"subscription_lists"`
+	UTMSource         string                             `db:"utm_source" json:"utm_source"`
+	UTMMedium         string                             `db:"utm_medium" json:"utm_medium"`
+	ScheduledAt       time.Time                          `db:"scheduled_at" json:"scheduled_at"`
+	DBCreatedAt       time.Time                          `db:"db_created_at" json:"db_created_at"`
+	DBUpdatedAt       time.Time                          `db:"db_updated_at" json:"db_updated_at"`
 }
 
 func (bc *BroadcastCampaign) Validate() error {
@@ -62,6 +63,10 @@ func (bc *BroadcastCampaign) Validate() error {
 
 	if bc.UTMMedium == "" {
 		return eris.New("UTMMedium is required")
+	}
+
+	if bc.ScheduledAt.IsZero() {
+		return eris.New("ScheduledAt is required")
 	}
 
 	return nil
@@ -146,6 +151,7 @@ var BroadcastCampaignSchema = `CREATE ROWSTORE TABLE IF NOT EXISTS broadcast_cam
 	subscription_list_id VARCHAR(64) NOT NULL,
 	utm_source VARCHAR(255) NOT NULL,
 	utm_medium VARCHAR(255) NOT NULL,
+	scheduled_at DATETIME NOT NULL,
 	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -161,6 +167,7 @@ var BroadcastCampaignSchemaMYSQL = `CREATE TABLE IF NOT EXISTS broadcast_campaig
 	subscription_list_id VARCHAR(64) NOT NULL,
 	utm_source VARCHAR(255) NOT NULL,
 	utm_medium VARCHAR(255) NOT NULL,
+	scheduled_at DATETIME NOT NULL,
 	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 

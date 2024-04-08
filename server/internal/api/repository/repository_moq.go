@@ -215,6 +215,9 @@ var _ Repository = &RepositoryMock{}
 //			GetAppFunc: func(ctx context.Context, workspaceID string, appID string) (*entity.App, error) {
 //				panic("mock out the GetApp method")
 //			},
+//			GetBroadcastCampaignFunc: func(ctx context.Context, workspaceID string, campaignID string) (*entity.BroadcastCampaign, error) {
+//				panic("mock out the GetBroadcastCampaign method")
+//			},
 //			GetDataLogFunc: func(ctx context.Context, workspaceID string, dataLogID string) (*entity.DataLog, error) {
 //				panic("mock out the GetDataLog method")
 //			},
@@ -280,6 +283,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			InsertAppItemFunc: func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error {
 //				panic("mock out the InsertAppItem method")
+//			},
+//			InsertBroadcastCampaignFunc: func(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error {
+//				panic("mock out the InsertBroadcastCampaign method")
 //			},
 //			InsertCartFunc: func(ctx context.Context, cart *entity.Cart, tx *sql.Tx) error {
 //				panic("mock out the InsertCart method")
@@ -364,6 +370,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			ListAppsFunc: func(ctx context.Context, workspaceID string) ([]*entity.App, error) {
 //				panic("mock out the ListApps method")
+//			},
+//			ListBroadcastCampaignsFunc: func(ctx context.Context, workspaceID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, error) {
+//				panic("mock out the ListBroadcastCampaigns method")
 //			},
 //			ListCustomEventsForUserFunc: func(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.CustomEvent, error) {
 //				panic("mock out the ListCustomEventsForUser method")
@@ -502,6 +511,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			UpdateAppItemFunc: func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error {
 //				panic("mock out the UpdateAppItem method")
+//			},
+//			UpdateBroadcastCampaignFunc: func(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error {
+//				panic("mock out the UpdateBroadcastCampaign method")
 //			},
 //			UpdateCartFunc: func(ctx context.Context, cart *entity.Cart, tx *sql.Tx) error {
 //				panic("mock out the UpdateCart method")
@@ -768,6 +780,9 @@ type RepositoryMock struct {
 	// GetAppFunc mocks the GetApp method.
 	GetAppFunc func(ctx context.Context, workspaceID string, appID string) (*entity.App, error)
 
+	// GetBroadcastCampaignFunc mocks the GetBroadcastCampaign method.
+	GetBroadcastCampaignFunc func(ctx context.Context, workspaceID string, campaignID string) (*entity.BroadcastCampaign, error)
+
 	// GetDataLogFunc mocks the GetDataLog method.
 	GetDataLogFunc func(ctx context.Context, workspaceID string, dataLogID string) (*entity.DataLog, error)
 
@@ -833,6 +848,9 @@ type RepositoryMock struct {
 
 	// InsertAppItemFunc mocks the InsertAppItem method.
 	InsertAppItemFunc func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error
+
+	// InsertBroadcastCampaignFunc mocks the InsertBroadcastCampaign method.
+	InsertBroadcastCampaignFunc func(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error
 
 	// InsertCartFunc mocks the InsertCart method.
 	InsertCartFunc func(ctx context.Context, cart *entity.Cart, tx *sql.Tx) error
@@ -917,6 +935,9 @@ type RepositoryMock struct {
 
 	// ListAppsFunc mocks the ListApps method.
 	ListAppsFunc func(ctx context.Context, workspaceID string) ([]*entity.App, error)
+
+	// ListBroadcastCampaignsFunc mocks the ListBroadcastCampaigns method.
+	ListBroadcastCampaignsFunc func(ctx context.Context, workspaceID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, error)
 
 	// ListCustomEventsForUserFunc mocks the ListCustomEventsForUser method.
 	ListCustomEventsForUserFunc func(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.CustomEvent, error)
@@ -1055,6 +1076,9 @@ type RepositoryMock struct {
 
 	// UpdateAppItemFunc mocks the UpdateAppItem method.
 	UpdateAppItemFunc func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error
+
+	// UpdateBroadcastCampaignFunc mocks the UpdateBroadcastCampaign method.
+	UpdateBroadcastCampaignFunc func(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error
 
 	// UpdateCartFunc mocks the UpdateCart method.
 	UpdateCartFunc func(ctx context.Context, cart *entity.Cart, tx *sql.Tx) error
@@ -1822,6 +1846,15 @@ type RepositoryMock struct {
 			// AppID is the appID argument value.
 			AppID string
 		}
+		// GetBroadcastCampaign holds details about calls to the GetBroadcastCampaign method.
+		GetBroadcastCampaign []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// CampaignID is the campaignID argument value.
+			CampaignID string
+		}
 		// GetDataLog holds details about calls to the GetDataLog method.
 		GetDataLog []struct {
 			// Ctx is the ctx argument value.
@@ -2027,6 +2060,15 @@ type RepositoryMock struct {
 			UpsertedAppItem *entity.AppItem
 			// Tx is the tx argument value.
 			Tx *sql.Tx
+		}
+		// InsertBroadcastCampaign holds details about calls to the InsertBroadcastCampaign method.
+		InsertBroadcastCampaign []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// Campaign is the campaign argument value.
+			Campaign *entity.BroadcastCampaign
 		}
 		// InsertCart holds details about calls to the InsertCart method.
 		InsertCart []struct {
@@ -2297,6 +2339,15 @@ type RepositoryMock struct {
 			Ctx context.Context
 			// WorkspaceID is the workspaceID argument value.
 			WorkspaceID string
+		}
+		// ListBroadcastCampaigns holds details about calls to the ListBroadcastCampaigns method.
+		ListBroadcastCampaigns []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// Params is the params argument value.
+			Params *dto.BroadcastCampaignListParams
 		}
 		// ListCustomEventsForUser holds details about calls to the ListCustomEventsForUser method.
 		ListCustomEventsForUser []struct {
@@ -2792,6 +2843,15 @@ type RepositoryMock struct {
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
+		// UpdateBroadcastCampaign holds details about calls to the UpdateBroadcastCampaign method.
+		UpdateBroadcastCampaign []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// Campaign is the campaign argument value.
+			Campaign *entity.BroadcastCampaign
+		}
 		// UpdateCart holds details about calls to the UpdateCart method.
 		UpdateCart []struct {
 			// Ctx is the ctx argument value.
@@ -3053,6 +3113,7 @@ type RepositoryMock struct {
 	lockGetAccountFromEmail                   sync.RWMutex
 	lockGetAccountFromID                      sync.RWMutex
 	lockGetApp                                sync.RWMutex
+	lockGetBroadcastCampaign                  sync.RWMutex
 	lockGetDataLog                            sync.RWMutex
 	lockGetDataLogChildren                    sync.RWMutex
 	lockGetInvitation                         sync.RWMutex
@@ -3075,6 +3136,7 @@ type RepositoryMock struct {
 	lockInsertAccountSession                  sync.RWMutex
 	lockInsertApp                             sync.RWMutex
 	lockInsertAppItem                         sync.RWMutex
+	lockInsertBroadcastCampaign               sync.RWMutex
 	lockInsertCart                            sync.RWMutex
 	lockInsertCartItem                        sync.RWMutex
 	lockInsertCustomEvent                     sync.RWMutex
@@ -3103,6 +3165,7 @@ type RepositoryMock struct {
 	lockIsExistingTableTheSame                sync.RWMutex
 	lockListAccountsForOrganization           sync.RWMutex
 	lockListApps                              sync.RWMutex
+	lockListBroadcastCampaigns                sync.RWMutex
 	lockListCustomEventsForUser               sync.RWMutex
 	lockListDataLogs                          sync.RWMutex
 	lockListDataLogsToReprocess               sync.RWMutex
@@ -3149,6 +3212,7 @@ type RepositoryMock struct {
 	lockUpdateAccountSessionLastAccess        sync.RWMutex
 	lockUpdateApp                             sync.RWMutex
 	lockUpdateAppItem                         sync.RWMutex
+	lockUpdateBroadcastCampaign               sync.RWMutex
 	lockUpdateCart                            sync.RWMutex
 	lockUpdateCartItem                        sync.RWMutex
 	lockUpdateChannel                         sync.RWMutex
@@ -5977,6 +6041,46 @@ func (mock *RepositoryMock) GetAppCalls() []struct {
 	return calls
 }
 
+// GetBroadcastCampaign calls GetBroadcastCampaignFunc.
+func (mock *RepositoryMock) GetBroadcastCampaign(ctx context.Context, workspaceID string, campaignID string) (*entity.BroadcastCampaign, error) {
+	if mock.GetBroadcastCampaignFunc == nil {
+		panic("RepositoryMock.GetBroadcastCampaignFunc: method is nil but Repository.GetBroadcastCampaign was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		CampaignID  string
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		CampaignID:  campaignID,
+	}
+	mock.lockGetBroadcastCampaign.Lock()
+	mock.calls.GetBroadcastCampaign = append(mock.calls.GetBroadcastCampaign, callInfo)
+	mock.lockGetBroadcastCampaign.Unlock()
+	return mock.GetBroadcastCampaignFunc(ctx, workspaceID, campaignID)
+}
+
+// GetBroadcastCampaignCalls gets all the calls that were made to GetBroadcastCampaign.
+// Check the length with:
+//
+//	len(mockedRepository.GetBroadcastCampaignCalls())
+func (mock *RepositoryMock) GetBroadcastCampaignCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	CampaignID  string
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		CampaignID  string
+	}
+	mock.lockGetBroadcastCampaign.RLock()
+	calls = mock.calls.GetBroadcastCampaign
+	mock.lockGetBroadcastCampaign.RUnlock()
+	return calls
+}
+
 // GetDataLog calls GetDataLogFunc.
 func (mock *RepositoryMock) GetDataLog(ctx context.Context, workspaceID string, dataLogID string) (*entity.DataLog, error) {
 	if mock.GetDataLogFunc == nil {
@@ -6870,6 +6974,46 @@ func (mock *RepositoryMock) InsertAppItemCalls() []struct {
 	mock.lockInsertAppItem.RLock()
 	calls = mock.calls.InsertAppItem
 	mock.lockInsertAppItem.RUnlock()
+	return calls
+}
+
+// InsertBroadcastCampaign calls InsertBroadcastCampaignFunc.
+func (mock *RepositoryMock) InsertBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error {
+	if mock.InsertBroadcastCampaignFunc == nil {
+		panic("RepositoryMock.InsertBroadcastCampaignFunc: method is nil but Repository.InsertBroadcastCampaign was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Campaign    *entity.BroadcastCampaign
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		Campaign:    campaign,
+	}
+	mock.lockInsertBroadcastCampaign.Lock()
+	mock.calls.InsertBroadcastCampaign = append(mock.calls.InsertBroadcastCampaign, callInfo)
+	mock.lockInsertBroadcastCampaign.Unlock()
+	return mock.InsertBroadcastCampaignFunc(ctx, workspaceID, campaign)
+}
+
+// InsertBroadcastCampaignCalls gets all the calls that were made to InsertBroadcastCampaign.
+// Check the length with:
+//
+//	len(mockedRepository.InsertBroadcastCampaignCalls())
+func (mock *RepositoryMock) InsertBroadcastCampaignCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	Campaign    *entity.BroadcastCampaign
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Campaign    *entity.BroadcastCampaign
+	}
+	mock.lockInsertBroadcastCampaign.RLock()
+	calls = mock.calls.InsertBroadcastCampaign
+	mock.lockInsertBroadcastCampaign.RUnlock()
 	return calls
 }
 
@@ -8026,6 +8170,46 @@ func (mock *RepositoryMock) ListAppsCalls() []struct {
 	mock.lockListApps.RLock()
 	calls = mock.calls.ListApps
 	mock.lockListApps.RUnlock()
+	return calls
+}
+
+// ListBroadcastCampaigns calls ListBroadcastCampaignsFunc.
+func (mock *RepositoryMock) ListBroadcastCampaigns(ctx context.Context, workspaceID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, error) {
+	if mock.ListBroadcastCampaignsFunc == nil {
+		panic("RepositoryMock.ListBroadcastCampaignsFunc: method is nil but Repository.ListBroadcastCampaigns was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Params      *dto.BroadcastCampaignListParams
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		Params:      params,
+	}
+	mock.lockListBroadcastCampaigns.Lock()
+	mock.calls.ListBroadcastCampaigns = append(mock.calls.ListBroadcastCampaigns, callInfo)
+	mock.lockListBroadcastCampaigns.Unlock()
+	return mock.ListBroadcastCampaignsFunc(ctx, workspaceID, params)
+}
+
+// ListBroadcastCampaignsCalls gets all the calls that were made to ListBroadcastCampaigns.
+// Check the length with:
+//
+//	len(mockedRepository.ListBroadcastCampaignsCalls())
+func (mock *RepositoryMock) ListBroadcastCampaignsCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	Params      *dto.BroadcastCampaignListParams
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Params      *dto.BroadcastCampaignListParams
+	}
+	mock.lockListBroadcastCampaigns.RLock()
+	calls = mock.calls.ListBroadcastCampaigns
+	mock.lockListBroadcastCampaigns.RUnlock()
 	return calls
 }
 
@@ -10026,6 +10210,46 @@ func (mock *RepositoryMock) UpdateAppItemCalls() []struct {
 	mock.lockUpdateAppItem.RLock()
 	calls = mock.calls.UpdateAppItem
 	mock.lockUpdateAppItem.RUnlock()
+	return calls
+}
+
+// UpdateBroadcastCampaign calls UpdateBroadcastCampaignFunc.
+func (mock *RepositoryMock) UpdateBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error {
+	if mock.UpdateBroadcastCampaignFunc == nil {
+		panic("RepositoryMock.UpdateBroadcastCampaignFunc: method is nil but Repository.UpdateBroadcastCampaign was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Campaign    *entity.BroadcastCampaign
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		Campaign:    campaign,
+	}
+	mock.lockUpdateBroadcastCampaign.Lock()
+	mock.calls.UpdateBroadcastCampaign = append(mock.calls.UpdateBroadcastCampaign, callInfo)
+	mock.lockUpdateBroadcastCampaign.Unlock()
+	return mock.UpdateBroadcastCampaignFunc(ctx, workspaceID, campaign)
+}
+
+// UpdateBroadcastCampaignCalls gets all the calls that were made to UpdateBroadcastCampaign.
+// Check the length with:
+//
+//	len(mockedRepository.UpdateBroadcastCampaignCalls())
+func (mock *RepositoryMock) UpdateBroadcastCampaignCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	Campaign    *entity.BroadcastCampaign
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		Campaign    *entity.BroadcastCampaign
+	}
+	mock.lockUpdateBroadcastCampaign.RLock()
+	calls = mock.calls.UpdateBroadcastCampaign
+	mock.lockUpdateBroadcastCampaign.RUnlock()
 	return calls
 }
 

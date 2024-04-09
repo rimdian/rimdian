@@ -12,7 +12,7 @@ const RouteBroadcasts = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
 
   const { isLoading, data, refetch, isFetching } = useQuery<BroadcastCampaign[]>(
-    ['templates', workspaceCtx.workspace.id],
+    ['broadcast_campaigns', workspaceCtx.workspace.id],
     (): Promise<BroadcastCampaign[]> => {
       return new Promise((resolve, reject) => {
         workspaceCtx
@@ -34,71 +34,74 @@ const RouteBroadcasts = () => {
       currentWorkspace={workspaceCtx.workspace}
     >
       <div className={CSS.container}>
-        <div className={CSS.top + ' ' + CSS.margin_l_l}>
+        <div className={CSS.top}>
           <h1>Broadcast campaigns</h1>
         </div>
-      </div>
 
-      <Table
-        pagination={false}
-        dataSource={data}
-        loading={isLoading || isFetching}
-        rowKey="id"
-        locale={{
-          emptyText: (
-            <>
-              <p>No campaign found</p>
-              <ButtonUpsertCampaign btnProps={{ type: 'primary' }} onSuccess={() => refetch()}>
-                New campaign
-              </ButtonUpsertCampaign>
-            </>
-          )
-        }}
-        columns={[
-          {
-            title: 'Template',
-            key: 'id',
-            render: (x: BroadcastCampaign) => (
-              <div>
-                <Tooltip title={x.id}>{x.name}</Tooltip>
-              </div>
-            )
-          },
-          // {
-          //   title: 'Last update',
-          //   key: 'createdAt',
-          //   render: (x: BroadcastCampaign) =>
-          //     dayjs(x.db_created_at)
-          //       .tz(accountCtx.account?.account.timezone as string)
-          //       .format('lll')
-          // },
-          {
-            title: (
+        <Table
+          pagination={false}
+          dataSource={data}
+          loading={isLoading || isFetching}
+          rowKey="id"
+          locale={{
+            emptyText: (
               <>
-                {!isLoading && data && data.length > 0 && (
-                  <ButtonUpsertCampaign btnProps={{ type: 'primary' }} onSuccess={() => refetch()}>
-                    New campaign
-                  </ButtonUpsertCampaign>
-                )}
-              </>
-            ),
-            key: 'actions',
-            className: 'actions',
-            width: 170,
-            render: (row: BroadcastCampaign) => (
-              <div className={CSS.text_right}>
-                <ButtonUpsertCampaign
-                  btnProps={{ size: 'small', type: 'text' }}
-                  onSuccess={() => refetch()}
-                  campaign={row}
-                >
-                  <FontAwesomeIcon icon={faPenToSquare} />
+                <p>No campaign found</p>
+                <ButtonUpsertCampaign btnProps={{ type: 'primary' }} onSuccess={() => refetch()}>
+                  New campaign
                 </ButtonUpsertCampaign>
-              </div>
+              </>
             )
-          }
-        ]}
-      />
+          }}
+          columns={[
+            {
+              title: 'Campaign',
+              key: 'id',
+              render: (x: BroadcastCampaign) => (
+                <div>
+                  <Tooltip title={x.id}>{x.name}</Tooltip>
+                </div>
+              )
+            },
+            // {
+            //   title: 'Last update',
+            //   key: 'createdAt',
+            //   render: (x: BroadcastCampaign) =>
+            //     dayjs(x.db_created_at)
+            //       .tz(accountCtx.account?.account.timezone as string)
+            //       .format('lll')
+            // },
+            {
+              title: (
+                <>
+                  {!isLoading && data && data.length > 0 && (
+                    <ButtonUpsertCampaign
+                      btnProps={{ type: 'primary' }}
+                      onSuccess={() => refetch()}
+                    >
+                      New campaign
+                    </ButtonUpsertCampaign>
+                  )}
+                </>
+              ),
+              key: 'actions',
+              className: 'actions',
+              width: 170,
+              render: (row: BroadcastCampaign) => (
+                <div className={CSS.text_right}>
+                  <ButtonUpsertCampaign
+                    btnProps={{ size: 'small', type: 'text' }}
+                    onSuccess={() => refetch()}
+                    campaign={row}
+                  >
+                    <FontAwesomeIcon icon={faPenToSquare} />
+                  </ButtonUpsertCampaign>
+                </div>
+              )
+            }
+          ]}
+        />
+      </div>
     </Layout>
   )
 }

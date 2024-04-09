@@ -34,6 +34,7 @@ import Nunjucks from 'nunjucks'
 // import AceInput from 'components/common/input_ace'
 // import IframeSandbox from 'components/email_editor/UI/Widgets/Iframe'
 import CSS from 'utils/css'
+import extractTLD from 'utils/tld'
 
 const generateBlockFromDefinition = (blockDefinition: BlockDefinitionInterface) => {
   const id = uuid.generate()
@@ -124,14 +125,14 @@ const tabsInHeader = css({
   }
 })
 
-interface ButtonUpsertTemplateProps {
+interface ButtonUpsertEmailTemplateProps {
   template?: MessageTemplate
   onSuccess?: () => void
   btnProps: any
   children: React.ReactNode
 }
 
-const ButtonUpsertTemplate = (props: ButtonUpsertTemplateProps) => {
+const ButtonUpsertEmailTemplate = (props: ButtonUpsertEmailTemplateProps) => {
   const [drawserVisible, setDrawserVisible] = useState(false)
   return (
     <>
@@ -186,12 +187,6 @@ const DrawerEmailTemplate = (props: {
       .catch(() => {
         setLoading(false)
       })
-  }
-
-  // extract TLD from URL
-  const extractTLD = (url: string) => {
-    const hostname = new URL(url).hostname
-    return hostname.split('.').slice(-2).join('.')
   }
 
   const initialValues = Object.assign(
@@ -796,4 +791,4 @@ const DrawerEmailTemplate = (props: {
   )
 }
 
-export default ButtonUpsertTemplate
+export default ButtonUpsertEmailTemplate

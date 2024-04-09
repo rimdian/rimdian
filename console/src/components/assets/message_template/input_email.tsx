@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { MessageTemplate } from './interfaces'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { Divider, Select, Spin } from 'antd'
-import ButtonUpsertTemplate from './button_upsert_email'
+import ButtonUpsertEmailTemplate from './button_upsert_email'
 
 // Form input to select an email template
 interface EmailTemplateInputProps {
@@ -37,12 +37,12 @@ const EmailTemplateInput = (props: EmailTemplateInputProps) => {
 
   if (data && data.length === 0) {
     return (
-      <ButtonUpsertTemplate
+      <ButtonUpsertEmailTemplate
         btnProps={{ isLoading: isFetching, type: 'primary', block: true }}
         onSuccess={() => refetch()}
       >
         New template
-      </ButtonUpsertTemplate>
+      </ButtonUpsertEmailTemplate>
     )
   }
 
@@ -61,12 +61,12 @@ const EmailTemplateInput = (props: EmailTemplateInputProps) => {
         <>
           {menu}
           <Divider style={{ margin: '8px 0' }} />
-          <ButtonUpsertTemplate
+          <ButtonUpsertEmailTemplate
             btnProps={{ type: 'primary', ghost: true, block: true }}
             onSuccess={() => refetch()}
           >
             New template
-          </ButtonUpsertTemplate>
+          </ButtonUpsertEmailTemplate>
         </>
       )}
     />

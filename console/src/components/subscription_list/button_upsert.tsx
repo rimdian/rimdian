@@ -18,7 +18,7 @@ import { SubscriptionList } from 'interfaces'
 import EmailTemplateInput from 'components/assets/message_template/input_email'
 import Messages from 'utils/formMessages'
 
-const ButtonUpsertSubscriptionList = (props: { segment?: SubscriptionList }) => {
+const ButtonUpsertSubscriptionList = (props: { list?: SubscriptionList }) => {
   const [drawserVisible, setDrawserVisible] = useState(false)
   const workspaceCtx = useCurrentWorkspaceCtx()
 
@@ -43,7 +43,7 @@ const ButtonUpsertSubscriptionList = (props: { segment?: SubscriptionList }) => 
     }
   }
 
-  const button = props.segment ? (
+  const button = props.list ? (
     <Button type="primary" size="small" ghost onClick={() => setDrawserVisible(!drawserVisible)}>
       Edit list
     </Button>
@@ -59,7 +59,7 @@ const ButtonUpsertSubscriptionList = (props: { segment?: SubscriptionList }) => 
     <>
       {button}
       {drawserVisible && (
-        <DrawerSubscriptionList list={props.segment} setDrawserVisible={setDrawserVisible} />
+        <DrawerSubscriptionList list={props.list} setDrawserVisible={setDrawserVisible} />
       )}
     </>
   )

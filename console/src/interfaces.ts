@@ -1164,7 +1164,7 @@ export interface BroadcastCampaign {
   id: string
   name: string
   channel: 'email'
-  templates: BroadcastCampaignTemplate[]
+  message_templates: BroadcastCampaignMessageTemplate[]
   status: 'draft' | 'sending' | 'sent' | 'failed'
   subscription_lists: BroadcastCampaignSubscriptionList[]
   utm_source: string
@@ -1174,8 +1174,8 @@ export interface BroadcastCampaign {
   db_updated_at: string
 }
 
-export interface BroadcastCampaignTemplate {
-  template_id: string
+export interface BroadcastCampaignMessageTemplate {
+  message_template_id: string
   percentage: number
 }
 

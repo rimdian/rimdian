@@ -6,7 +6,7 @@ import { MessageTemplate } from 'components/assets/message_template/interfaces'
 import dayjs from 'dayjs'
 import { useAccount } from 'components/login/context_account'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import ButtonUpsertTemplate from './button_upsert_email'
+import ButtonUpsertEmailTemplate from './button_upsert_email'
 import { faPenToSquare } from '@fortawesome/free-regular-svg-icons'
 
 const ListTemplates = () => {
@@ -40,9 +40,9 @@ const ListTemplates = () => {
         emptyText: (
           <>
             <p>No templates found</p>
-            <ButtonUpsertTemplate btnProps={{ type: 'primary' }} onSuccess={() => refetch()}>
+            <ButtonUpsertEmailTemplate btnProps={{ type: 'primary' }} onSuccess={() => refetch()}>
               New template
-            </ButtonUpsertTemplate>
+            </ButtonUpsertEmailTemplate>
           </>
         )
       }}
@@ -96,9 +96,12 @@ const ListTemplates = () => {
           title: (
             <>
               {!isLoading && data && data.length > 0 && (
-                <ButtonUpsertTemplate btnProps={{ type: 'primary' }} onSuccess={() => refetch()}>
+                <ButtonUpsertEmailTemplate
+                  btnProps={{ type: 'primary' }}
+                  onSuccess={() => refetch()}
+                >
                   New template
-                </ButtonUpsertTemplate>
+                </ButtonUpsertEmailTemplate>
               )}
             </>
           ),
@@ -107,13 +110,13 @@ const ListTemplates = () => {
           width: 170,
           render: (row: MessageTemplate) => (
             <div className={CSS.text_right}>
-              <ButtonUpsertTemplate
+              <ButtonUpsertEmailTemplate
                 btnProps={{ size: 'small', type: 'text' }}
                 onSuccess={() => refetch()}
                 template={row}
               >
                 <FontAwesomeIcon icon={faPenToSquare} />
-              </ButtonUpsertTemplate>
+              </ButtonUpsertEmailTemplate>
             </div>
           )
         }

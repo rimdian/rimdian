@@ -36,7 +36,7 @@ func (svc *ServiceImpl) BroadcastCampaignUpsert(ctx context.Context, accountID s
 
 		campaign.Name = data.Name
 		campaign.Channel = data.Channel
-		campaign.Templates = data.Templates
+		campaign.MessageTemplates = data.MessageTemplates
 		campaign.Status = data.Status
 		campaign.SubscriptionLists = data.SubscriptionLists
 		campaign.UTMSource = data.UTMSource
@@ -59,7 +59,7 @@ func (svc *ServiceImpl) BroadcastCampaignUpsert(ctx context.Context, accountID s
 		ID:                data.ID,
 		Name:              data.Name,
 		Channel:           data.Channel,
-		Templates:         data.Templates,
+		MessageTemplates:  data.MessageTemplates,
 		Status:            data.Status,
 		SubscriptionLists: data.SubscriptionLists,
 		UTMSource:         data.UTMSource,

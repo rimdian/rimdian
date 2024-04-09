@@ -20,9 +20,9 @@ var (
 type BroadcastCampaign struct {
 	ID                string                             `db:"id" json:"id"` // ID is the utm_campaign value
 	Name              string                             `db:"name" json:"name"`
-	Channel           string                             `db:"channel" json:"channel"`     // email | sms | push
-	Templates         BroadcastCampaignTemplates         `db:"templates" json:"templates"` // templates for A/B testing
-	Status            string                             `db:"status" json:"status"`       // draft | sending | sent | failed
+	Channel           string                             `db:"channel" json:"channel"`                     // email | sms | push
+	MessageTemplates  BroadcastCampaignMessageTemplates  `db:"message_templates" json:"message_templates"` // templates for A/B testing
+	Status            string                             `db:"status" json:"status"`                       // draft | sending | sent | failed
 	SubscriptionLists BroadcastCampaignSubscriptionLists `db:"subscription_lists" json:"subscription_lists"`
 	UTMSource         string                             `db:"utm_source" json:"utm_source"`
 	UTMMedium         string                             `db:"utm_medium" json:"utm_medium"`
@@ -45,7 +45,7 @@ func (bc *BroadcastCampaign) Validate() error {
 		return eris.New("Channel is invalid")
 	}
 
-	if bc.Templates == nil || len(bc.Templates) == 0 {
+	if bc.MessageTemplates == nil || len(bc.MessageTemplates) == 0 {
 		return eris.New("Templates is required")
 	}
 
@@ -72,9 +72,9 @@ func (bc *BroadcastCampaign) Validate() error {
 	return nil
 }
 
-type BroadcastCampaignTemplates []*BroadcastCampaignTemplate
+type BroadcastCampaignMessageTemplates []*BroadcastCampaignMessageTemplate
 
-func (x *BroadcastCampaignTemplates) Scan(val interface{}) error {
+func (x *BroadcastCampaignMessageTemplates) Scan(val interface{}) error {
 
 	var data []byte
 
@@ -92,18 +92,18 @@ func (x *BroadcastCampaignTemplates) Scan(val interface{}) error {
 	return json.Unmarshal(data, x)
 }
 
-func (x BroadcastCampaignTemplates) Value() (driver.Value, error) {
+func (x BroadcastCampaignMessageTemplates) Value() (driver.Value, error) {
 	return json.Marshal(x)
 }
 
-type BroadcastCampaignTemplate struct {
-	TemplateID string `json:"template_id"`
+type BroadcastCampaignMessageTemplate struct {
+	MessageTemplateID string `json:"message_template_id"`
 	// percentage for A/B testing
 	Percentage int `json:"percentage"`
 }
 
-func (bct *BroadcastCampaignTemplate) Validate() error {
-	if bct.TemplateID == "" {
+func (bct *BroadcastCampaignMessageTemplate) Validate() error {
+	if bct.MessageTemplateID == "" {
 		return eris.New("TemplateID is required")
 	}
 
@@ -146,7 +146,7 @@ var BroadcastCampaignSchema = `CREATE ROWSTORE TABLE IF NOT EXISTS broadcast_cam
 	id VARCHAR(64) NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	channel VARCHAR(255) NOT NULL,
-	templates JSON NOT NULL,
+	message_templates JSON NOT NULL,
 	status VARCHAR(255) NOT NULL,
 	subscription_list_id VARCHAR(64) NOT NULL,
 	utm_source VARCHAR(255) NOT NULL,
@@ -162,7 +162,7 @@ var BroadcastCampaignSchemaMYSQL = `CREATE TABLE IF NOT EXISTS broadcast_campaig
 	id VARCHAR(64) NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	channel VARCHAR(255) NOT NULL,
-	templates JSON NOT NULL,
+	message_templates JSON NOT NULL,
 	status VARCHAR(255) NOT NULL,
 	subscription_list_id VARCHAR(64) NOT NULL,
 	utm_source VARCHAR(255) NOT NULL,

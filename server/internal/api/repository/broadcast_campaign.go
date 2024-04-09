@@ -22,7 +22,7 @@ func (repo *RepositoryImpl) UpdateBroadcastCampaign(ctx context.Context, workspa
 	sql, args, err := squirrel.Update("broadcast_campaign").
 		Set("name", campaign.Name).
 		Set("channel", campaign.Channel).
-		Set("templates", campaign.Templates).
+		Set("message_templates", campaign.MessageTemplates).
 		Set("status", campaign.Status).
 		Set("subscription_lists", campaign.SubscriptionLists).
 		Set("utm_source", campaign.UTMSource).
@@ -55,7 +55,7 @@ func (repo *RepositoryImpl) InsertBroadcastCampaign(ctx context.Context, workspa
 			"id",
 			"name",
 			"channel",
-			"templates",
+			"message_templates",
 			"status",
 			"subscription_lists",
 			"utm_source",
@@ -65,7 +65,7 @@ func (repo *RepositoryImpl) InsertBroadcastCampaign(ctx context.Context, workspa
 		Values(campaign.ID,
 			campaign.Name,
 			campaign.Channel,
-			campaign.Templates,
+			campaign.MessageTemplates,
 			campaign.Status,
 			campaign.SubscriptionLists,
 			campaign.UTMSource,
@@ -107,6 +107,14 @@ func (repo *RepositoryImpl) ListBroadcastCampaigns(ctx context.Context, workspac
 	defer conn.Close()
 
 	err = sqlscan.Select(ctx, conn, &campaigns, "SELECT * FROM broadcast_campaign")
+
+	if err != nil {
+		return
+	}
+
+	if campaigns == nil {
+		campaigns = []*entity.BroadcastCampaign{}
+	}
 
 	return
 }

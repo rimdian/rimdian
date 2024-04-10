@@ -8,6 +8,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
@@ -676,7 +677,7 @@ func scanSessionRow(cols []string, row RowScanner, session *entity.Session, inst
 
 	// scan error
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if sqlscan.NotFound(err) {
 			return sql.ErrNoRows
 		} else {
 			return eris.Wrap(err, "scanSessionRow")

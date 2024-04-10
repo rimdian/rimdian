@@ -8,6 +8,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
@@ -564,7 +565,7 @@ func scanPostviewRow(cols []string, row RowScanner, postview *entity.Postview, i
 
 	// scan error
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if sqlscan.NotFound(err) {
 			return sql.ErrNoRows
 		} else {
 			return eris.Wrap(err, "scanPostviewRow")

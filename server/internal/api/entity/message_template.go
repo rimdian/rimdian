@@ -19,6 +19,11 @@ var (
 	MessageTemplateEngineVisual    = "visual"
 	MessageTemplateEngineMJML      = "mjml"
 	MessageTemplateEngineNunchucks = "nunchucks"
+
+	MessageTemplateCategoryTransactional = "transactional"
+	MessageTemplateCategoryCampaign      = "campaign"
+	MessageTemplateCategoryAutomation    = "automation"
+	MessageTemplateCategoryOther         = "other"
 )
 
 type MessageTemplate struct {
@@ -26,13 +31,13 @@ type MessageTemplate struct {
 	Version         int64                `json:"version"`
 	Name            string               `json:"name"`
 	Channel         string               `json:"channel"` // email | sms | push
-	Engine          string               `json:"engine"`  // visual | mjml | nunchucks
+	Category        string               `json:"category"`
+	Engine          string               `json:"engine"` // visual | mjml | nunchucks
 	Email           MessageTemplateEmail `json:"email"`
 	TemplateMacroID *string              `json:"template_macro_id,omitempty"`
 	UTMSource       *string              `json:"utm_source,omitempty"`
 	UTMMedium       *string              `json:"utm_medium,omitempty"`
 	UTMCampaign     *string              `json:"utm_campaign,omitempty"`
-	UTMContent      *string              `json:"utm_content,omitempty"`
 	Settings        MapOfInterfaces      `json:"settings"`  // Channels specific 3rd-party settings
 	TestData        string               `json:"test_data"` // Test data for the template
 	DBCreatedAt     time.Time            `json:"db_created_at"`
@@ -51,6 +56,10 @@ func (e *MessageTemplate) Validate() (err error) {
 
 	if e.Name == "" {
 		return eris.New("name is required")
+	}
+
+	if e.Category != MessageTemplateCategoryTransactional && e.Category != MessageTemplateCategoryCampaign && e.Category != MessageTemplateCategoryAutomation && e.Category != MessageTemplateCategoryOther {
+		return eris.New("category is invalid")
 	}
 
 	if e.Engine != MessageTemplateEngineVisual && e.Engine != MessageTemplateEngineMJML && e.Engine != MessageTemplateEngineNunchucks {
@@ -149,14 +158,14 @@ var MessageTemplateSchema string = `CREATE ROWSTORE TABLE IF NOT EXISTS message_
 	id VARCHAR(64) NOT NULL,
 	version INT NOT NULL,
 	name VARCHAR(255) NOT NULL,
-	channel VARCHAR(255) NOT NULL,
+	channel VARCHAR(24) NOT NULL,
+	category VARCHAR(24) NOT NULL,
 	engine VARCHAR(255) NOT NULL,
 	email JSON NOT NULL,
 	template_macro_id VARCHAR(64),
 	utm_source VARCHAR(255),
 	utm_medium VARCHAR(255),
 	utm_campaign VARCHAR(255),
-	utm_content VARCHAR(255),
 	settings JSON NOT NULL,
 	test_data TEXT,
 	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -170,14 +179,14 @@ var MessageTemplateSchemaMYSQL string = `CREATE TABLE IF NOT EXISTS message_temp
 	id VARCHAR(64) NOT NULL,
 	version INT NOT NULL,
 	name VARCHAR(255) NOT NULL,
-	channel VARCHAR(255) NOT NULL,
+	channel VARCHAR(24) NOT NULL,
+	category VARCHAR(24) NOT NULL,
 	engine VARCHAR(255) NOT NULL,
 	email JSON NOT NULL,
 	template_macro_id VARCHAR(64),
 	utm_source VARCHAR(255),
 	utm_medium VARCHAR(255),
 	utm_campaign VARCHAR(255),
-	utm_content VARCHAR(255),
 	settings JSON NOT NULL,
 	test_data TEXT,
 	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

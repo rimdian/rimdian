@@ -10,6 +10,7 @@ import (
 type MessageTemplateListParams struct {
 	WorkspaceID string  `json:"workspace_id"`
 	Channel     *string `json:"channel"` // email | sms | push
+	Category    *string `json:"category"`
 }
 
 func (params *MessageTemplateListParams) FromRequest(r *http.Request) (err error) {
@@ -28,6 +29,15 @@ func (params *MessageTemplateListParams) FromRequest(r *http.Request) (err error
 		params.Channel = &channel
 	}
 
+	// category
+	category := r.FormValue("category")
+	if category != "" {
+		if category != entity.MessageTemplateCategoryTransactional && category != entity.MessageTemplateCategoryCampaign && category != entity.MessageTemplateCategoryAutomation && category != entity.MessageTemplateCategoryOther {
+			return eris.New("category is invalid")
+		}
+		params.Category = &category
+	}
+
 	return nil
 }
 
@@ -35,14 +45,14 @@ type MessageTemplate struct {
 	WorkspaceID     string                      `json:"workspace_id"`
 	ID              string                      `json:"id"`
 	Name            string                      `json:"name"`
-	Channel         string                      `json:"channel"` // email | sms | push
-	Engine          string                      `json:"engine"`  // visual | mjml | nunchucks
+	Channel         string                      `json:"channel"`  // email | sms | push
+	Category        string                      `json:"category"` // email | sms | push
+	Engine          string                      `json:"engine"`   // visual | mjml | nunchucks
 	Email           entity.MessageTemplateEmail `json:"email"`
 	TemplateMacroID *string                     `json:"template_macro_id,omitempty"`
 	UTMSource       *string                     `json:"utm_source,omitempty"`
 	UTMMedium       *string                     `json:"utm_medium,omitempty"`
 	UTMCampaign     *string                     `json:"utm_campaign,omitempty"`
-	UTMContent      *string                     `json:"utm_content,omitempty"`
 	Settings        entity.MapOfInterfaces      `json:"settings"`  // Channels specific 3rd-party settings
 	TestData        string                      `json:"test_data"` // Test data for the template
 }

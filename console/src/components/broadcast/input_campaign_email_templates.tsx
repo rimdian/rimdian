@@ -1,6 +1,6 @@
-import { faTrashAlt } from '@fortawesome/free-regular-svg-icons'
+import { faEdit, faTrashAlt } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Button, InputNumber, Modal, Select, Table } from 'antd'
+import { Alert, Button, InputNumber, Modal, Select, Space, Table, Tag, Tooltip } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import ButtonUpsertEmailTemplate from 'components/assets/message_template/button_upsert_email'
 import { MessageTemplate } from 'components/assets/message_template/interfaces'
@@ -13,6 +13,10 @@ type InputCampaignEmailTemplatesProps = {
   value?: BroadcastCampaignMessageTemplate[]
   onChange?: (value: BroadcastCampaignMessageTemplate[]) => void
   disabled?: boolean
+  name?: string
+  utmSource?: string
+  utmMedium?: string
+  utmCampaign?: string
 }
 
 const InputCampaignEmailTemplates = (props: InputCampaignEmailTemplatesProps) => {
@@ -25,12 +29,14 @@ const InputCampaignEmailTemplates = (props: InputCampaignEmailTemplatesProps) =>
     refetch,
     isFetching
   } = useQuery<MessageTemplate[]>(
-    ['templates', workspaceCtx.workspace.id],
+    ['templates_email_campaign', workspaceCtx.workspace.id],
     (): Promise<MessageTemplate[]> => {
       return new Promise((resolve, reject) => {
         workspaceCtx
           .apiGET(
-            '/messageTemplate.list?workspace_id=' + workspaceCtx.workspace.id + '&channel=email'
+            '/messageTemplate.list?workspace_id=' +
+              workspaceCtx.workspace.id +
+              '&channel=email&category=campaign'
           )
           .then((data: any) => {
             // console.log(data)
@@ -46,40 +52,52 @@ const InputCampaignEmailTemplates = (props: InputCampaignEmailTemplatesProps) =>
   const updatePercentage = (templateID: string, percentage: number | null) => {
     let diff = 0
     let isIncrement = false
-    if (props.onChange) {
-      let templateIndex = 0
-      const newTemplates = (props.value || []).map((x, i) => {
-        if (x.message_template_id === templateID) {
-          templateIndex = i
-          if (percentage !== null && percentage > x.percentage) {
-            isIncrement = true
-            diff = (percentage || 0) - x.percentage
-          } else {
-            diff = x.percentage - (percentage || 0)
-          }
-          return { ...x, percentage: percentage || 0 }
-        }
-        return x
-      })
-
-      // if has a previous or next template, adjust the percentage
-      const hasPrevious = templateIndex > 0
-      const hasNext = templateIndex < newTemplates.length - 1
-
-      if (hasPrevious) {
-        if (isIncrement) {
-          newTemplates[templateIndex - 1].percentage -= diff
+    let templateIndex = 0
+    const newTemplates = (props.value || []).map((x, i) => {
+      if (x.id === templateID) {
+        templateIndex = i
+        if (percentage !== null && percentage > x.percentage) {
+          isIncrement = true
+          diff = (percentage || 0) - x.percentage
         } else {
-          newTemplates[templateIndex - 1].percentage += diff
+          diff = x.percentage - (percentage || 0)
         }
-      } else if (hasNext) {
-        if (isIncrement) {
-          newTemplates[templateIndex + 1].percentage -= diff
-        } else {
-          newTemplates[templateIndex + 1].percentage += diff
+        return { ...x, percentage: percentage || 0 }
+      }
+      return x
+    })
+
+    // if has a previous or next template, adjust the percentage
+    const hasPrevious = templateIndex > 0
+    const hasNext = templateIndex < newTemplates.length - 1
+
+    if (hasPrevious) {
+      if (isIncrement) {
+        const newValue = newTemplates[templateIndex - 1].percentage - diff
+        if (newValue >= 0 && newValue <= 100) {
+          newTemplates[templateIndex - 1].percentage = newValue
+        }
+      } else {
+        const newValue = newTemplates[templateIndex - 1].percentage + diff
+        if (newValue >= 0 && newValue <= 100) {
+          newTemplates[templateIndex - 1].percentage = newValue
         }
       }
+    } else if (hasNext) {
+      if (isIncrement) {
+        const newValue = newTemplates[templateIndex + 1].percentage - diff
+        if (newValue >= 0 && newValue <= 100) {
+          newTemplates[templateIndex + 1].percentage = newValue
+        }
+      } else {
+        const newValue = newTemplates[templateIndex + 1].percentage + diff
+        if (newValue >= 0 && newValue <= 100) {
+          newTemplates[templateIndex + 1].percentage = newValue
+        }
+      }
+    }
 
+    if (props.onChange) {
       props.onChange(newTemplates)
     }
   }
@@ -88,28 +106,56 @@ const InputCampaignEmailTemplates = (props: InputCampaignEmailTemplatesProps) =>
     if (!messageTemplates) {
       return []
     }
-    return messageTemplates.filter((x) => !props.value?.find((y) => y.message_template_id === x.id))
+    return messageTemplates.filter((x) => !props.value?.find((y) => y.id === x.id))
   }, [messageTemplates, props.value])
+
+  const equalSplit = (
+    templates: BroadcastCampaignMessageTemplate[]
+  ): BroadcastCampaignMessageTemplate[] => {
+    if (templates.length === 0) return templates
+
+    const arr = [...templates]
+
+    if (arr.length === 1) {
+      arr[0].percentage = 100
+      return arr
+    }
+
+    let eachPercentage = 100
+    let total = 0
+
+    eachPercentage = Math.floor(100 / arr.length) // split percentages equally
+    arr.forEach((x: BroadcastCampaignMessageTemplate, i: number) => {
+      x.percentage = eachPercentage
+      total += eachPercentage
+
+      // last item has the rest
+      if (i + 1 === arr.length) {
+        const rest = total < 100 ? 100 - total : 0
+        x.percentage += rest
+      }
+    })
+
+    return arr
+  }
 
   const addTemplate = (templateID: string) => {
     if (props.onChange) {
-      let percentageAvailable = 100
-
-      if (props.value && props.value.length > 0) {
-        const totalPercentage = props.value.reduce((acc, x) => acc + x.percentage, 0)
-        percentageAvailable = 100 - totalPercentage
-      }
-
-      props.onChange([
-        ...(props.value || []),
-        { message_template_id: templateID, percentage: percentageAvailable }
-      ])
+      let arr = props.value ? [...props.value] : []
+      arr.push({
+        id: templateID,
+        percentage: 0
+      })
+      arr = equalSplit(arr)
+      props.onChange(arr)
     }
   }
 
   const removeTemplate = (templateID: string) => {
     if (props.onChange) {
-      props.onChange((props.value || []).filter((x) => x.message_template_id !== templateID))
+      let arr = (props.value || []).filter((x) => x.id !== templateID)
+      arr = equalSplit(arr)
+      props.onChange(arr)
     }
   }
 
@@ -136,7 +182,7 @@ const InputCampaignEmailTemplates = (props: InputCampaignEmailTemplatesProps) =>
                     min={0}
                     max={100}
                     step={5}
-                    onChange={updatePercentage.bind(null, record.message_template_id)}
+                    onChange={updatePercentage.bind(null, record.id)}
                     formatter={(value) => `${value}%`}
                     parser={(value) => value?.replace('%', '') as unknown as number}
                   />
@@ -146,34 +192,41 @@ const InputCampaignEmailTemplates = (props: InputCampaignEmailTemplatesProps) =>
             {
               title: 'Name',
               render: (record: BroadcastCampaignMessageTemplate) => {
-                const template = messageTemplates?.find(
-                  (x: MessageTemplate) => x.id === record.message_template_id
-                )
+                const template = messageTemplates?.find((x: MessageTemplate) => x.id === record.id)
                 if (!template) {
-                  return <div>{record.message_template_id}</div>
+                  return <div>{record.id}</div>
                 }
                 return <div>{template.name}</div>
               }
             },
             {
-              title: (
-                <div className={CSS.text_right}>
-                  {/* <Button type="primary" ghost size="small">
-                    Change A/B
-                  </Button> */}
-                </div>
-              ),
-              // width: 20,
+              title: '',
               className: CSS.text_right,
               render: (_value, record) => {
                 return (
-                  <Button
-                    type="text"
-                    size="small"
-                    onClick={removeTemplate.bind(null, record.message_template_id)}
-                  >
-                    <FontAwesomeIcon icon={faTrashAlt} />
-                  </Button>
+                  <Space>
+                    <Tooltip title="Remove from campaign">
+                      <Button
+                        type="text"
+                        size="small"
+                        onClick={removeTemplate.bind(null, record.id)}
+                      >
+                        <FontAwesomeIcon icon={faTrashAlt} />
+                      </Button>
+                    </Tooltip>
+
+                    <ButtonUpsertEmailTemplate
+                      onSuccess={(newID: string) => {
+                        refetch()
+                      }}
+                      btnProps={{ type: 'text', size: 'small' }}
+                      template={messageTemplates?.find((x) => x.id === record.id)}
+                    >
+                      <Tooltip title="Edit template">
+                        <FontAwesomeIcon icon={faEdit} />
+                      </Tooltip>
+                    </ButtonUpsertEmailTemplate>
+                  </Space>
                 )
               }
             }
@@ -193,9 +246,21 @@ const InputCampaignEmailTemplates = (props: InputCampaignEmailTemplatesProps) =>
           footer={null}
           width={400}
         >
-          <div className={CSS.margin_v_m}>
+          <div className={CSS.margin_v_l}>
             {availableTemplates.length > 0 && (
               <>
+                <Alert
+                  className={CSS.margin_b_l}
+                  message={
+                    <>
+                      Only templates from the <Tag color="purple">Campaign</Tag> category are
+                      available.
+                    </>
+                  }
+                  type="info"
+                  showIcon
+                />
+
                 <Select
                   showSearch
                   style={{ width: '100%' }}
@@ -209,8 +274,22 @@ const InputCampaignEmailTemplates = (props: InputCampaignEmailTemplatesProps) =>
               </>
             )}
             <ButtonUpsertEmailTemplate
-              onSuccess={refetch}
+              onSuccess={(newID: string) => {
+                refetch().then(() => {
+                  addTemplate(newID)
+                  setModalVisible(false)
+                })
+              }}
               btnProps={{ type: 'primary', ghost: true, block: true }}
+              category="campaign"
+              name={
+                props.name
+                  ? props.name + ' v' + (props.value ? props.value.length + 1 : 1)
+                  : undefined
+              }
+              utmSource={props.utmSource}
+              utmMedium={props.utmMedium}
+              utmCampaign={props.utmCampaign}
             >
               Create a new template
             </ButtonUpsertEmailTemplate>

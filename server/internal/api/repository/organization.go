@@ -89,7 +89,7 @@ func (repo *RepositoryImpl) IsAccountOfOrganization(ctx context.Context, account
 	var id string
 
 	if err := row.Scan(&id); err != nil {
-		if err == sql.ErrNoRows {
+		if sqlscan.NotFound(err) {
 			return false, nil
 		}
 

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
@@ -444,7 +445,7 @@ func scanPageviewRow(cols []string, row RowScanner, pageview *entity.Pageview, i
 
 	// scan error
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if sqlscan.NotFound(err) {
 			return sql.ErrNoRows
 		} else {
 			return eris.Wrap(err, "scanPageviewRow")

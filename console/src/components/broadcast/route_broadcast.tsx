@@ -3,13 +3,16 @@ import Layout from 'components/common/layout'
 import CSS from 'utils/css'
 import { useQuery } from '@tanstack/react-query'
 import { BroadcastCampaign } from 'interfaces'
-import { Table, Tooltip } from 'antd'
+import { Table, Tag, Tooltip } from 'antd'
 import ButtonUpsertCampaign from './button_upsert_broadcast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-regular-svg-icons'
+import dayjs from 'dayjs'
+import { useAccount } from 'components/login/context_account'
 
 const RouteBroadcasts = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
+  const accountCtx = useAccount()
 
   const { isLoading, data, refetch, isFetching } = useQuery<BroadcastCampaign[]>(
     ['broadcast_campaigns', workspaceCtx.workspace.id],
@@ -63,14 +66,85 @@ const RouteBroadcasts = () => {
                 </div>
               )
             },
-            // {
-            //   title: 'Last update',
-            //   key: 'createdAt',
-            //   render: (x: BroadcastCampaign) =>
-            //     dayjs(x.db_created_at)
-            //       .tz(accountCtx.account?.account.timezone as string)
-            //       .format('lll')
-            // },
+            {
+              title: 'Channel',
+              key: 'channel',
+              render: (x: BroadcastCampaign) => <div>{x.channel}</div>
+            },
+            {
+              title: 'utm_source / medium / campaign',
+              key: 'channel',
+              render: (x: BroadcastCampaign) => (
+                <div>
+                  {x.utm_source} / {x.utm_medium} / {x.id}
+                </div>
+              )
+            },
+            {
+              title: 'To',
+              key: 'to',
+              render: (x: BroadcastCampaign) => (
+                <div>
+                  {x.subscription_lists.map((list) => {
+                    const subscriptionList = workspaceCtx.subscriptionLists.find(
+                      (l) => l.id === list.id
+                    )
+                    return (
+                      <Tag key={list.id} color={subscriptionList?.color}>
+                        {subscriptionList?.name}
+                      </Tag>
+                    )
+                  })}
+                </div>
+              )
+            },
+            {
+              title: 'Status',
+              key: 'status',
+              render: (x: BroadcastCampaign) => {
+                switch (x.status) {
+                  case 'draft':
+                    return <Tag color="blue">Draft</Tag>
+                  case 'scheduled':
+                    return <Tag color="purple">Scheduled</Tag>
+                  case 'launched':
+                    return <Tag color="gold">Launched</Tag>
+                  case 'sent':
+                    return <Tag color="green">Sent</Tag>
+                  case 'failed':
+                    return <Tag color="volcano">Failed</Tag>
+                  default:
+                    return <Tag color="default">{x.status}</Tag>
+                }
+              }
+            },
+            {
+              title: 'Scheduled / launched at',
+              key: 'createdAt',
+              render: (x: BroadcastCampaign) => {
+                if (x.scheduled_at) {
+                  return (
+                    <>
+                      {dayjs(x.scheduled_at).format('lll')}
+                      <div className={CSS.font_size_xs}>in {x.timezone}</div>
+                    </>
+                  )
+                }
+                if (x.launched_at) {
+                  return (
+                    <>
+                      {dayjs(x.launched_at)
+                        .tz(accountCtx.account?.account.timezone as string)
+                        .format('lll')}
+                      <div className={CSS.font_size_xs}>
+                        in {accountCtx.account?.account.timezone}
+                      </div>
+                    </>
+                  )
+                }
+                return ''
+              }
+            },
             {
               title: (
                 <>

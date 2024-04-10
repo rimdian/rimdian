@@ -1,4 +1,18 @@
-import { Button, Col, Divider, Drawer, Form, Input, Row, Space, Tabs, Tag, message } from 'antd'
+import {
+  Alert,
+  Button,
+  Col,
+  Divider,
+  Drawer,
+  Form,
+  Input,
+  Row,
+  Select,
+  Space,
+  Tabs,
+  Tag,
+  message
+} from 'antd'
 import { MessageTemplate } from './interfaces'
 import { useState } from 'react'
 import { cloneDeep, kebabCase } from 'lodash'
@@ -127,9 +141,14 @@ const tabsInHeader = css({
 
 interface ButtonUpsertEmailTemplateProps {
   template?: MessageTemplate
-  onSuccess?: () => void
+  onSuccess?: (id: string) => void
   btnProps: any
+  category?: string
   children: React.ReactNode
+  name?: string
+  utmSource?: string
+  utmMedium?: string
+  utmCampaign?: string
 }
 
 const ButtonUpsertEmailTemplate = (props: ButtonUpsertEmailTemplateProps) => {
@@ -141,6 +160,11 @@ const ButtonUpsertEmailTemplate = (props: ButtonUpsertEmailTemplateProps) => {
           template={props.template}
           setDrawserVisible={setDrawserVisible}
           onSuccess={props.onSuccess}
+          name={props.name}
+          category={props.category}
+          utmSource={props.utmSource}
+          utmMedium={props.utmMedium}
+          utmCampaign={props.utmCampaign}
         />
       )}
       <Button {...props.btnProps} onClick={() => setDrawserVisible(true)}>
@@ -153,7 +177,12 @@ const ButtonUpsertEmailTemplate = (props: ButtonUpsertEmailTemplateProps) => {
 const DrawerEmailTemplate = (props: {
   template?: MessageTemplate
   setDrawserVisible: any
-  onSuccess?: () => void
+  onSuccess?: (id: string) => void
+  name?: string
+  category?: string
+  utmSource?: string
+  utmMedium?: string
+  utmCampaign?: string
 }) => {
   const [loading, setLoading] = useState(false)
   const [form] = Form.useForm()
@@ -181,7 +210,7 @@ const DrawerEmailTemplate = (props: {
       .then(() => {
         message.success('The template has been saved!')
         setLoading(false)
-        props.onSuccess && props.onSuccess()
+        props.onSuccess && props.onSuccess(data.id)
         props.setDrawserVisible(false)
       })
       .catch(() => {
@@ -191,8 +220,12 @@ const DrawerEmailTemplate = (props: {
 
   const initialValues = Object.assign(
     {
-      utm_source: extractTLD(workspaceCtx.workspace.website_url),
-      utm_medium: 'email',
+      name: props.name,
+      id: props.name ? kebabCase(props.name) : undefined,
+      utm_source: props.utmSource || extractTLD(workspaceCtx.workspace.website_url),
+      utm_medium: props.utmMedium || 'email',
+      utm_campaign: props.utmCampaign || undefined,
+      category: props.category,
       engine: 'visual',
       email: {
         visual_editor_tree: rootBlock
@@ -279,11 +312,11 @@ const DrawerEmailTemplate = (props: {
 
   return (
     <Drawer
-      title={<>{props.template ? 'Edit template' : 'Create a template'}</>}
+      title={<>{props.template ? 'Edit email template' : 'Create an email template'}</>}
       closable={true}
       keyboard={false}
       maskClosable={false}
-      width={tab === 'settings' ? 900 : '95%'}
+      width={tab === 'settings' ? 960 : '95%'}
       open={true}
       onClose={() => props.setDrawserVisible(false)}
       className={CSS.drawerBodyNoPadding}
@@ -320,7 +353,9 @@ const DrawerEmailTemplate = (props: {
                           utm_source: values.utm_source,
                           utm_medium: values.utm_medium,
                           utm_campaign: values.utm_campaign,
-                          utm_content: values.utm_content,
+                          utm_content: values.id,
+                          // replaced by the backend
+                          // the utm_id contains the unique message.id sent to the user
                           utm_id: '{{ rmd_utm_id }}'
                         }
 
@@ -400,7 +435,7 @@ const DrawerEmailTemplate = (props: {
                 children: (
                   <div className={CSS.padding_a_l}>
                     <Row gutter={24}>
-                      <Col span={12}>
+                      <Col span={8}>
                         <Form.Item name="name" label="Template name" rules={[{ required: true }]}>
                           <Input
                             placeholder="i.e: Newsletter ABC"
@@ -413,10 +448,10 @@ const DrawerEmailTemplate = (props: {
                           />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col span={8}>
                         <Form.Item
                           name="id"
-                          label="Template ID"
+                          label="Template ID (utm_content)"
                           rules={[
                             {
                               required: true,
@@ -429,6 +464,36 @@ const DrawerEmailTemplate = (props: {
                           <Input
                             disabled={props.template ? true : false}
                             placeholder="i.e: newsletter-abc"
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          name="category"
+                          label="Category"
+                          rules={[{ required: true, type: 'string' }]}
+                        >
+                          <Select
+                            placeholder="Select category"
+                            disabled={props.category ? true : false}
+                            options={[
+                              {
+                                value: 'transactional',
+                                label: <Tag color="green">Transactional</Tag>
+                              },
+                              {
+                                value: 'campaign',
+                                label: <Tag color="purple">Campaign</Tag>
+                              },
+                              {
+                                value: 'automation',
+                                label: <Tag color="cyan">Automation</Tag>
+                              },
+                              {
+                                value: 'other',
+                                label: <Tag color="magenta">Other...</Tag>
+                              }
+                            ]}
                           />
                         </Form.Item>
                       </Col>
@@ -519,38 +584,45 @@ const DrawerEmailTemplate = (props: {
                       URL Tracking
                     </Divider>
 
+                    {props.utmCampaign && (
+                      <Alert
+                        type="info"
+                        showIcon
+                        className={CSS.margin_b_l}
+                        message="The utm_source / medium / campaign parameters are already defined at the Campaign level."
+                      />
+                    )}
                     <Row gutter={24}>
-                      <Col span={12}>
+                      <Col span={8}>
                         <Form.Item
                           name="utm_source"
                           label="utm_source"
                           rules={[{ required: false, type: 'string' }]}
                         >
-                          <Input placeholder="business.com" />
+                          <Input
+                            placeholder="business.com"
+                            disabled={props.utmSource ? true : false}
+                          />
                         </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
                         <Form.Item
                           name="utm_medium"
                           label="utm_medium"
                           rules={[{ required: false, type: 'string' }]}
                         >
-                          <Input placeholder="email" />
+                          <Input placeholder="email" disabled={props.utmMedium ? true : false} />
                         </Form.Item>
                       </Col>
 
-                      <Col span={12}>
+                      <Col span={8}>
                         <Form.Item
                           name="utm_campaign"
                           label="utm_campaign"
                           rules={[{ required: false, type: 'string' }]}
                         >
-                          <Input />
-                        </Form.Item>
-                        <Form.Item
-                          name="utm_content"
-                          label="utm_content"
-                          rules={[{ required: false, type: 'string' }]}
-                        >
-                          <Input />
+                          <Input disabled={props.utmCampaign ? true : false} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -605,8 +677,8 @@ const DrawerEmailTemplate = (props: {
                                     utm_source: getFieldValue('utm_source'),
                                     utm_medium: getFieldValue('utm_medium'),
                                     utm_campaign: getFieldValue('utm_campaign'),
-                                    utm_content: getFieldValue('utm_content'),
-                                    utm_id: getFieldValue('id')
+                                    utm_content: getFieldValue('id')
+                                    // utm_id: getFieldValue('id')
                                   }}
                                 >
                                   <Layout form={form} macros={macros} height={contentHeight} />

@@ -7,6 +7,7 @@ import ButtonUpsertEmailTemplate from './button_upsert_email'
 // Form input to select an email template
 interface EmailTemplateInputProps {
   value?: string
+  category?: string
   onChange?: (value: string) => void
 }
 
@@ -40,6 +41,7 @@ const EmailTemplateInput = (props: EmailTemplateInputProps) => {
       <ButtonUpsertEmailTemplate
         btnProps={{ isLoading: isFetching, type: 'primary', block: true }}
         onSuccess={() => refetch()}
+        category={props.category}
       >
         New template
       </ButtonUpsertEmailTemplate>

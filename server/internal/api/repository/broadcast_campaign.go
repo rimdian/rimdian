@@ -28,6 +28,8 @@ func (repo *RepositoryImpl) UpdateBroadcastCampaign(ctx context.Context, workspa
 		Set("utm_source", campaign.UTMSource).
 		Set("utm_medium", campaign.UTMMedium).
 		Set("scheduled_at", campaign.ScheduledAt).
+		Set("timezone", campaign.Timezone).
+		Set("launched_at", campaign.LaunchedAt).
 		Where("id = ?", campaign.ID).
 		ToSql()
 
@@ -61,6 +63,7 @@ func (repo *RepositoryImpl) InsertBroadcastCampaign(ctx context.Context, workspa
 			"utm_source",
 			"utm_medium",
 			"scheduled_at",
+			"timezone",
 		).
 		Values(campaign.ID,
 			campaign.Name,
@@ -71,6 +74,7 @@ func (repo *RepositoryImpl) InsertBroadcastCampaign(ctx context.Context, workspa
 			campaign.UTMSource,
 			campaign.UTMMedium,
 			campaign.ScheduledAt,
+			campaign.Timezone,
 		).
 		ToSql()
 
@@ -92,9 +96,15 @@ func (repo *RepositoryImpl) GetBroadcastCampaign(ctx context.Context, workspaceI
 
 	defer conn.Close()
 
-	err = sqlscan.Get(ctx, conn, &campaign, "SELECT * FROM broadcast_campaign WHERE id = ?", campaignID)
+	cp := &entity.BroadcastCampaign{}
 
-	return
+	err = sqlscan.Get(ctx, conn, cp, "SELECT * FROM broadcast_campaign WHERE id = ?", campaignID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return cp, nil
 }
 
 func (repo *RepositoryImpl) ListBroadcastCampaigns(ctx context.Context, workspaceID string, params *dto.BroadcastCampaignListParams) (campaigns []*entity.BroadcastCampaign, err error) {

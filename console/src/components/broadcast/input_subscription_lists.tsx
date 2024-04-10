@@ -81,7 +81,7 @@ const InputSubscriptionLists = (props: SubscriptionListsProps) => {
           ]}
         />
       )}
-      {channelLists.length === 0 && <ButtonUpsertSubscriptionList />}
+      {channelLists.length === 0 && <ButtonUpsertSubscriptionList channel={props.channel} />}
     </>
   )
 }

@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"strings"
 
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/common"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
@@ -34,7 +34,7 @@ func (repo *RepositoryImpl) GetSettings(ctx context.Context) (settings *entity.S
 
 	if err != nil {
 		// tables not installed yet
-		if err == sql.ErrNoRows || strings.Contains(err.Error(), "Error 1146: Table") {
+		if sqlscan.NotFound(err) || strings.Contains(err.Error(), "Error 1146: Table") {
 			return nil, entity.ErrSettingsTableNotFound
 		}
 		return nil, eris.Wrapf(err, "GetSettings exec query %v", query)

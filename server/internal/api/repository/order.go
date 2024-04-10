@@ -544,7 +544,7 @@ func scanOrderRow(cols []string, row RowScanner, order *entity.Order, installedA
 
 	// scan error
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if sqlscan.NotFound(err) {
 			return sql.ErrNoRows
 		} else {
 			return eris.Wrap(err, "scanOrderRow")

@@ -4,11 +4,11 @@ export interface MessageTemplate {
   name: string
   engine: 'visual' | 'code'
   channel: 'email'
+  category: 'transactional' | 'campaign' | 'automation' | 'other'
   email: MessageTemplateEmail
   utm_source?: string
   utm_medium?: string
   utm_campaign?: string
-  utm_content?: string
   esp_settings: any
   test_data: any
   db_created_at: string

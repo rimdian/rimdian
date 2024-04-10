@@ -7,14 +7,16 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/rimdian/rimdian/internal/api/common"
 	"github.com/rotisserie/eris"
 )
 
 var (
-	BroadcastCampaignStatusDraft   string = "draft"
-	BroadcastCampaignStatusSending string = "sending"
-	BroadcastCampaignStatusSent    string = "sent"
-	BroadcastCampaignStatusFailed  string = "failed"
+	BroadcastCampaignStatusDraft     string = "draft"
+	BroadcastCampaignStatusScheduled string = "scheduled"
+	BroadcastCampaignStatusLaunched  string = "launched"
+	BroadcastCampaignStatusSent      string = "sent"
+	BroadcastCampaignStatusFailed    string = "failed"
 )
 
 type BroadcastCampaign struct {
@@ -26,7 +28,9 @@ type BroadcastCampaign struct {
 	SubscriptionLists BroadcastCampaignSubscriptionLists `db:"subscription_lists" json:"subscription_lists"`
 	UTMSource         string                             `db:"utm_source" json:"utm_source"`
 	UTMMedium         string                             `db:"utm_medium" json:"utm_medium"`
-	ScheduledAt       time.Time                          `db:"scheduled_at" json:"scheduled_at"`
+	ScheduledAt       *string                            `db:"scheduled_at" json:"scheduled_at,omitempty"`
+	Timezone          *string                            `db:"timezone" json:"timezone,omitempty"`
+	LaunchedAt        *time.Time                         `db:"launched_at" json:"launched_at,omitempty"`
 	DBCreatedAt       time.Time                          `db:"db_created_at" json:"db_created_at"`
 	DBUpdatedAt       time.Time                          `db:"db_updated_at" json:"db_updated_at"`
 }
@@ -49,10 +53,6 @@ func (bc *BroadcastCampaign) Validate() error {
 		return eris.New("Templates is required")
 	}
 
-	if !govalidator.IsIn(bc.Status, BroadcastCampaignStatusDraft, BroadcastCampaignStatusSending, BroadcastCampaignStatusSent, BroadcastCampaignStatusFailed) {
-		return eris.New("Status is invalid")
-	}
-
 	if bc.SubscriptionLists == nil || len(bc.SubscriptionLists) == 0 {
 		return eris.New("SubscriptionLists is required")
 	}
@@ -65,8 +65,43 @@ func (bc *BroadcastCampaign) Validate() error {
 		return eris.New("UTMMedium is required")
 	}
 
-	if bc.ScheduledAt.IsZero() {
-		return eris.New("ScheduledAt is required")
+	if bc.ScheduledAt != nil {
+
+		if bc.Timezone != nil && !govalidator.IsIn(*bc.Timezone, common.Timezones...) {
+			return eris.New("timezone is invalid")
+		}
+
+		// parse date in location
+		location, err := time.LoadLocation(*bc.Timezone)
+		if err != nil {
+			return eris.Wrap(err, "Failed to load timezone")
+		}
+		datetime, err := time.ParseInLocation("2006-01-02 15:04", *bc.ScheduledAt, location)
+
+		if err != nil {
+			return eris.Wrap(err, "Failed to parse datetime")
+		}
+
+		if datetime.Before(time.Now()) {
+			return eris.New("scheduled_at should be in the future")
+		}
+	}
+
+	if bc.Status == "" {
+		bc.Status = BroadcastCampaignStatusDraft
+	}
+
+	if bc.Status == BroadcastCampaignStatusDraft && bc.ScheduledAt != nil {
+		bc.Status = BroadcastCampaignStatusScheduled
+	}
+
+	// switch back to draft if scheduled_at is removed
+	if bc.ScheduledAt == nil && bc.Status == BroadcastCampaignStatusScheduled {
+		bc.Status = BroadcastCampaignStatusDraft
+	}
+
+	if !govalidator.IsIn(bc.Status, BroadcastCampaignStatusDraft, BroadcastCampaignStatusScheduled, BroadcastCampaignStatusLaunched, BroadcastCampaignStatusSent, BroadcastCampaignStatusFailed) {
+		return eris.New("Status is invalid")
 	}
 
 	return nil
@@ -97,13 +132,13 @@ func (x BroadcastCampaignMessageTemplates) Value() (driver.Value, error) {
 }
 
 type BroadcastCampaignMessageTemplate struct {
-	MessageTemplateID string `json:"message_template_id"`
+	ID string `json:"id"`
 	// percentage for A/B testing
 	Percentage int `json:"percentage"`
 }
 
 func (bct *BroadcastCampaignMessageTemplate) Validate() error {
-	if bct.MessageTemplateID == "" {
+	if bct.ID == "" {
 		return eris.New("TemplateID is required")
 	}
 
@@ -147,11 +182,13 @@ var BroadcastCampaignSchema = `CREATE ROWSTORE TABLE IF NOT EXISTS broadcast_cam
 	name VARCHAR(255) NOT NULL,
 	channel VARCHAR(255) NOT NULL,
 	message_templates JSON NOT NULL,
-	status VARCHAR(255) NOT NULL,
-	subscription_list_id VARCHAR(64) NOT NULL,
+	status VARCHAR(24) NOT NULL,
+	subscription_lists JSON NOT NULL,
 	utm_source VARCHAR(255) NOT NULL,
 	utm_medium VARCHAR(255) NOT NULL,
-	scheduled_at DATETIME NOT NULL,
+	scheduled_at VARCHAR(24),
+	timezone VARCHAR(255),
+	launched_at DATETIME,
 	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -163,11 +200,13 @@ var BroadcastCampaignSchemaMYSQL = `CREATE TABLE IF NOT EXISTS broadcast_campaig
 	name VARCHAR(255) NOT NULL,
 	channel VARCHAR(255) NOT NULL,
 	message_templates JSON NOT NULL,
-	status VARCHAR(255) NOT NULL,
-	subscription_list_id VARCHAR(64) NOT NULL,
+	status VARCHAR(24) NOT NULL,
+	subscription_lists JSON NOT NULL,
 	utm_source VARCHAR(255) NOT NULL,
 	utm_medium VARCHAR(255) NOT NULL,
-	scheduled_at DATETIME NOT NULL,
+	scheduled_at VARCHAR(24),
+	timezone VARCHAR(255),
+	launched_at DATETIME,
 	db_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	db_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 

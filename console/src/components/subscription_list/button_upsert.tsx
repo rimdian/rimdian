@@ -18,7 +18,7 @@ import { SubscriptionList } from 'interfaces'
 import EmailTemplateInput from 'components/assets/message_template/input_email'
 import Messages from 'utils/formMessages'
 
-const ButtonUpsertSubscriptionList = (props: { list?: SubscriptionList }) => {
+const ButtonUpsertSubscriptionList = (props: { list?: SubscriptionList; channel?: string }) => {
   const [drawserVisible, setDrawserVisible] = useState(false)
   const workspaceCtx = useCurrentWorkspaceCtx()
 
@@ -59,20 +59,29 @@ const ButtonUpsertSubscriptionList = (props: { list?: SubscriptionList }) => {
     <>
       {button}
       {drawserVisible && (
-        <DrawerSubscriptionList list={props.list} setDrawserVisible={setDrawserVisible} />
+        <DrawerSubscriptionList
+          channel={props.channel}
+          list={props.list}
+          setDrawserVisible={setDrawserVisible}
+        />
       )}
     </>
   )
 }
 
-const DrawerSubscriptionList = (props: { list?: SubscriptionList; setDrawserVisible: any }) => {
+const DrawerSubscriptionList = (props: {
+  list?: SubscriptionList
+  channel?: string
+  setDrawserVisible: any
+}) => {
   const workspaceCtx = useCurrentWorkspaceCtx()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
 
   const initialValues = Object.assign(
     {
-      color: 'blue'
+      color: 'blue',
+      channel: props.channel
     },
     props.list
   )
@@ -205,6 +214,7 @@ const DrawerSubscriptionList = (props: { list?: SubscriptionList; setDrawserVisi
                 // { label: 'Push', value: 'push' },
                 // { label: 'SMS', value: 'sms' },
               ]}
+              disabled={props.channel ? true : false}
             />
           </Form.Item>
           {/* double opt in if channel is email */}
@@ -221,7 +231,7 @@ const DrawerSubscriptionList = (props: { list?: SubscriptionList; setDrawserVisi
             {() => {
               return form.getFieldValue('double_opt_in') ? (
                 <Form.Item name="message_template_id" label="Email template">
-                  <EmailTemplateInput />
+                  <EmailTemplateInput category="transactional" />
                 </Form.Item>
               ) : null
             }}

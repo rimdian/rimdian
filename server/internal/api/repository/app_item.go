@@ -12,6 +12,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/asaskevich/govalidator"
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
@@ -80,7 +81,7 @@ func (repo *RepositoryImpl) FetchAppItems(ctx context.Context, workspace *entity
 		err = rawDataToAppItem(cols, rows, tableDefinition, item)
 
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if sqlscan.NotFound(err) {
 				return items, nil
 			}
 
@@ -540,7 +541,7 @@ func rawDataToAppItem(cols []string, rows RowScanner, tableDefinition *entity.Ap
 
 	err = rows.Scan(scanValues...)
 
-	if err == sql.ErrNoRows {
+	if sqlscan.NotFound(err) {
 		return err
 	}
 

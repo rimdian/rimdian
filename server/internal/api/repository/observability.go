@@ -111,7 +111,7 @@ package repository
 // 	err = sqlscan.Get(ctx, conn, check, "SELECT * FROM observability_check WHERE id = ? LIMIT 1", checkID)
 
 // 	if err != nil {
-// 		if err == sql.ErrNoRows {
+// 		if sqlscan.NotFound(err) {
 // 			return nil, eris.Wrap(entity.ErrObservabilityCheckNotFound, "GetObservabilityCheck")
 // 		} else {
 // 			return nil, eris.Wrap(err, "GetObservabilityCheck error")

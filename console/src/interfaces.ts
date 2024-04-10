@@ -1165,17 +1165,19 @@ export interface BroadcastCampaign {
   name: string
   channel: 'email'
   message_templates: BroadcastCampaignMessageTemplate[]
-  status: 'draft' | 'sending' | 'sent' | 'failed'
+  status: 'draft' | 'scheduled' | 'launched' | 'sent' | 'failed'
   subscription_lists: BroadcastCampaignSubscriptionList[]
   utm_source: string
   utm_medium: string
-  scheduled_at: string
+  scheduled_at?: string
+  timezone: string
+  launched_at?: string
   db_created_at: string
   db_updated_at: string
 }
 
 export interface BroadcastCampaignMessageTemplate {
-  message_template_id: string
+  id: string
   percentage: number
 }
 

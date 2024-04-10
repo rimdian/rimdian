@@ -19,13 +19,13 @@ func (repo *RepositoryImpl) InsertMessageTemplate(ctx context.Context, workspace
 			"version",
 			"name",
 			"channel",
+			"category",
 			"engine",
 			"email",
 			"template_macro_id",
 			"utm_source",
 			"utm_medium",
 			"utm_campaign",
-			"utm_content",
 			"settings",
 			"test_data",
 		).
@@ -34,13 +34,13 @@ func (repo *RepositoryImpl) InsertMessageTemplate(ctx context.Context, workspace
 			template.Version,
 			template.Name,
 			template.Channel,
+			template.Category,
 			template.Engine,
 			template.Email,
 			template.TemplateMacroID,
 			template.UTMSource,
 			template.UTMMedium,
 			template.UTMCampaign,
-			template.UTMContent,
 			template.Settings,
 			template.TestData,
 		).
@@ -116,6 +116,10 @@ func (repo *RepositoryImpl) ListMessageTemplates(ctx context.Context, workspaceI
 
 	if params.Channel != nil {
 		builder = builder.Where(sq.Eq{"t1.channel": *params.Channel})
+	}
+
+	if params.Category != nil {
+		builder = builder.Where(sq.Eq{"t1.category": *params.Category})
 	}
 
 	// fetch lists

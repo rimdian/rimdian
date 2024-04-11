@@ -153,7 +153,9 @@ const RouteBroadcasts = () => {
                       return (
                         <p key={msgTemplate.id}>
                           <Space>
-                            <span>{msgTemplate.percentage}%</span>
+                            <span className={CSS.font_size_xs + ' ' + CSS.font_weight_bold}>
+                              {msgTemplate.percentage}%
+                            </span>
                             <Tooltip title="Preview template">
                               <ButtonPreviewMessageTemplate
                                 templates={templates}

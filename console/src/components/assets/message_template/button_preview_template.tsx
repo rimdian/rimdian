@@ -5,6 +5,7 @@ import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_wor
 import { Descriptions, Drawer, Space, Spin, Tabs } from 'antd'
 import IframeSandbox from 'components/email_editor/UI/Widgets/Iframe'
 import Nunjucks from 'nunjucks'
+import CSS from 'utils/css'
 
 type PreviewMessageTemplate = {
   id: string
@@ -41,38 +42,50 @@ type DrawerPreviewMessageTemplateProps = {
   setVisible: (value: boolean) => void
 }
 const DrawerPreviewMessageTemplate = (props: DrawerPreviewMessageTemplateProps) => {
+  const hasMany = props.templates.length > 1
   return (
     <Drawer
-      title="Preview templates"
+      title={!hasMany ? 'Preview template' : 'Preview templates'}
       placement="right"
       closable={true}
       onClose={() => props.setVisible(false)}
       open={true}
       width={800}
     >
-      <Tabs
-        defaultActiveKey={props.selectedID}
-        items={props.templates.map((template) => {
-          return {
-            key: template.id,
-            label: (
-              <Space>
-                {template.percentage !== undefined && template.percentage !== 100 && (
-                  <span>{template.percentage}%</span>
-                )}
-                {template.id}
-              </Space>
-            ),
-            children: (
-              <MessageTemplatePreview
-                key={template.id}
-                templateID={template.id}
-                version={template.version}
-              />
-            )
-          }
-        })}
-      />
+      {hasMany && (
+        <Tabs
+          defaultActiveKey={props.selectedID}
+          items={props.templates.map((template) => {
+            return {
+              key: template.id,
+              label: (
+                <Space>
+                  {template.percentage !== undefined && template.percentage !== 100 && (
+                    <span className={CSS.font_size_xs + ' ' + CSS.font_weight_bold}>
+                      {template.percentage}%
+                    </span>
+                  )}
+                  {template.id}
+                </Space>
+              ),
+              children: (
+                <MessageTemplatePreview
+                  key={template.id}
+                  templateID={template.id}
+                  version={template.version}
+                />
+              )
+            }
+          })}
+        />
+      )}
+      {!hasMany && (
+        <MessageTemplatePreview
+          key={props.templates[0].id}
+          templateID={props.templates[0].id}
+          version={props.templates[0].version}
+        />
+      )}
     </Drawer>
   )
 }
@@ -180,8 +193,14 @@ const EmailMessageTemplatePreview = (props: EmailMessageTemplatePreviewProps) =>
 
   return (
     <div>
-      <Descriptions size="small" layout="vertical">
+      <Descriptions size="small" layout="vertical" className={CSS.margin_b_m}>
         <Descriptions.Item label="Template name">{props.data.name}</Descriptions.Item>
+        <Descriptions.Item label="utm_source / medium / campaign / content">
+          {props.data.utm_source} / {props.data.utm_medium} / {props.data.utm_campaign} /{' '}
+          {props.data.id}
+        </Descriptions.Item>
+      </Descriptions>
+      <Descriptions size="small" layout="vertical">
         <Descriptions.Item label="Subject">{subject}</Descriptions.Item>
         <Descriptions.Item label="From">
           {props.data.email.from_name + ' <' + props.data.email.from_address + '>'}{' '}

@@ -1,13 +1,14 @@
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import CSS from 'utils/css'
-import { Table, Tooltip } from 'antd'
+import { Button, Space, Table, Tooltip } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { MessageTemplate } from 'components/assets/message_template/interfaces'
 import dayjs from 'dayjs'
 import { useAccount } from 'components/login/context_account'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import ButtonUpsertEmailTemplate from './button_upsert_email'
-import { faPenToSquare } from '@fortawesome/free-regular-svg-icons'
+import { faEye, faPenToSquare } from '@fortawesome/free-regular-svg-icons'
+import ButtonPreviewMessageTemplate from './button_preview_template'
 
 const ListTemplates = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -110,13 +111,25 @@ const ListTemplates = () => {
           width: 170,
           render: (row: MessageTemplate) => (
             <div className={CSS.text_right}>
-              <ButtonUpsertEmailTemplate
-                btnProps={{ size: 'small', type: 'text' }}
-                onSuccess={() => refetch()}
-                template={row}
-              >
-                <FontAwesomeIcon icon={faPenToSquare} />
-              </ButtonUpsertEmailTemplate>
+              <Space>
+                <ButtonUpsertEmailTemplate
+                  btnProps={{ size: 'small', type: 'text' }}
+                  onSuccess={() => refetch()}
+                  template={row}
+                >
+                  <Tooltip title="Edit template">
+                    <FontAwesomeIcon icon={faPenToSquare} />
+                  </Tooltip>
+                </ButtonUpsertEmailTemplate>
+
+                <ButtonPreviewMessageTemplate templates={[{ id: row.id }]} selectedID={row.id}>
+                  <Tooltip title="Preview template">
+                    <Button type="text" size="small">
+                      <FontAwesomeIcon icon={faEye} />
+                    </Button>
+                  </Tooltip>
+                </ButtonPreviewMessageTemplate>
+              </Space>
             </div>
           )
         }

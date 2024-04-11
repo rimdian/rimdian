@@ -202,7 +202,7 @@ type Repository interface {
 	// subscritpion list users
 	InsertSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) (err error)
 	UpdateSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) (err error)
-	GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) (userIDs []*dto.UserToImportToSubscriptionList, err error)
+	GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64, segmentID *string) (userIDs []*dto.UserToImportToSubscriptionList, err error)
 
 	// broadcast campaigns
 	ListBroadcastCampaigns(ctx context.Context, workspaceID string, params *dto.BroadcastCampaignListParams) (campaigns []*entity.BroadcastCampaign, err error)

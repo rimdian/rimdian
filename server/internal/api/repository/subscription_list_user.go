@@ -12,7 +12,7 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func (repo *RepositoryImpl) GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) (users []*dto.UserToImportToSubscriptionList, err error) {
+func (repo *RepositoryImpl) GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64, segmentID *string) (users []*dto.UserToImportToSubscriptionList, err error) {
 
 	conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
 
@@ -24,7 +24,7 @@ func (repo *RepositoryImpl) GetUsersNotInSubscriptionList(ctx context.Context, w
 
 	users = []*dto.UserToImportToSubscriptionList{}
 
-	sql, args, err := squirrel.Select(
+	builder := squirrel.Select(
 		"user.external_id",
 		"user.is_authenticated",
 		"user.created_at",
@@ -32,8 +32,14 @@ func (repo *RepositoryImpl) GetUsersNotInSubscriptionList(ctx context.Context, w
 		LeftJoin("subscription_list_user ON user.id = subscription_list_user.user_id AND subscription_list_user.subscription_list_id = ?", listID).
 		Where("subscription_list_user.user_id IS NULL").
 		Offset(uint64(offset)).
-		Limit(uint64(limit)).
-		ToSql()
+		Limit(uint64(limit))
+
+	if segmentID != nil {
+		builder = builder.LeftJoin("user_segment ON user.id = user_segment.user_id AND user_segment.segment_id = ?", *segmentID).
+			Where("user_segment.user_id IS NOT NULL")
+	}
+
+	sql, args, err := builder.ToSql()
 
 	if err != nil {
 		return nil, eris.Wrap(err, "GetUsersNotInSubscriptionList")

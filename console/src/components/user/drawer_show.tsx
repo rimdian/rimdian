@@ -1,11 +1,26 @@
-import { Avatar, Image, Button, Drawer, Row, Col, Tooltip, Tabs, Tag, Spin } from 'antd'
-import { User, UserAlias, Device, UserSegment, Account } from 'interfaces'
+import { Avatar, Image, Button, Drawer, Row, Col, Tooltip, Tabs, Tag, Spin, Table } from 'antd'
+import {
+  User,
+  UserAlias,
+  Device,
+  UserSegment,
+  Account,
+  SubscriptionListUser,
+  SubscriptionList
+} from 'interfaces'
 import { CurrentWorkspaceCtxValue } from 'components/workspace/context_current_workspace'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useAccount } from 'components/login/context_account'
-import { faCheck, faMapMarkerAlt, faSyncAlt, faTimes } from '@fortawesome/free-solid-svg-icons'
+import {
+  faCheck,
+  faEnvelope,
+  faMapMarkerAlt,
+  faPhone,
+  faSyncAlt,
+  faTimes
+} from '@fortawesome/free-solid-svg-icons'
 import PartialCustomColumns from 'components/common/partial_custom_column'
 import { faUser } from '@fortawesome/free-regular-svg-icons'
 import { PartialDeviceTypeIcon } from 'components/common/partial_device_icon'
@@ -189,12 +204,12 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
                               </Attribute>
                             )}
                             {user.email && (
-                              <Attribute label={<FontAwesomeIcon icon="envelope" />}>
+                              <Attribute label={<FontAwesomeIcon icon={faEnvelope} />}>
                                 <a href={'mailto:' + user.email}>{user.email}</a>
                               </Attribute>
                             )}
                             {user.telephone && (
-                              <Attribute label={<FontAwesomeIcon icon="phone" />}>
+                              <Attribute label={<FontAwesomeIcon icon={faPhone} />}>
                                 <a href={'tel:' + user.telephone}>{user.telephone}</a>
                               </Attribute>
                             )}
@@ -362,7 +377,48 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
                       ))}
                     </div>
                   )} */}
+                        {props.workspaceCtx.subscriptionLists &&
+                          props.workspaceCtx.subscriptionLists.length > 0 && (
+                            <Block title="Subscription lists" classNames={[CSS.margin_t_m]}>
+                              <Table
+                                size="small"
+                                pagination={false}
+                                showHeader={false}
+                                rowKey="id"
+                                dataSource={props.workspaceCtx.subscriptionLists}
+                                columns={[
+                                  {
+                                    title: 'Name',
+                                    key: 'name',
+                                    render: (record: SubscriptionList) => {
+                                      return <Tag color={record.color}>{record.name}</Tag>
+                                    }
+                                  },
+                                  {
+                                    title: 'subscribed',
+                                    key: 'subscribed',
+                                    render: (record: SubscriptionList) => {
+                                      if (!user.subscription_lists) return ''
+                                      const isSubscribed = user.subscription_lists?.some(
+                                        (sub: SubscriptionListUser) =>
+                                          sub.subscription_list_id === record.id
+                                      )
 
+                                      return isSubscribed ? (
+                                        <span className={CSS.text_green}>
+                                          <FontAwesomeIcon icon={faCheck} />
+                                        </span>
+                                      ) : (
+                                        <span className={CSS.text_orange}>
+                                          <FontAwesomeIcon icon={faTimes} />
+                                        </span>
+                                      )
+                                    }
+                                  }
+                                ]}
+                              />
+                            </Block>
+                          )}
                         {aliases.length > 0 && (
                           <Block title="Merged user IDs" classNames={[CSS.margin_t_m]}>
                             <Attribute label="External ID">

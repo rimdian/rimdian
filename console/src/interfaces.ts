@@ -605,7 +605,19 @@ export interface User {
   last_order_at?: Date
   avg_repeat_cart: number
   avg_repeat_order_ttc: number
-  [key: string]: any // custom dimensions
+  // joined server-side
+  subscription_lists?: SubscriptionListUser[]
+  // custom dimensions
+  [key: string]: any
+}
+
+export interface SubscriptionListUser {
+  subscription_list_id: string
+  user_id: string
+  status: number
+  comment?: string
+  db_created_at: string
+  db_updated_at: string
 }
 
 // raw cubejs schema returned by the API

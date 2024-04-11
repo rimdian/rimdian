@@ -9,9 +9,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-regular-svg-icons'
 import dayjs from 'dayjs'
 import { useAccount } from 'components/login/context_account'
-import { faPause, faRefresh } from '@fortawesome/free-solid-svg-icons'
+import { faPause, faPlay, faRefresh } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
 import ButtonPreviewMessageTemplate from 'components/assets/message_template/button_preview_template'
+import numbro from 'numbro'
 
 const RouteBroadcasts = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -37,7 +38,7 @@ const RouteBroadcasts = () => {
 
   const pauseCampaign = (id: string) => {
     const campaign = data?.find((c) => c.id === id)
-    console.log(campaign)
+
     if (!campaign) return
     if (campaign.status !== 'scheduled' || !campaign.scheduled_at) return
     if (isLoadingAction) return
@@ -54,6 +55,26 @@ const RouteBroadcasts = () => {
       .then(() => {
         refetch().then(() => {
           message.success('The campaign has been paused!')
+          setIsLoadingAction(false)
+        })
+      })
+      .finally(() => {
+        setIsLoadingAction(false)
+      })
+  }
+
+  const launchCampaign = (id: string) => {
+    if (isLoadingAction) return
+    setIsLoadingAction(true)
+
+    workspaceCtx
+      .apiPOST('/broadcastCampaign.launch', {
+        workspace_id: workspaceCtx.workspace.id,
+        id: id
+      })
+      .then(() => {
+        refetch().then(() => {
+          message.success('The campaign has been launched!')
           setIsLoadingAction(false)
         })
       })
@@ -128,9 +149,15 @@ const RouteBroadcasts = () => {
                       (l) => l.id === list.id
                     )
                     return (
-                      <Tag key={list.id} color={subscriptionList?.color}>
-                        {subscriptionList?.name}
-                      </Tag>
+                      <p key={list.id}>
+                        <Tag color={subscriptionList?.color}>{subscriptionList?.name}</Tag>(
+                        {subscriptionList &&
+                          numbro(subscriptionList.users_count).format({
+                            totalLength: 3,
+                            trimMantissa: true
+                          })}
+                        )
+                      </p>
                     )
                   })}
                 </div>
@@ -265,6 +292,21 @@ const RouteBroadcasts = () => {
                         >
                           <Button type="text" size="small">
                             <FontAwesomeIcon icon={faPause} />
+                          </Button>
+                        </Popconfirm>
+                      </Tooltip>
+                    )}
+                    {row.status === 'draft' && (
+                      <Tooltip title="Launch campaign" placement="bottomRight">
+                        <Popconfirm
+                          title="Do your really want to launch the campaign?"
+                          onConfirm={launchCampaign.bind(null, row.id)}
+                          okText="Launch campaign"
+                          placement="topRight"
+                          okButtonProps={{ loading: isLoadingAction }}
+                        >
+                          <Button type="text" size="small">
+                            <FontAwesomeIcon icon={faPlay} />
                           </Button>
                         </Popconfirm>
                       </Tooltip>

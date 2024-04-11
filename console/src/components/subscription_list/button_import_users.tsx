@@ -1,4 +1,4 @@
-import { Alert, Button, ButtonProps, Form, Modal, Select, Tag } from 'antd'
+import { Alert, Button, ButtonProps, Form, Modal, Select, Tag, message } from 'antd'
 import { Segment } from 'components/segment/interfaces'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { SubscriptionList } from 'interfaces'
@@ -36,6 +36,7 @@ const ButtonImportSubscriptionListUsers = (props: {
               loading={loading}
               onClick={() => {
                 form.validateFields().then((values) => {
+                  if (loading) return
                   setLoading(true)
                   workspaceCtx
                     .apiPOST('/task.run', {
@@ -49,6 +50,7 @@ const ButtonImportSubscriptionListUsers = (props: {
                       multiple_exec_key: props.subscriptionList.id
                     })
                     .then(() => {
+                      message.success('Import started')
                       setLoading(false)
                       setModalVisible(false)
                       onSuccess && onSuccess()

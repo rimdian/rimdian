@@ -82,7 +82,7 @@ func TaskExecImportUsersToSubscriptionList(ctx context.Context, pipe *TaskExecPi
 	limit := int64(100)
 
 	// fetch users who are not in the subscription list and belong to the segment
-	users, err := pipe.Repository.GetUsersNotInSubscriptionList(bgCtx, pipe.Workspace.ID, segmentID, offset, limit)
+	users, err := pipe.Repository.GetUsersNotInSubscriptionList(bgCtx, pipe.Workspace.ID, segmentID, offset, limit, &segmentID)
 
 	if err != nil {
 		result.SetError(err.Error(), false)
@@ -113,7 +113,7 @@ func TaskExecImportUsersToSubscriptionList(ctx context.Context, pipe *TaskExecPi
 				"created_at": "%s"
 			}
 		}`,
-			segmentID,
+			subscriptionListID,
 			user.ExternalID,
 			now,
 			user.ExternalID,

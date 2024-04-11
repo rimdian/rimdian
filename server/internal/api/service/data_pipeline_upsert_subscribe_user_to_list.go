@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rotisserie/eris"
@@ -23,7 +24,7 @@ func (pipe *DataLogPipeline) UpsertSubscriptionListUser(ctx context.Context, isC
 
 	existingSubscriptionListUser, err = pipe.Repository.FindSubscriptionListUser(spanCtx, pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID, pipe.DataLog.UpsertedSubscriptionListUser.UserID, tx)
 
-	if err != nil {
+	if err != nil && !sqlscan.NotFound(err) {
 		return eris.Wrap(err, "SubscriptionListUserUpsert")
 	}
 

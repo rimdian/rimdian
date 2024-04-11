@@ -260,7 +260,7 @@ var _ Repository = &RepositoryMock{}
 //			GetTaskExecJobsFunc: func(ctx context.Context, workspaceID string, taskExecID string, offset int, limit int) ([]*entity.TaskExecJob, int, error) {
 //				panic("mock out the GetTaskExecJobs method")
 //			},
-//			GetUsersNotInSubscriptionListFunc: func(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) ([]*dto.UserToImportToSubscriptionList, error) {
+//			GetUsersNotInSubscriptionListFunc: func(ctx context.Context, workspaceID string, listID string, offset int64, limit int64, segmentID *string) ([]*dto.UserToImportToSubscriptionList, error) {
 //				panic("mock out the GetUsersNotInSubscriptionList method")
 //			},
 //			GetWorkspaceFunc: func(ctx context.Context, workspaceID string) (*entity.Workspace, error) {
@@ -826,7 +826,7 @@ type RepositoryMock struct {
 	GetTaskExecJobsFunc func(ctx context.Context, workspaceID string, taskExecID string, offset int, limit int) ([]*entity.TaskExecJob, int, error)
 
 	// GetUsersNotInSubscriptionListFunc mocks the GetUsersNotInSubscriptionList method.
-	GetUsersNotInSubscriptionListFunc func(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) ([]*dto.UserToImportToSubscriptionList, error)
+	GetUsersNotInSubscriptionListFunc func(ctx context.Context, workspaceID string, listID string, offset int64, limit int64, segmentID *string) ([]*dto.UserToImportToSubscriptionList, error)
 
 	// GetWorkspaceFunc mocks the GetWorkspace method.
 	GetWorkspaceFunc func(ctx context.Context, workspaceID string) (*entity.Workspace, error)
@@ -1997,6 +1997,8 @@ type RepositoryMock struct {
 			Offset int64
 			// Limit is the limit argument value.
 			Limit int64
+			// SegmentID is the segmentID argument value.
+			SegmentID *string
 		}
 		// GetWorkspace holds details about calls to the GetWorkspace method.
 		GetWorkspace []struct {
@@ -6650,7 +6652,7 @@ func (mock *RepositoryMock) GetTaskExecJobsCalls() []struct {
 }
 
 // GetUsersNotInSubscriptionList calls GetUsersNotInSubscriptionListFunc.
-func (mock *RepositoryMock) GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64) ([]*dto.UserToImportToSubscriptionList, error) {
+func (mock *RepositoryMock) GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64, segmentID *string) ([]*dto.UserToImportToSubscriptionList, error) {
 	if mock.GetUsersNotInSubscriptionListFunc == nil {
 		panic("RepositoryMock.GetUsersNotInSubscriptionListFunc: method is nil but Repository.GetUsersNotInSubscriptionList was just called")
 	}
@@ -6660,17 +6662,19 @@ func (mock *RepositoryMock) GetUsersNotInSubscriptionList(ctx context.Context, w
 		ListID      string
 		Offset      int64
 		Limit       int64
+		SegmentID   *string
 	}{
 		Ctx:         ctx,
 		WorkspaceID: workspaceID,
 		ListID:      listID,
 		Offset:      offset,
 		Limit:       limit,
+		SegmentID:   segmentID,
 	}
 	mock.lockGetUsersNotInSubscriptionList.Lock()
 	mock.calls.GetUsersNotInSubscriptionList = append(mock.calls.GetUsersNotInSubscriptionList, callInfo)
 	mock.lockGetUsersNotInSubscriptionList.Unlock()
-	return mock.GetUsersNotInSubscriptionListFunc(ctx, workspaceID, listID, offset, limit)
+	return mock.GetUsersNotInSubscriptionListFunc(ctx, workspaceID, listID, offset, limit, segmentID)
 }
 
 // GetUsersNotInSubscriptionListCalls gets all the calls that were made to GetUsersNotInSubscriptionList.
@@ -6683,6 +6687,7 @@ func (mock *RepositoryMock) GetUsersNotInSubscriptionListCalls() []struct {
 	ListID      string
 	Offset      int64
 	Limit       int64
+	SegmentID   *string
 } {
 	var calls []struct {
 		Ctx         context.Context
@@ -6690,6 +6695,7 @@ func (mock *RepositoryMock) GetUsersNotInSubscriptionListCalls() []struct {
 		ListID      string
 		Offset      int64
 		Limit       int64
+		SegmentID   *string
 	}
 	mock.lockGetUsersNotInSubscriptionList.RLock()
 	calls = mock.calls.GetUsersNotInSubscriptionList

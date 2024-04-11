@@ -2,10 +2,44 @@ package dto
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
+
+type MessageTemplateGetParams struct {
+	WorkspaceID string `json:"workspace_id"`
+	ID          string `json:"id"`
+	Version     *int64 `json:"version,omitempty"`
+}
+
+func (params *MessageTemplateGetParams) FromRequest(r *http.Request) (err error) {
+
+	params.WorkspaceID = r.FormValue("workspace_id")
+	if params.WorkspaceID == "" {
+		return eris.New("workspace_id is required")
+	}
+
+	params.ID = r.FormValue("id")
+	if params.ID == "" {
+		return eris.New("id is required")
+	}
+
+	// version
+	version := r.FormValue("version")
+	if version != "" {
+		// convert to int
+		i, err := strconv.Atoi(version)
+		if err != nil {
+			return eris.New("version is invalid")
+		}
+		i64 := int64(i)
+		params.Version = &i64
+	}
+
+	return nil
+}
 
 type MessageTemplateListParams struct {
 	WorkspaceID string  `json:"workspace_id"`

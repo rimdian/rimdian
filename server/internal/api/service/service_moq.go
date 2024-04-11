@@ -151,6 +151,9 @@ var _ Service = &ServiceMock{}
 //			MessageSendFunc: func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
 //				panic("mock out the MessageSend method")
 //			},
+//			MessageTemplateGetFunc: func(ctx context.Context, accountID string, params *dto.MessageTemplateGetParams) (*entity.MessageTemplate, int, error) {
+//				panic("mock out the MessageTemplateGet method")
+//			},
 //			MessageTemplateListFunc: func(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) ([]*entity.MessageTemplate, int, error) {
 //				panic("mock out the MessageTemplateList method")
 //			},
@@ -415,6 +418,9 @@ type ServiceMock struct {
 
 	// MessageSendFunc mocks the MessageSend method.
 	MessageSendFunc func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult
+
+	// MessageTemplateGetFunc mocks the MessageTemplateGet method.
+	MessageTemplateGetFunc func(ctx context.Context, accountID string, params *dto.MessageTemplateGetParams) (*entity.MessageTemplate, int, error)
 
 	// MessageTemplateListFunc mocks the MessageTemplateList method.
 	MessageTemplateListFunc func(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) ([]*entity.MessageTemplate, int, error)
@@ -898,6 +904,15 @@ type ServiceMock struct {
 			// Data is the data argument value.
 			Data *dto.SendMessage
 		}
+		// MessageTemplateGet holds details about calls to the MessageTemplateGet method.
+		MessageTemplateGet []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AccountID is the accountID argument value.
+			AccountID string
+			// Params is the params argument value.
+			Params *dto.MessageTemplateGetParams
+		}
 		// MessageTemplateList holds details about calls to the MessageTemplateList method.
 		MessageTemplateList []struct {
 			// Ctx is the ctx argument value.
@@ -1311,6 +1326,7 @@ type ServiceMock struct {
 	lockIsAccountOfOrganization                 sync.RWMutex
 	lockIsOwnerOfOrganization                   sync.RWMutex
 	lockMessageSend                             sync.RWMutex
+	lockMessageTemplateGet                      sync.RWMutex
 	lockMessageTemplateList                     sync.RWMutex
 	lockMessageTemplateUpsert                   sync.RWMutex
 	lockOrganizationAccountCreateServiceAccount sync.RWMutex
@@ -3000,6 +3016,46 @@ func (mock *ServiceMock) MessageSendCalls() []struct {
 	mock.lockMessageSend.RLock()
 	calls = mock.calls.MessageSend
 	mock.lockMessageSend.RUnlock()
+	return calls
+}
+
+// MessageTemplateGet calls MessageTemplateGetFunc.
+func (mock *ServiceMock) MessageTemplateGet(ctx context.Context, accountID string, params *dto.MessageTemplateGetParams) (*entity.MessageTemplate, int, error) {
+	if mock.MessageTemplateGetFunc == nil {
+		panic("ServiceMock.MessageTemplateGetFunc: method is nil but Service.MessageTemplateGet was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.MessageTemplateGetParams
+	}{
+		Ctx:       ctx,
+		AccountID: accountID,
+		Params:    params,
+	}
+	mock.lockMessageTemplateGet.Lock()
+	mock.calls.MessageTemplateGet = append(mock.calls.MessageTemplateGet, callInfo)
+	mock.lockMessageTemplateGet.Unlock()
+	return mock.MessageTemplateGetFunc(ctx, accountID, params)
+}
+
+// MessageTemplateGetCalls gets all the calls that were made to MessageTemplateGet.
+// Check the length with:
+//
+//	len(mockedService.MessageTemplateGetCalls())
+func (mock *ServiceMock) MessageTemplateGetCalls() []struct {
+	Ctx       context.Context
+	AccountID string
+	Params    *dto.MessageTemplateGetParams
+} {
+	var calls []struct {
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.MessageTemplateGetParams
+	}
+	mock.lockMessageTemplateGet.RLock()
+	calls = mock.calls.MessageTemplateGet
+	mock.lockMessageTemplateGet.RUnlock()
 	return calls
 }
 

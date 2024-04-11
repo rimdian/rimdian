@@ -3,16 +3,20 @@ import Layout from 'components/common/layout'
 import CSS from 'utils/css'
 import { useQuery } from '@tanstack/react-query'
 import { BroadcastCampaign } from 'interfaces'
-import { Table, Tag, Tooltip } from 'antd'
+import { Button, Popconfirm, Space, Table, Tag, Tooltip, message } from 'antd'
 import ButtonUpsertCampaign from './button_upsert_broadcast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-regular-svg-icons'
 import dayjs from 'dayjs'
 import { useAccount } from 'components/login/context_account'
+import { faPause, faRefresh } from '@fortawesome/free-solid-svg-icons'
+import { useState } from 'react'
+import ButtonPreviewMessageTemplate from 'components/assets/message_template/button_preview_template'
 
 const RouteBroadcasts = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
   const accountCtx = useAccount()
+  const [isLoadingAction, setIsLoadingAction] = useState(false)
 
   const { isLoading, data, refetch, isFetching } = useQuery<BroadcastCampaign[]>(
     ['broadcast_campaigns', workspaceCtx.workspace.id],
@@ -31,6 +35,33 @@ const RouteBroadcasts = () => {
     }
   )
 
+  const pauseCampaign = (id: string) => {
+    const campaign = data?.find((c) => c.id === id)
+    console.log(campaign)
+    if (!campaign) return
+    if (campaign.status !== 'scheduled' || !campaign.scheduled_at) return
+    if (isLoadingAction) return
+    setIsLoadingAction(true)
+
+    campaign.scheduled_at = undefined
+    campaign.status = 'draft'
+
+    workspaceCtx
+      .apiPOST('/broadcastCampaign.upsert', {
+        workspace_id: workspaceCtx.workspace.id,
+        ...campaign
+      })
+      .then(() => {
+        refetch().then(() => {
+          message.success('The campaign has been paused!')
+          setIsLoadingAction(false)
+        })
+      })
+      .finally(() => {
+        setIsLoadingAction(false)
+      })
+  }
+
   return (
     <Layout
       currentOrganization={workspaceCtx.organization}
@@ -39,6 +70,13 @@ const RouteBroadcasts = () => {
       <div className={CSS.container}>
         <div className={CSS.top}>
           <h1>Broadcast campaigns</h1>
+          <div className={CSS.topSeparator}></div>
+
+          {!isLoading && data && data.length > 0 && (
+            <ButtonUpsertCampaign btnProps={{ type: 'primary' }} onSuccess={() => refetch()}>
+              New campaign
+            </ButtonUpsertCampaign>
+          )}
         </div>
 
         <Table
@@ -99,6 +137,42 @@ const RouteBroadcasts = () => {
               )
             },
             {
+              title: 'A/B templates',
+              key: 'templates',
+              render: (x: BroadcastCampaign) => {
+                const templates = x.message_templates.map((msgTemplate) => {
+                  return {
+                    id: msgTemplate.id,
+                    percentage: msgTemplate.percentage
+                  }
+                })
+
+                return (
+                  <div>
+                    {x.message_templates.map((msgTemplate) => {
+                      return (
+                        <p key={msgTemplate.id}>
+                          <Space>
+                            <span>{msgTemplate.percentage}%</span>
+                            <Tooltip title="Preview template">
+                              <ButtonPreviewMessageTemplate
+                                templates={templates}
+                                selectedID={msgTemplate.id}
+                              >
+                                <Button type="link" size="small">
+                                  {msgTemplate.id}
+                                </Button>
+                              </ButtonPreviewMessageTemplate>
+                            </Tooltip>
+                          </Space>
+                        </p>
+                      )
+                    })}
+                  </div>
+                )
+              }
+            },
+            {
               title: 'Status',
               key: 'status',
               render: (x: BroadcastCampaign) => {
@@ -126,7 +200,12 @@ const RouteBroadcasts = () => {
                   return (
                     <>
                       {dayjs(x.scheduled_at).format('lll')}
-                      <div className={CSS.font_size_xs}>in {x.timezone}</div>
+                      <div className={CSS.font_size_xs}>
+                        in {x.timezone} -{' '}
+                        {dayjs(x.scheduled_at)
+                          .tz(accountCtx.account?.account.timezone as string)
+                          .fromNow()}
+                      </div>
                     </>
                   )
                 }
@@ -147,29 +226,48 @@ const RouteBroadcasts = () => {
             },
             {
               title: (
-                <>
-                  {!isLoading && data && data.length > 0 && (
-                    <ButtonUpsertCampaign
-                      btnProps={{ type: 'primary' }}
-                      onSuccess={() => refetch()}
-                    >
-                      New campaign
-                    </ButtonUpsertCampaign>
-                  )}
-                </>
+                <div className={CSS.text_right}>
+                  <Space>
+                    <Tooltip title="Refresh">
+                      <Button type="text" size="small" onClick={() => refetch()}>
+                        <FontAwesomeIcon icon={faRefresh} />
+                      </Button>
+                    </Tooltip>
+                  </Space>
+                </div>
               ),
               key: 'actions',
-              className: 'actions',
-              width: 170,
+              className: CSS.text_right,
+              width: 50,
               render: (row: BroadcastCampaign) => (
                 <div className={CSS.text_right}>
-                  <ButtonUpsertCampaign
-                    btnProps={{ size: 'small', type: 'text' }}
-                    onSuccess={() => refetch()}
-                    campaign={row}
-                  >
-                    <FontAwesomeIcon icon={faPenToSquare} />
-                  </ButtonUpsertCampaign>
+                  <Space>
+                    <ButtonUpsertCampaign
+                      btnProps={{ size: 'small', type: 'text' }}
+                      onSuccess={() => refetch()}
+                      campaign={row}
+                    >
+                      <Tooltip title="Edit campaign" placement="bottomRight">
+                        <FontAwesomeIcon icon={faPenToSquare} />
+                      </Tooltip>
+                    </ButtonUpsertCampaign>
+
+                    {row.status === 'scheduled' && (
+                      <Tooltip title="Pause campaign" placement="bottomRight">
+                        <Popconfirm
+                          title="Do your really want to pause the scheduled campaign?"
+                          onConfirm={pauseCampaign.bind(null, row.id)}
+                          okText="Pause campaign"
+                          placement="topRight"
+                          okButtonProps={{ loading: isLoadingAction }}
+                        >
+                          <Button type="text" size="small">
+                            <FontAwesomeIcon icon={faPause} />
+                          </Button>
+                        </Popconfirm>
+                      </Tooltip>
+                    )}
+                  </Space>
                 </div>
               )
             }

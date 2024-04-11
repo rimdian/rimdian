@@ -19,7 +19,7 @@ const ButtonImportSubscriptionListUsers = (props: {
 
   return (
     <>
-      <Button {...btnProps} onClick={() => setModalVisible(true)}>
+      <Button {...btnProps} size="small" onClick={() => setModalVisible(true)}>
         Import users from segment
       </Button>
       {modalVisible && (

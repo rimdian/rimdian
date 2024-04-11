@@ -65,6 +65,9 @@ func (repo *RepositoryImpl) GetMessageTemplate(ctx context.Context, workspaceID 
 
 	if version != nil {
 		builder = builder.Where(sq.Eq{"version": *version})
+	} else {
+		// fetch the latest version
+		builder = builder.OrderBy("version DESC").Limit(1)
 	}
 
 	query, args, err := builder.ToSql()

@@ -4,10 +4,33 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
+
+func (svc *ServiceImpl) MessageTemplateGet(ctx context.Context, accountID string, params *dto.MessageTemplateGetParams) (result *entity.MessageTemplate, code int, err error) {
+
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
+
+	if err != nil {
+		return nil, code, eris.Wrap(err, "MessageTemplateGet")
+	}
+
+	// fetch
+	result, err = svc.Repo.GetMessageTemplate(ctx, workspace.ID, params.ID, params.Version, nil)
+
+	if err != nil {
+		if sqlscan.NotFound(err) {
+			return nil, 404, eris.New("Message template not found")
+		}
+		return nil, 500, err
+	}
+
+	return result, 200, nil
+
+}
 
 func (svc *ServiceImpl) MessageTemplateList(ctx context.Context, accountID string, params *dto.MessageTemplateListParams) (result []*entity.MessageTemplate, code int, err error) {
 

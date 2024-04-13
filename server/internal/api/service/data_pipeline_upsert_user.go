@@ -44,7 +44,7 @@ func (pipe *DataLogPipeline) UpsertUser(ctx context.Context, isChild bool, tx *s
 	// find eventual existing user
 	var existingUser *entity.User
 
-	existingUser, err = pipe.Repository.FindUserByID(spanCtx, pipe.Workspace, upsertedUser.ID, tx)
+	existingUser, err = pipe.Repository.FindUserByID(spanCtx, pipe.Workspace, upsertedUser.ID, tx, nil)
 
 	if err != nil && !sqlscan.NotFound(err) {
 		return eris.Wrap(err, "UserUpsert")

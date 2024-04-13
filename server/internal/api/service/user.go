@@ -28,21 +28,19 @@ func (svc *ServiceImpl) UserList(ctx context.Context, accountID string, params *
 	return result, 200, nil
 }
 
-func (svc *ServiceImpl) UserShow(ctx context.Context, workspaceID string, accountID string, userExternalID string) (result *dto.UserShowResult, code int, err error) {
-	// init
-	result = &dto.UserShowResult{}
+func (svc *ServiceImpl) UserShow(ctx context.Context, accountID string, params *dto.UserShowParams) (user *entity.User, code int, err error) {
 
-	workspace, code, err := svc.GetWorkspaceForAccount(ctx, workspaceID, accountID)
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
 
 	if err != nil {
 		return nil, code, eris.Wrap(err, "UserShow")
 	}
 
 	// compute user id from external id
-	userID := entity.ComputeUserID(userExternalID)
+	userID := entity.ComputeUserID(params.UserExternalID)
 
 	// fetch user
-	user, err := svc.Repo.FindUserByID(ctx, workspace, userID, nil)
+	user, err = svc.Repo.FindUserByID(ctx, workspace, userID, nil, params.UserWith)
 
 	if err != nil {
 		return nil, 500, eris.Wrap(err, "UserShow")
@@ -52,31 +50,5 @@ func (svc *ServiceImpl) UserShow(ctx context.Context, workspaceID string, accoun
 		return nil, 400, eris.New("user not found")
 	}
 
-	// populate result
-	result.User = user
-
-	// fetch user segments
-	result.UserSegments, err = svc.Repo.ListUserSegments(ctx, workspace.ID, []string{user.ID}, nil)
-
-	if err != nil {
-		return nil, 500, eris.Wrap(err, "UserShow")
-	}
-
-	// fetch user devices
-	result.Devices, err = svc.Repo.ListDevicesForUser(ctx, workspace, user.ID, "created_at ASC", nil)
-
-	if err != nil {
-		return nil, 500, eris.Wrap(err, "UserShow")
-	}
-
-	// svc.Logger.Printf("result.Devices = %+v", result.Devices)
-
-	// fetch user aliases
-	result.Aliases, err = svc.Repo.FindUsersAliased(ctx, workspace.ID, user.ExternalID)
-
-	if err != nil {
-		return nil, 500, eris.Wrap(err, "UserShow")
-	}
-
-	return result, 200, nil
+	return user, 200, nil
 }

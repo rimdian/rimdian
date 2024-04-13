@@ -25,7 +25,7 @@ func (pipe *DataLogPipeline) UpsertSubscriptionListUser(ctx context.Context, isC
 	existingSubscriptionListUser, err = pipe.Repository.FindSubscriptionListUser(spanCtx, pipe.DataLog.UpsertedSubscriptionListUser.SubscriptionListID, pipe.DataLog.UpsertedSubscriptionListUser.UserID, tx)
 
 	if err != nil && !sqlscan.NotFound(err) {
-		return eris.Wrap(err, "SubscriptionListUserUpsert")
+		return eris.Wrap(err, "SubscriptionListUserUpsert: FindSubscriptionListUser")
 	}
 
 	// insert new subscription_list_user
@@ -121,7 +121,7 @@ func (pipe *DataLogPipeline) UpsertSubscriptionListUser(ctx context.Context, isC
 
 	// persist changes
 	if err = pipe.Repository.UpdateSubscriptionListUser(spanCtx, pipe.DataLog.UpsertedSubscriptionListUser, tx); err != nil {
-		return eris.Wrap(err, "SubscriptionListUserUpsert")
+		return eris.Wrap(err, "SubscriptionListUserUpsert: UpdateSubscriptionListUser")
 	}
 
 	if isChild {

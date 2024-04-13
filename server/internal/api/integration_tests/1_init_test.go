@@ -1027,7 +1027,7 @@ func TestIntegration_MergeUsers(t *testing.T) {
 		// fetch auth user
 		authExternalID := fmt.Sprintf("auth-%v", id)
 		authID := fmt.Sprintf("%x", sha1.Sum([]byte(authExternalID)))
-		authUser, err := repo.FindUserByID(context.Background(), workspace, authID, nil)
+		authUser, err := repo.FindUserByID(context.Background(), workspace, authID, nil, nil)
 
 		if err != nil {
 			t.Fatalf("cannot fetch auth user: %v", err)

@@ -1,4 +1,18 @@
-import { Avatar, Image, Button, Drawer, Row, Col, Tooltip, Tabs, Tag, Spin, Table } from 'antd'
+import {
+  Avatar,
+  Image,
+  Button,
+  Drawer,
+  Row,
+  Col,
+  Tooltip,
+  Tabs,
+  Tag,
+  Spin,
+  Table,
+  Badge,
+  Popover
+} from 'antd'
 import {
   User,
   UserAlias,
@@ -6,7 +20,10 @@ import {
   UserSegment,
   Account,
   SubscriptionListUser,
-  SubscriptionList
+  SubscriptionList,
+  SubscriptionListUserActive,
+  SubscriptionListUserPaused,
+  SubscriptionListUserUnsubscribed
 } from 'interfaces'
 import { CurrentWorkspaceCtxValue } from 'components/workspace/context_current_workspace'
 import { useQuery } from '@tanstack/react-query'
@@ -31,6 +48,8 @@ import { css } from '@emotion/css'
 import Block from 'components/common/block'
 import Attribute from 'components/common/partial_attribute'
 import { BlockUserTimeline } from 'components/item_timeline/block_user_timeline'
+import ButtonUnsubscribeUser from 'components/subscription_list/button_update_user_subscription'
+import ButtonUpdateUserSubscription from 'components/subscription_list/button_update_user_subscription'
 // import FormatCurrency from 'utils/format_currency'
 // import FormatDuration from 'utils/format_duration'
 
@@ -40,46 +59,39 @@ type DrawerShowUserProps = {
   workspaceCtx: CurrentWorkspaceCtxValue
 }
 
-type UserShowResult = {
-  user: User
-  user_segments: UserSegment[]
-  devices: Device[]
-  aliases: UserAlias[]
-}
-
 const DrawerShowUser = (props: DrawerShowUserProps) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const accountCtx = useAccount()
 
   // fetch user profile
-  const { isLoading, data, refetch, isFetching } = useQuery<UserShowResult>(
-    ['user', props.userExternalId],
-    (): Promise<UserShowResult> => {
-      return new Promise((resolve, reject) => {
-        props.workspaceCtx
-          .apiGET(
-            '/user.show?workspace_id=' +
-              props.workspaceCtx.workspace.id +
-              '&external_id=' +
-              props.userExternalId
-          )
-          .then((data: any) => {
-            resolve(data as UserShowResult)
-          })
-          .catch((e) => {
-            reject(e)
-          })
-      })
-    }
-  )
+  const {
+    isLoading,
+    data: user,
+    refetch,
+    isFetching
+  } = useQuery<User>(['user', props.userExternalId], (): Promise<User> => {
+    return new Promise((resolve, reject) => {
+      props.workspaceCtx
+        .apiGET(
+          '/user.show?workspace_id=' +
+            props.workspaceCtx.workspace.id +
+            '&external_id=' +
+            props.userExternalId +
+            '&with_segments=true&with_devices=true&with_aliases=true&with_subscription_lists=true'
+        )
+        .then((data: any) => {
+          resolve(data as User)
+        })
+        .catch((e) => {
+          reject(e)
+        })
+    })
+  })
 
   const refresh = () => {
     refetch()
   }
 
-  const user = data?.user as User
-  const devices = data?.devices as Device[]
-  const aliases = data?.aliases as UserAlias[]
   const account = accountCtx.account?.account as Account
   const currency = props.workspaceCtx.workspace.currency
 
@@ -106,7 +118,7 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
             </div>
           )}
 
-          {!isLoading && data && (
+          {!isLoading && user && (
             <div className={CSS.padding_b_xl}>
               <div className={CSS.text_center}>
                 <div
@@ -391,27 +403,90 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
                                     title: 'Name',
                                     key: 'name',
                                     render: (record: SubscriptionList) => {
-                                      return <Tag color={record.color}>{record.name}</Tag>
+                                      const subscription = user.subscription_lists?.find(
+                                        (sub: SubscriptionListUser) =>
+                                          sub.subscription_list_id === record.id
+                                      )
+                                      if (!subscription)
+                                        return (
+                                          <Tooltip title="Never subscribed">
+                                            <Badge status="default" className={CSS.margin_r_s} />
+                                            <Tag color={record.color}>{record.name}</Tag>
+                                          </Tooltip>
+                                        )
+
+                                      return (
+                                        <Popover
+                                          title={
+                                            <>
+                                              {subscription.status === SubscriptionListUserActive &&
+                                                'Subscription active'}
+                                              {subscription.status === SubscriptionListUserPaused &&
+                                                'Subscription paused'}
+                                              {subscription.status ===
+                                                SubscriptionListUserUnsubscribed &&
+                                                'Subscription cancelled'}
+                                            </>
+                                          }
+                                          content={
+                                            <>
+                                              <p>
+                                                <b>Created: </b>
+                                                {dayjs(subscription.created_at)
+                                                  .tz(user.timezone)
+                                                  .format('lll')}{' '}
+                                                in {user.timezone}
+                                              </p>
+                                              <p>
+                                                <b>Updated: </b>
+                                                {dayjs(subscription.db_updated_at)
+                                                  .tz(user.timezone)
+                                                  .format('lll')}{' '}
+                                                in {user.timezone}
+                                              </p>
+                                              {subscription.comment &&
+                                                subscription.comment.length > 0 && (
+                                                  <p>
+                                                    <b>Comment: </b> {subscription.comment}
+                                                  </p>
+                                                )}
+                                            </>
+                                          }
+                                        >
+                                          {subscription.status === SubscriptionListUserActive && (
+                                            <Badge status="success" className={CSS.margin_r_s} />
+                                          )}
+                                          {subscription.status === SubscriptionListUserPaused && (
+                                            <Badge status="warning" className={CSS.margin_r_s} />
+                                          )}
+                                          {subscription.status ===
+                                            SubscriptionListUserUnsubscribed && (
+                                            <Badge status="error" className={CSS.margin_r_s} />
+                                          )}
+
+                                          <Tag color={record.color}>{record.name}</Tag>
+                                        </Popover>
+                                      )
                                     }
                                   },
                                   {
                                     title: 'subscribed',
                                     key: 'subscribed',
+                                    className: CSS.text_right,
                                     render: (record: SubscriptionList) => {
-                                      if (!user.subscription_lists) return ''
-                                      const isSubscribed = user.subscription_lists?.some(
+                                      const subscription = user.subscription_lists?.find(
                                         (sub: SubscriptionListUser) =>
                                           sub.subscription_list_id === record.id
                                       )
 
-                                      return isSubscribed ? (
-                                        <span className={CSS.text_green}>
-                                          <FontAwesomeIcon icon={faCheck} />
-                                        </span>
-                                      ) : (
-                                        <span className={CSS.text_orange}>
-                                          <FontAwesomeIcon icon={faTimes} />
-                                        </span>
+                                      return (
+                                        <ButtonUpdateUserSubscription
+                                          user={user}
+                                          subscriptionList={record}
+                                          subscription={subscription}
+                                          onSuccess={refresh}
+                                          workspaceCtx={props.workspaceCtx}
+                                        />
                                       )
                                     }
                                   }
@@ -419,11 +494,11 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
                               />
                             </Block>
                           )}
-                        {aliases.length > 0 && (
+                        {user.aliases && user.aliases.length > 0 && (
                           <Block title="Merged user IDs" classNames={[CSS.margin_t_m]}>
                             <Attribute label="External ID">
                               <>
-                                {aliases.map((alias: UserAlias) => (
+                                {user.aliases?.map((alias: UserAlias) => (
                                   <div key={alias.from_user_external_id}>
                                     {alias.from_user_external_id}
                                   </div>
@@ -440,7 +515,7 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
                     label: 'Devices',
                     children: (
                       <>
-                        {devices.map((device: Device) => {
+                        {user.devices?.map((device: Device) => {
                           return (
                             <Block
                               title={
@@ -491,8 +566,8 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
               </Tooltip>
             </span>
             {!isLoading &&
-              data?.user_segments &&
-              data?.user_segments
+              user?.segments &&
+              user?.segments
                 .filter((us: UserSegment) => !us.exit_at)
                 .map((us: UserSegment) => {
                   const segment = props.workspaceCtx.segmentsMap[us.segment_id]
@@ -512,7 +587,7 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
                   )
                 })}
           </div>
-          {props.workspaceCtx.workspace.has_orders && (
+          {props.workspaceCtx.workspace.has_orders && user && (
             <>
               <Block grid classNames={[CSS.margin_b_m]}>
                 <RenderKPI
@@ -595,7 +670,8 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
                         timezone={user.timezone}
                         workspaceCtx={props.workspaceCtx}
                         user={user}
-                        devices={devices}
+                        devices={user.devices || []}
+                        limit={20}
                       />
                     )}
                     {!user && <Spin />}

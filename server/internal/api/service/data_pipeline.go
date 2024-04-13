@@ -15,7 +15,6 @@ import (
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rimdian/rimdian/internal/api/repository"
-	"github.com/rimdian/rimdian/internal/common/dto"
 	common "github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rimdian/rimdian/internal/common/httpClient"
 	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
@@ -103,10 +102,10 @@ type DataLogPipeline struct {
 	Workspace        *entity.Workspace
 	Apps             []*entity.App
 	// data received from the queue
-	DataLogInQueue *dto.DataLogInQueue
+	DataLogInQueue *common.DataLogInQueue
 	// data_log generated & persisted from the dDataLogInQueue
 	DataLog     *entity.DataLog
-	QueueResult *dto.DataLogInQueueResult
+	QueueResult *common.DataLogInQueueResult
 	// user ids impacted by the data_log that need to be locked
 	// in order to serialize the data_log processing at the user leve
 	// and guarantee idempotency of the data_log
@@ -137,7 +136,7 @@ func (pipe *DataLogPipeline) GetWorkspace() *entity.Workspace {
 	return pipe.Workspace
 }
 
-func (pipe *DataLogPipeline) GetQueueResult() *dto.DataLogInQueueResult {
+func (pipe *DataLogPipeline) GetQueueResult() *common.DataLogInQueueResult {
 	return pipe.QueueResult
 }
 
@@ -328,7 +327,7 @@ func (pipe *DataLogPipeline) Replay(ctx context.Context) {
 
 	// Replay() can be called on a duplicate data_log
 	if !pipe.DataLogInQueue.IsReplay {
-		dataLogID = dto.ComputeDataLogID(pipe.Config.SECRET_KEY, pipe.DataLogInQueue.Origin, pipe.DataLogInQueue.Item)
+		dataLogID = common.ComputeDataLogID(pipe.Config.SECRET_KEY, pipe.DataLogInQueue.Origin, pipe.DataLogInQueue.Item)
 	}
 
 	// fetch dataLog from DB
@@ -371,7 +370,8 @@ func (pipe *DataLogPipeline) Replay(ctx context.Context) {
 
 	if pipe.DataLog.Checkpoint >= entity.DataLogCheckpointItemUpserted && pipe.DataLog.UserID != entity.None {
 		// fetch user
-		user, err := pipe.Repository.FindUserByID(spanCtx, pipe.Workspace, pipe.DataLog.UserID, nil)
+		user, err := pipe.Repository.FindUserByID(spanCtx, pipe.Workspace, pipe.DataLog.UserID, nil, nil)
+
 		if err != nil && !sqlscan.NotFound(err) {
 			pipe.SetError("server", fmt.Sprintf("doReplayDataLog: %v", err), true)
 			return
@@ -558,7 +558,7 @@ func (pipe *DataLogPipeline) InitDataLog(ctx context.Context) {
 	}
 
 	// compute a hash ID from its "item" and compares it with existing ID
-	computedID := dto.ComputeDataLogID(pipe.Config.SECRET_KEY, pipe.DataLogInQueue.Origin, pipe.DataLogInQueue.Item)
+	computedID := common.ComputeDataLogID(pipe.Config.SECRET_KEY, pipe.DataLogInQueue.Origin, pipe.DataLogInQueue.Item)
 
 	if computedID != pipe.DataLogInQueue.ID {
 		pipe.Logger.Printf("dropping data: ID integrity check failed: %+v\n", pipe.DataLogInQueue)
@@ -648,7 +648,7 @@ type DataPipelineProps struct {
 	Repository       repository.Repository
 	TaskOrchestrator taskorchestrator.Client
 	Workspace        *entity.Workspace
-	DataLogInQueue   *dto.DataLogInQueue
+	DataLogInQueue   *common.DataLogInQueue
 }
 
 func NewDataPipeline(props *DataPipelineProps) IDataLogPipeline {
@@ -661,7 +661,7 @@ func NewDataPipeline(props *DataPipelineProps) IDataLogPipeline {
 		TaskOrchestrator:  props.TaskOrchestrator,
 		Workspace:         props.Workspace,
 		DataLogInQueue:    props.DataLogInQueue,
-		QueueResult:       &dto.DataLogInQueueResult{},
+		QueueResult:       &common.DataLogInQueueResult{},
 		UsersLock:         entity.NewUsersLock(),
 		DataLogsGenerated: []*entity.DataLog{},
 	}

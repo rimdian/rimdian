@@ -9,11 +9,40 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-type UserShowResult struct {
-	User         *entity.User          `json:"user"`
-	UserSegments []*entity.UserSegment `json:"user_segments"`
-	Devices      []*entity.Device      `json:"devices"`
-	Aliases      []*entity.UserAlias   `json:"aliases"`
+type UserShowParams struct {
+	WorkspaceID    string `json:"workspace_id"`
+	UserID         string `json:"id"`
+	UserExternalID string `json:"external_id"`
+	*UserWith
+}
+
+func (params *UserShowParams) FromRequest(r *http.Request) (err error) {
+	params.WorkspaceID = r.FormValue("workspace_id")
+	params.UserID = r.FormValue("id")
+	params.UserExternalID = r.FormValue("external_id")
+
+	if params.UserID == "" && params.UserExternalID == "" {
+		return eris.New("id or external_id is required")
+	}
+
+	params.UserWith = &UserWith{}
+	params.UserWith.FromRequest(r)
+
+	return nil
+}
+
+type UserWith struct {
+	Devices           bool `json:"with_devices"`
+	Segments          bool `json:"with_segments"`
+	Aliases           bool `json:"with_aliases"`
+	SubscriptionLists bool `json:"with_subscription_lists"`
+}
+
+func (params *UserWith) FromRequest(r *http.Request) {
+	params.Devices = r.FormValue("with_devices") == "true"
+	params.Segments = r.FormValue("with_segments") == "true"
+	params.Aliases = r.FormValue("with_aliases") == "true"
+	params.SubscriptionLists = r.FormValue("with_subscription_lists") == "true"
 }
 
 type UserListResult struct {

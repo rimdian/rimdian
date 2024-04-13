@@ -195,7 +195,7 @@ export const AuthProvider = (props: Props) => {
         return reject('Account not logged in')
       }
 
-      Axios.post(window.Config.COLLECTOR_ENDPOINT + (sync ? '/bypass' : 'data'), dataImport, {
+      Axios.post(window.Config.COLLECTOR_ENDPOINT + (sync ? '/sync' : 'data'), dataImport, {
         headers: { Authorization: 'Bearer ' + account.access_token }
       })
         .then((res) => {

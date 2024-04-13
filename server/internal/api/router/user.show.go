@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/common/auth"
 	"go.opencensus.io/plugin/ochttp"
 )
@@ -18,7 +19,14 @@ func (api *API) UserShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, code, err := api.Svc.UserShow(ctx, r.FormValue("workspace_id"), claims.AccountID, r.FormValue("external_id"))
+	params := &dto.UserShowParams{}
+
+	if err := params.FromRequest(r); err != nil {
+		api.ReturnJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	result, code, err := api.Svc.UserShow(ctx, claims.AccountID, params)
 
 	if err != nil {
 		api.ReturnJSONError(w, code, err)

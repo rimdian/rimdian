@@ -107,7 +107,7 @@ type Service interface {
 
 	// user
 	UserList(ctx context.Context, accountID string, params *dto.UserListParams) (result *dto.UserListResult, code int, err error)
-	UserShow(ctx context.Context, workspaceID string, accountID string, userExternalID string) (result *dto.UserShowResult, code int, err error)
+	UserShow(ctx context.Context, accountID string, params *dto.UserShowParams) (user *entity.User, code int, err error)
 
 	// segment
 	SegmentList(ctx context.Context, accountID string, params *dto.SegmentListParams) (result *dto.SegmentListResult, code int, err error)

@@ -230,7 +230,9 @@ func ReattributeUsersOrders(ctx context.Context, pipe Pipeline) {
 			_, err := pipe.Repo().RunInTransactionForWorkspace(spanCtx, pipe.GetWorkspace().ID, func(ctx context.Context, tx *sql.Tx) (txCode int, txErr error) {
 
 				// fetch user in TX
-				user, err := pipe.Repo().FindUserByID(ctx, pipe.GetWorkspace(), uID, tx)
+				user, err := pipe.Repo().FindUserByID(ctx, pipe.GetWorkspace(), uID, tx, &dto.UserWith{
+					Devices: true,
+				})
 
 				if err != nil {
 					return 500, eris.Wrap(err, "ReattributeUsersOrders")
@@ -244,13 +246,6 @@ func ReattributeUsersOrders(ctx context.Context, pipe Pipeline) {
 				// abort if user is merged
 				if user.IsMerged {
 					return 200, nil
-				}
-
-				// fetch user devices
-				devices, err := pipe.Repo().ListDevicesForUser(ctx, pipe.GetWorkspace(), user.ID, "created_at ASC", tx)
-
-				if err != nil {
-					return 500, eris.Wrap(err, "ReattributeUsersOrders")
 				}
 
 				// fetch existing orders for this user
@@ -350,7 +345,7 @@ func ReattributeUsersOrders(ctx context.Context, pipe Pipeline) {
 						orderPostviews = append(orderPostviews, pv)
 					}
 
-					pipe.AttributeOrder(spanCtx, order, orderSessions, orderPostviews, previousOrders, devices, tx)
+					pipe.AttributeOrder(spanCtx, order, orderSessions, orderPostviews, previousOrders, user.Devices, tx)
 
 					if pipe.HasError() {
 						return

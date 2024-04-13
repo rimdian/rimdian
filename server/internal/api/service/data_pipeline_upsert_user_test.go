@@ -110,7 +110,7 @@ func TestServiceImpl_DataPipelineUpsertUser(t *testing.T) {
 			EnsureUsersLockFunc: func(ctx context.Context, workspaceID string, lock *entity.UsersLock, withRetry bool) error {
 				return nil
 			},
-			FindUserByIDFunc: func(ctx context.Context, workspace *entity.Workspace, userID string, tx *sql.Tx) (*entity.User, error) {
+			FindUserByIDFunc: func(ctx context.Context, workspace *entity.Workspace, userID string, tx *sql.Tx, with *dto.UserWith) (*entity.User, error) {
 				return nil, sql.ErrNoRows
 			},
 			InsertUserFunc: func(ctx context.Context, user *entity.User, tx *sql.Tx) error {

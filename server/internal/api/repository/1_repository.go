@@ -169,7 +169,7 @@ type Repository interface {
 	CleanAfterUserAlias(workspaceID string, fromUserExternalID string) (err error)
 
 	// users
-	FindUserByID(ctx context.Context, workspace *entity.Workspace, userID string, tx *sql.Tx) (userFound *entity.User, err error)
+	FindUserByID(ctx context.Context, workspace *entity.Workspace, userID string, tx *sql.Tx, userWith *dto.UserWith) (userFound *entity.User, err error)
 	FindEventualUsersToMergeWith(ctx context.Context, workspace *entity.Workspace, withUser *entity.User, withReconciliationKeys entity.MapOfInterfaces, tx *sql.Tx) (usersFound []*entity.User, err error)
 	InsertUser(ctx context.Context, user *entity.User, tx *sql.Tx) (err error)
 	UpdateUser(ctx context.Context, user *entity.User, tx *sql.Tx) (err error)
@@ -196,13 +196,14 @@ type Repository interface {
 	// subscription lists
 	ListSubscriptionLists(ctx context.Context, workspaceID string, withUsersCount bool) (lists []*entity.SubscriptionList, err error)
 	CreateSubscriptionList(ctx context.Context, workspaceID string, list *entity.SubscriptionList) (err error)
-	FindSubscriptionListUser(ctx context.Context, listID string, userID string, tx *sql.Tx) (subscription *entity.SubscriptionListUser, err error)
 	GetSubscriptionList(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (list *entity.SubscriptionList, err error)
 
 	// subscritpion list users
 	InsertSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) (err error)
 	UpdateSubscriptionListUser(ctx context.Context, subscription *entity.SubscriptionListUser, tx *sql.Tx) (err error)
+	FindSubscriptionListUser(ctx context.Context, listID string, userID string, tx *sql.Tx) (subscription *entity.SubscriptionListUser, err error)
 	GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64, segmentID *string) (userIDs []*dto.UserToImportToSubscriptionList, err error)
+	ListSubscriptionListUser(ctx context.Context, workspaceID string, userID string) (subscriptions []*entity.SubscriptionListUser, err error)
 
 	// broadcast campaigns
 	ListBroadcastCampaigns(ctx context.Context, workspaceID string, params *dto.BroadcastCampaignListParams) (campaigns []*entity.BroadcastCampaign, err error)

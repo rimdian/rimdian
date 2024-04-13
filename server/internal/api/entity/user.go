@@ -689,6 +689,12 @@ type User struct {
 	HMAC         *string       `db:"-" json:"hmac,omitempty"` // signature for web activity with users protection
 	UpdatedAt    *time.Time    `db:"-" json:"-"`              // used to merge fields and append item_timeline at the right time
 	ExtraColumns AppItemFields `db:"-" json:"-"`              // converted into "app_xxx" fields when marshaling JSON
+
+	// eventually joined server-side
+	Segments          []*UserSegment          `json:"segments,omitempty"`
+	Devices           []*Device               `json:"devices,omitempty"`
+	Aliases           []*UserAlias            `json:"aliases,omitempty"`
+	SubscriptionLists []*SubscriptionListUser `json:"subscription_lists,omitempty"`
 }
 
 // update a field timestamp to its most recent value

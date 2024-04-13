@@ -33,14 +33,14 @@ func (pipe *DataLogPipeline) UpsertUserAlias(ctx context.Context, isChild bool, 
 	paramsToUserID := entity.ComputeUserID(pipe.DataLog.UserAlias.ToUserExternalID)
 
 	// fetch from user
-	fromUser, err := pipe.Repository.FindUserByID(spanCtx, pipe.Workspace, paramsFromUserID, tx)
+	fromUser, err := pipe.Repository.FindUserByID(spanCtx, pipe.Workspace, paramsFromUserID, tx, nil)
 
 	if err != nil {
 		return eris.Wrap(err, "UserAlias")
 	}
 
 	// fetch to user
-	toUser, err := pipe.Repository.FindUserByID(spanCtx, pipe.Workspace, paramsToUserID, tx)
+	toUser, err := pipe.Repository.FindUserByID(spanCtx, pipe.Workspace, paramsToUserID, tx, nil)
 
 	if err != nil {
 		return eris.Wrap(err, "UserAlias")

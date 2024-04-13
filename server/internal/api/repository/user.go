@@ -501,7 +501,7 @@ func (repo *RepositoryImpl) FindEventualUsersToMergeWith(ctx context.Context, wo
 	return repo.FetchUsers(ctx, workspace, queryBuilder, tx)
 }
 
-func (repo *RepositoryImpl) FindUserByID(ctx context.Context, workspace *entity.Workspace, userID string, tx *sql.Tx) (userFound *entity.User, err error) {
+func (repo *RepositoryImpl) FindUserByID(ctx context.Context, workspace *entity.Workspace, userID string, tx *sql.Tx, userWith *dto.UserWith) (userFound *entity.User, err error) {
 
 	var rows *sql.Rows
 	userFound = &entity.User{}
@@ -546,6 +546,62 @@ func (repo *RepositoryImpl) FindUserByID(ctx context.Context, workspace *entity.
 	err = scanUserRow(cols, rows, userFound, workspace.InstalledApps)
 	if err != nil {
 		return nil, eris.Wrap(err, "FindUserByID")
+	}
+
+	if userWith == nil {
+		return userFound, nil
+	}
+
+	// fetch user segments
+	if userWith.Segments {
+		userFound.Segments, err = repo.ListUserSegments(ctx, workspace.ID, []string{userFound.ID}, nil)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "UserShow")
+		}
+	}
+
+	// fetch user devices
+	if userWith.Devices {
+		userFound.Devices, err = repo.ListDevicesForUser(ctx, workspace, userFound.ID, "created_at ASC", nil)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "UserShow")
+		}
+	}
+
+	// svc.Logger.Printf("result.Devices = %+v", result.Devices)
+
+	// fetch user aliases
+	if userWith.Aliases {
+		userFound.Aliases, err = repo.FindUsersAliased(ctx, workspace.ID, userFound.ExternalID)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "UserShow")
+		}
+	}
+
+	if userWith.SubscriptionLists {
+		userFound.SubscriptionLists, err = repo.ListSubscriptionListUser(ctx, workspace.ID, userFound.ID)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "UserShow")
+		}
+
+		// enrich with subscription list details
+		// NEVER USED YET
+		// lists, err := repo.ListSubscriptionLists(ctx, workspace.ID, false)
+		// if err != nil {
+		// 	return nil, eris.Wrap(err, "UserShow")
+		// }
+
+		// for _, list := range userFound.SubscriptionLists {
+		// 	for _, listDetail := range lists {
+		// 		if list.SubscriptionListID == listDetail.ID {
+		// 			list.SubscriptionList = listDetail
+		// 		}
+		// 	}
+		// }
 	}
 
 	return userFound, nil

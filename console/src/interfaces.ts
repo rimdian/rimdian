@@ -372,18 +372,17 @@ export type ItemKind =
   | 'order'
   | 'order_item'
   | 'custom_event'
+  | 'message'
+  | 'subscription_list_user'
+  | 'custom_event'
   | 'app_observability_check'
   | 'app_observability_incident'
 
 export interface DataLogItem {
   kind: ItemKind
-  operation: 'upsert'
   context?: DataLogContext
 
-  // each kind has its dedicated object
-  // user?: DataLogItemUser
-  // user_alias?: DataLogItemUserAlias
-  // app_item?: MapOfInterfaces
+  [key: string]: any
 }
 
 export interface DataLogItemUser extends DataLogItem {
@@ -606,16 +605,24 @@ export interface User {
   avg_repeat_cart: number
   avg_repeat_order_ttc: number
   // joined server-side
+  aliases?: UserAlias[]
+  segments?: UserSegment[]
+  devices?: Device[]
   subscription_lists?: SubscriptionListUser[]
   // custom dimensions
   [key: string]: any
 }
 
+export const SubscriptionListUserActive = 1
+export const SubscriptionListUserPaused = 2
+export const SubscriptionListUserUnsubscribed = 3
+
 export interface SubscriptionListUser {
   subscription_list_id: string
   user_id: string
-  status: number
+  status: number // 1 active, 2 paused, 3 unsubscribed
   comment?: string
+  created_at: string
   db_created_at: string
   db_updated_at: string
 }

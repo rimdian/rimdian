@@ -12,6 +12,23 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+func (repo *RepositoryImpl) ListSubscriptionListUser(ctx context.Context, workspaceID string, userID string) (subscriptions []*entity.SubscriptionListUser, err error) {
+
+	conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
+
+	if err != nil {
+		return
+	}
+
+	defer conn.Close()
+
+	subscriptions = []*entity.SubscriptionListUser{}
+
+	err = sqlscan.Select(ctx, conn, &subscriptions, "SELECT * FROM subscription_list_user WHERE user_id = ?", userID)
+
+	return
+}
+
 func (repo *RepositoryImpl) GetUsersNotInSubscriptionList(ctx context.Context, workspaceID string, listID string, offset int64, limit int64, segmentID *string) (users []*dto.UserToImportToSubscriptionList, err error) {
 
 	conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
@@ -56,7 +73,13 @@ func (repo *RepositoryImpl) GetUsersNotInSubscriptionList(ctx context.Context, w
 
 func (repo *RepositoryImpl) FindSubscriptionListUser(ctx context.Context, listID string, userID string, tx *sql.Tx) (subscription *entity.SubscriptionListUser, err error) {
 
-	err = sqlscan.Get(ctx, tx, &subscription, "SELECT * FROM subscription_list_user WHERE subscription_list_id = ? AND user_id = ?", listID, userID)
+	subscription = &entity.SubscriptionListUser{}
+
+	err = sqlscan.Get(ctx, tx, subscription, "SELECT * FROM subscription_list_user WHERE subscription_list_id = ? AND user_id = ?", listID, userID)
+
+	if err != nil && sqlscan.NotFound(err) {
+		return nil, err
+	}
 
 	return
 }

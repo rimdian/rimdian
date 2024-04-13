@@ -256,7 +256,7 @@ var _ Service = &ServiceMock{}
 //			UserListFunc: func(ctx context.Context, accountID string, params *dto.UserListParams) (*dto.UserListResult, int, error) {
 //				panic("mock out the UserList method")
 //			},
-//			UserShowFunc: func(ctx context.Context, workspaceID string, accountID string, userExternalID string) (*dto.UserShowResult, int, error) {
+//			UserShowFunc: func(ctx context.Context, accountID string, params *dto.UserShowParams) (*entity.User, int, error) {
 //				panic("mock out the UserShow method")
 //			},
 //			WorkspaceCreateFunc: func(ctx context.Context, accountID string, workspaceDTO *dto.WorkspaceCreate) (*entity.Workspace, int, error) {
@@ -525,7 +525,7 @@ type ServiceMock struct {
 	UserListFunc func(ctx context.Context, accountID string, params *dto.UserListParams) (*dto.UserListResult, int, error)
 
 	// UserShowFunc mocks the UserShow method.
-	UserShowFunc func(ctx context.Context, workspaceID string, accountID string, userExternalID string) (*dto.UserShowResult, int, error)
+	UserShowFunc func(ctx context.Context, accountID string, params *dto.UserShowParams) (*entity.User, int, error)
 
 	// WorkspaceCreateFunc mocks the WorkspaceCreate method.
 	WorkspaceCreateFunc func(ctx context.Context, accountID string, workspaceDTO *dto.WorkspaceCreate) (*entity.Workspace, int, error)
@@ -1203,12 +1203,10 @@ type ServiceMock struct {
 		UserShow []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// WorkspaceID is the workspaceID argument value.
-			WorkspaceID string
 			// AccountID is the accountID argument value.
 			AccountID string
-			// UserExternalID is the userExternalID argument value.
-			UserExternalID string
+			// Params is the params argument value.
+			Params *dto.UserShowParams
 		}
 		// WorkspaceCreate holds details about calls to the WorkspaceCreate method.
 		WorkspaceCreate []struct {
@@ -4380,25 +4378,23 @@ func (mock *ServiceMock) UserListCalls() []struct {
 }
 
 // UserShow calls UserShowFunc.
-func (mock *ServiceMock) UserShow(ctx context.Context, workspaceID string, accountID string, userExternalID string) (*dto.UserShowResult, int, error) {
+func (mock *ServiceMock) UserShow(ctx context.Context, accountID string, params *dto.UserShowParams) (*entity.User, int, error) {
 	if mock.UserShowFunc == nil {
 		panic("ServiceMock.UserShowFunc: method is nil but Service.UserShow was just called")
 	}
 	callInfo := struct {
-		Ctx            context.Context
-		WorkspaceID    string
-		AccountID      string
-		UserExternalID string
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.UserShowParams
 	}{
-		Ctx:            ctx,
-		WorkspaceID:    workspaceID,
-		AccountID:      accountID,
-		UserExternalID: userExternalID,
+		Ctx:       ctx,
+		AccountID: accountID,
+		Params:    params,
 	}
 	mock.lockUserShow.Lock()
 	mock.calls.UserShow = append(mock.calls.UserShow, callInfo)
 	mock.lockUserShow.Unlock()
-	return mock.UserShowFunc(ctx, workspaceID, accountID, userExternalID)
+	return mock.UserShowFunc(ctx, accountID, params)
 }
 
 // UserShowCalls gets all the calls that were made to UserShow.
@@ -4406,16 +4402,14 @@ func (mock *ServiceMock) UserShow(ctx context.Context, workspaceID string, accou
 //
 //	len(mockedService.UserShowCalls())
 func (mock *ServiceMock) UserShowCalls() []struct {
-	Ctx            context.Context
-	WorkspaceID    string
-	AccountID      string
-	UserExternalID string
+	Ctx       context.Context
+	AccountID string
+	Params    *dto.UserShowParams
 } {
 	var calls []struct {
-		Ctx            context.Context
-		WorkspaceID    string
-		AccountID      string
-		UserExternalID string
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.UserShowParams
 	}
 	mock.lockUserShow.RLock()
 	calls = mock.calls.UserShow

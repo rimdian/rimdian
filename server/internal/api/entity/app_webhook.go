@@ -2,6 +2,8 @@ package entity
 
 import (
 	"time"
+
+	"github.com/rimdian/rimdian/internal/common/dto"
 )
 
 var (
@@ -35,12 +37,13 @@ type TaskExecWorker struct {
 }
 
 type DataHookPayload struct {
-	DataHookID   string `json:"data_hook_id"`
-	DataHookName string `json:"data_hook_name"`
-	DataHookOn   string `json:"data_hook_on"` // on_validation, on_success
-	DataLogID    string `json:"data_log_id"`
-	DataLogItem  string `json:"data_log_item"` // raw json string of the item
-	DataLogKind  string `json:"data_log_kind"` // order, segment, user...
+	DataHookID     string             `json:"data_hook_id"`
+	DataHookName   string             `json:"data_hook_name"`
+	DataHookOn     string             `json:"data_hook_on"` // on_validation, on_success
+	DataLogID      string             `json:"data_log_id"`
+	DataLogContext dto.DataLogContext `json:"data_log_context"` // contains ip
+	DataLogItem    string             `json:"data_log_item"`    // raw json string of the item
+	DataLogKind    string             `json:"data_log_kind"`    // order, segment, user...
 	// fields provided for "on_success" hooks:
 	DataLogAction         *string       `json:"data_log_action,omitempty"`
 	DataLogItemID         *string       `json:"data_log_item_id,omitempty"`

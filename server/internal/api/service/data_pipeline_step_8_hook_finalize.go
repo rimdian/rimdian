@@ -89,6 +89,7 @@ func (pipe *DataLogPipeline) StepHookFinalize(ctx context.Context) {
 						DataLogID:             dataLog.ID,
 						DataLogKind:           dataLog.Kind,
 						DataLogItem:           parentDataLogItem,
+						DataLogContext:        dataLog.Context,
 						DataLogAction:         &dataLog.Action,
 						DataLogItemID:         &dataLog.ItemID,
 						DataLogItemExternalID: &dataLog.ItemExternalID,

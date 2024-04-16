@@ -22,7 +22,7 @@ type Pipeline interface {
 	Net() httpClient.HTTPClient
 	Repo() repository.Repository
 	GetWorkspace() *entity.Workspace
-	GetQueueResult() *common.DataLogInQueueResult
+	GetQueueResult() *common.ResponseForTaskQueue
 	Execute(ctx context.Context)
 	ProcessNextStep(ctx context.Context)
 	InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) error

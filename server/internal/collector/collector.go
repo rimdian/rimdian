@@ -122,11 +122,11 @@ func (collector *Collector) DoubleOptIn(w http.ResponseWriter, r *http.Request) 
 
 	// push row to live queue
 	cloudTask := &taskorchestrator.TaskRequest{
-		QueueLocation:    collector.Config.TASK_QUEUE_LOCATION,
-		QueueName:        collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
-		PostEndpoint:     fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
-		Payload:          row,
-		DeduplicationKey: &row.ID,
+		UniqueID:      &row.ID,
+		QueueLocation: collector.Config.TASK_QUEUE_LOCATION,
+		QueueName:     collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
+		PostEndpoint:  fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
+		Payload:       row,
 	}
 
 	// 28 secs max (graceful shutdown is at 30 secs)
@@ -173,11 +173,11 @@ func (collector *Collector) UnsubscribeEmail(w http.ResponseWriter, r *http.Requ
 
 	// push row to live queue
 	cloudTask := &taskorchestrator.TaskRequest{
-		QueueLocation:    collector.Config.TASK_QUEUE_LOCATION,
-		QueueName:        collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
-		PostEndpoint:     fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
-		Payload:          row,
-		DeduplicationKey: &row.ID,
+		UniqueID:      &row.ID,
+		QueueLocation: collector.Config.TASK_QUEUE_LOCATION,
+		QueueName:     collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
+		PostEndpoint:  fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
+		Payload:       row,
 	}
 
 	// 28 secs max (graceful shutdown is at 30 secs)
@@ -224,11 +224,11 @@ func (collector *Collector) OpenEmail(w http.ResponseWriter, r *http.Request) {
 
 	// push row to live queue
 	cloudTask := &taskorchestrator.TaskRequest{
-		QueueLocation:    collector.Config.TASK_QUEUE_LOCATION,
-		QueueName:        collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
-		PostEndpoint:     fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
-		Payload:          row,
-		DeduplicationKey: &row.ID,
+		UniqueID:      &row.ID,
+		QueueLocation: collector.Config.TASK_QUEUE_LOCATION,
+		QueueName:     collector.TaskOrchestratorClient.GetLiveQueueNameForWorkspace(claims.WorkspaceID),
+		PostEndpoint:  fmt.Sprintf("%v%v", collector.Config.API_ENDPOINT, DataImportEndpointPath),
+		Payload:       row,
 	}
 
 	// 28 secs max (graceful shutdown is at 30 secs)
@@ -362,7 +362,7 @@ func (collector *Collector) ForwardData(mode string, w http.ResponseWriter, r *h
 
 			// avoid duplicates in the queue, except for replays
 			if !row.IsReplay {
-				cloudTask.DeduplicationKey = &row.ID
+				cloudTask.UniqueID = &row.ID
 			}
 
 			// 28 secs max (graceful shutdown is at 30 secs)

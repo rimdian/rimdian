@@ -177,7 +177,7 @@ func EnqueueMessage(ctx context.Context, pipe *DataLogPipeline) {
 		QueueLocation:     pipe.Config.TASK_QUEUE_LOCATION,
 		QueueName:         queueName,
 		PostEndpoint:      pipe.Config.API_ENDPOINT + SendMessageEndpoint + "?workspace_id=" + pipe.Workspace.ID,
-		TaskTimeoutInSecs: &TaskTimeoutInSecs,
+		TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 		Payload:           payload,
 	}
 

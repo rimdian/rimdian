@@ -45,7 +45,7 @@ var _ Pipeline = &PipelineMock{}
 //			GetDataLogsGeneratedFunc: func() []*entity.DataLog {
 //				panic("mock out the GetDataLogsGenerated method")
 //			},
-//			GetQueueResultFunc: func() *common.DataLogInQueueResult {
+//			GetQueueResultFunc: func() *common.ResponseForTaskQueue {
 //				panic("mock out the GetQueueResult method")
 //			},
 //			GetUserIDsFunc: func() []string {
@@ -110,7 +110,7 @@ type PipelineMock struct {
 	GetDataLogsGeneratedFunc func() []*entity.DataLog
 
 	// GetQueueResultFunc mocks the GetQueueResult method.
-	GetQueueResultFunc func() *common.DataLogInQueueResult
+	GetQueueResultFunc func() *common.ResponseForTaskQueue
 
 	// GetUserIDsFunc mocks the GetUserIDs method.
 	GetUserIDsFunc func() []string
@@ -537,7 +537,7 @@ func (mock *PipelineMock) GetDataLogsGeneratedCalls() []struct {
 }
 
 // GetQueueResult calls GetQueueResultFunc.
-func (mock *PipelineMock) GetQueueResult() *common.DataLogInQueueResult {
+func (mock *PipelineMock) GetQueueResult() *common.ResponseForTaskQueue {
 	if mock.GetQueueResultFunc == nil {
 		panic("PipelineMock.GetQueueResultFunc: method is nil but Pipeline.GetQueueResult was just called")
 	}

@@ -515,7 +515,7 @@ var _ Repository = &RepositoryMock{}
 //			UpdateAppItemFunc: func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error {
 //				panic("mock out the UpdateAppItem method")
 //			},
-//			UpdateBroadcastCampaignFunc: func(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error {
+//			UpdateBroadcastCampaignFunc: func(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign, tx *sql.Tx) error {
 //				panic("mock out the UpdateBroadcastCampaign method")
 //			},
 //			UpdateCartFunc: func(ctx context.Context, cart *entity.Cart, tx *sql.Tx) error {
@@ -1084,7 +1084,7 @@ type RepositoryMock struct {
 	UpdateAppItemFunc func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error
 
 	// UpdateBroadcastCampaignFunc mocks the UpdateBroadcastCampaign method.
-	UpdateBroadcastCampaignFunc func(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error
+	UpdateBroadcastCampaignFunc func(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign, tx *sql.Tx) error
 
 	// UpdateCartFunc mocks the UpdateCart method.
 	UpdateCartFunc func(ctx context.Context, cart *entity.Cart, tx *sql.Tx) error
@@ -2870,6 +2870,8 @@ type RepositoryMock struct {
 			WorkspaceID string
 			// Campaign is the campaign argument value.
 			Campaign *entity.BroadcastCampaign
+			// Tx is the tx argument value.
+			Tx *sql.Tx
 		}
 		// UpdateCart holds details about calls to the UpdateCart method.
 		UpdateCart []struct {
@@ -10282,7 +10284,7 @@ func (mock *RepositoryMock) UpdateAppItemCalls() []struct {
 }
 
 // UpdateBroadcastCampaign calls UpdateBroadcastCampaignFunc.
-func (mock *RepositoryMock) UpdateBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) error {
+func (mock *RepositoryMock) UpdateBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign, tx *sql.Tx) error {
 	if mock.UpdateBroadcastCampaignFunc == nil {
 		panic("RepositoryMock.UpdateBroadcastCampaignFunc: method is nil but Repository.UpdateBroadcastCampaign was just called")
 	}
@@ -10290,15 +10292,17 @@ func (mock *RepositoryMock) UpdateBroadcastCampaign(ctx context.Context, workspa
 		Ctx         context.Context
 		WorkspaceID string
 		Campaign    *entity.BroadcastCampaign
+		Tx          *sql.Tx
 	}{
 		Ctx:         ctx,
 		WorkspaceID: workspaceID,
 		Campaign:    campaign,
+		Tx:          tx,
 	}
 	mock.lockUpdateBroadcastCampaign.Lock()
 	mock.calls.UpdateBroadcastCampaign = append(mock.calls.UpdateBroadcastCampaign, callInfo)
 	mock.lockUpdateBroadcastCampaign.Unlock()
-	return mock.UpdateBroadcastCampaignFunc(ctx, workspaceID, campaign)
+	return mock.UpdateBroadcastCampaignFunc(ctx, workspaceID, campaign, tx)
 }
 
 // UpdateBroadcastCampaignCalls gets all the calls that were made to UpdateBroadcastCampaign.
@@ -10309,11 +10313,13 @@ func (mock *RepositoryMock) UpdateBroadcastCampaignCalls() []struct {
 	Ctx         context.Context
 	WorkspaceID string
 	Campaign    *entity.BroadcastCampaign
+	Tx          *sql.Tx
 } {
 	var calls []struct {
 		Ctx         context.Context
 		WorkspaceID string
 		Campaign    *entity.BroadcastCampaign
+		Tx          *sql.Tx
 	}
 	mock.lockUpdateBroadcastCampaign.RLock()
 	calls = mock.calls.UpdateBroadcastCampaign

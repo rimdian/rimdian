@@ -95,6 +95,7 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 	r.Post("/api/dataLog.importFromQueue", api.DataLogImportFromQueue) // receives a data_log item from the task queue
 	r.Post("/api/dataLog.reprocessUntil", api.DataLogReprocessUntil)   // reprocess "pending" data_logs until a given date
 	r.Post("/api/taskExec.do", api.TaskExecDo)                         // receives a job from the task queue
+	r.Post("/api/scheduledTask.do", api.ScheduledTaskDo)               // receives a job from the scheduled-task queue
 	r.Post("/api/task.wakeUpCron", api.TaskWakeUpCron)                 // cron to wake up the server and trigger cron tasks
 	r.Post("/api/account.login", api.AccountLogin)
 	r.Post("/api/account.resetPassword", api.AccountResetPassword)
@@ -174,7 +175,7 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 
 		r.Get("/api/broadcastCampaign.list", api.BroadcastCampaignList)
 		r.Post("/api/broadcastCampaign.upsert", api.BroadcastCampaignUpsert)
-		// r.Post("/api/broadcastCampaign.launch", api.BroadcastCampaignLaunch)
+		r.Post("/api/broadcastCampaign.launch", api.BroadcastCampaignLaunch)
 
 		r.Get("/api/app.list", api.AppList)
 		r.Get("/api/app.get", api.AppGet)

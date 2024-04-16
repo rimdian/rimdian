@@ -7,6 +7,13 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+type BroadcastCampaignLaunchParams struct {
+	WorkspaceID string `json:"workspace_id"`
+	ID          string `json:"id"`
+	// ScheduledAt *string `db:"scheduled_at" json:"scheduled_at,omitempty"`
+	// Timezone    *string `db:"timezone" json:"timezone,omitempty"`
+}
+
 type BroadcastCampaignListParams struct {
 	WorkspaceID string `json:"workspace_id"`
 }

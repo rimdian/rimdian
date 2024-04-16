@@ -88,17 +88,20 @@ type Service interface {
 	TaskWakeUpCron(ctx context.Context) (code int, err error)
 	// task_exec
 	TaskExecCreate(ctx context.Context, accountID string, params *dto.TaskExecCreateParams) (code int, err error)
-	TaskExecDo(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) (result *common.DataLogInQueueResult)
+	TaskExecDo(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) (result *common.ResponseForTaskQueue)
 	TaskExecAbort(ctx context.Context, accountID string, params *dto.TaskExecAbortParams) (code int, err error)
 	TaskExecList(ctx context.Context, accountID string, params *dto.TaskExecListParams) (result *dto.TaskExecListResult, code int, err error)
+	// scheduled_task
+	ScheduledTaskPost(ctx context.Context, scheduledTask entity.ScheduledTask) (err error)
+	ScheduledTaskDo(ctx context.Context, scheduledTask *entity.ScheduledTask) (result *common.ResponseForTaskQueue)
 
 	// task_exec_job
 	TaskExecJobInfo(ctx context.Context, accountID string, params *dto.TaskExecJobInfoParams) (runningJobInfo *dto.TaskExecJobInfoInfo, code int, err error)
 	TaskExecJobs(ctx context.Context, accountID string, params *dto.TaskExecJobsParams) (result *dto.TaskExecJobsResult, code int, err error)
 	// data log
-	DataLogImportFromQueue(ctx context.Context, dataLogInQueue *common.DataLogInQueue) (result *common.DataLogInQueueResult)
+	DataLogImportFromQueue(ctx context.Context, dataLogInQueue *common.DataLogInQueue) (result *common.ResponseForTaskQueue)
 	DataLogList(ctx context.Context, accountID string, params *dto.DataLogListParams) (result *dto.DataLogListResult, code int, err error)
-	DataLogReprocessOne(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (result *common.DataLogInQueueResult, code int, err error)
+	DataLogReprocessOne(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (result *common.ResponseForTaskQueue, code int, err error)
 	DataLogReprocessUntil(ctx context.Context, untilDate time.Time) (code int, err error)
 
 	// DB Select
@@ -128,11 +131,12 @@ type Service interface {
 	// broadcast campaign
 	BroadcastCampaignList(ctx context.Context, accountID string, params *dto.BroadcastCampaignListParams) (broadcasts []*entity.BroadcastCampaign, code int, err error)
 	BroadcastCampaignUpsert(ctx context.Context, accountID string, data *dto.BroadcastCampaign) (code int, err error)
+	BroadcastCampaignLaunch(ctx context.Context, accountID string, data *dto.BroadcastCampaignLaunchParams) (code int, err error)
 
 	// message
-	MessageSend(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult)
-	SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult)
-	SendEmailWithSMTP(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult)
+	MessageSend(ctx context.Context, data *dto.SendMessage) (result *common.ResponseForTaskQueue)
+	SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) (result *common.ResponseForTaskQueue)
+	SendEmailWithSMTP(ctx context.Context, data *dto.SendMessage) (result *common.ResponseForTaskQueue)
 
 	// data hook
 	DataHookUpdate(ctx context.Context, accountID string, dataHookDTO *dto.DataHook) (updatedWorkspace *entity.Workspace, code int, err error)

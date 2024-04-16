@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/v2/sqlscan"
@@ -9,15 +10,7 @@ import (
 	"github.com/rimdian/rimdian/internal/api/entity"
 )
 
-func (repo *RepositoryImpl) UpdateBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) (err error) {
-
-	conn, errConn := repo.GetWorkspaceConnection(ctx, workspaceID)
-
-	if errConn != nil {
-		return
-	}
-
-	defer conn.Close()
+func (repo *RepositoryImpl) UpdateBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign, tx *sql.Tx) (err error) {
 
 	sql, args, err := squirrel.Update("broadcast_campaign").
 		Set("name", campaign.Name).
@@ -37,10 +30,22 @@ func (repo *RepositoryImpl) UpdateBroadcastCampaign(ctx context.Context, workspa
 		return err
 	}
 
-	_, err = conn.ExecContext(ctx, sql, args...)
+	if tx == nil {
+		conn, errConn := repo.GetWorkspaceConnection(ctx, workspaceID)
+
+		if errConn != nil {
+			return
+		}
+
+		defer conn.Close()
+
+		_, err = conn.ExecContext(ctx, sql, args...)
+
+	} else {
+		_, err = tx.ExecContext(ctx, sql, args...)
+	}
 
 	return
-
 }
 
 func (repo *RepositoryImpl) InsertBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) (err error) {

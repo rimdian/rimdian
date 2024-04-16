@@ -83,6 +83,43 @@ func (m *Migration39) UpdateSystem(ctx context.Context, cfg *entity.Config, syst
 			log.Printf("error inserting task: %v", err)
 		}
 
+		// launch campaign task
+		sql, args, err = squirrel.Insert("task").
+			Columns(
+				"id",
+				"workspace_id",
+				"name",
+				"on_multiple_exec",
+				"app_id",
+				"is_active",
+				"is_cron",
+				"minutes_interval",
+			).
+			Values(
+				entity.TaskKindLaunchBroadcastCampaign,
+				workspaceID,
+				"Launch broadcast campaign",
+				entity.OnMultipleExecDiscardNew,
+				"system",
+				true,
+				false,
+				0,
+			).
+			ToSql()
+
+		if err != nil {
+			log.Printf("error building insert query: %v",
+				err)
+			return err
+		}
+
+		_, err = systemConnection.ExecContext(ctx, sql, args...)
+
+		// silently ignore errors in case of retried migrations
+		if err != nil {
+			log.Printf("error inserting task: %v", err)
+		}
+
 		// add column: messaging_settings JSON NOT NULL
 		_, err = systemConnection.ExecContext(ctx, `ALTER TABLE workspace ADD COLUMN messaging_settings JSON NOT NULL AFTER files_settings`)
 		if err != nil {

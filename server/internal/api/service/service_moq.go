@@ -67,6 +67,9 @@ var _ Service = &ServiceMock{}
 //			AppStopFunc: func(ctx context.Context, accountID string, params *dto.AppDelete) (*entity.App, int, error) {
 //				panic("mock out the AppStop method")
 //			},
+//			BroadcastCampaignLaunchFunc: func(ctx context.Context, accountID string, data *dto.BroadcastCampaignLaunchParams) (int, error) {
+//				panic("mock out the BroadcastCampaignLaunch method")
+//			},
 //			BroadcastCampaignListFunc: func(ctx context.Context, accountID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, int, error) {
 //				panic("mock out the BroadcastCampaignList method")
 //			},
@@ -97,13 +100,13 @@ var _ Service = &ServiceMock{}
 //			DataHookUpdateFunc: func(ctx context.Context, accountID string, dataHookDTO *dto.DataHook) (*entity.Workspace, int, error) {
 //				panic("mock out the DataHookUpdate method")
 //			},
-//			DataLogImportFromQueueFunc: func(ctx context.Context, dataLogInQueue *common.DataLogInQueue) *common.DataLogInQueueResult {
+//			DataLogImportFromQueueFunc: func(ctx context.Context, dataLogInQueue *common.DataLogInQueue) *common.ResponseForTaskQueue {
 //				panic("mock out the DataLogImportFromQueue method")
 //			},
 //			DataLogListFunc: func(ctx context.Context, accountID string, params *dto.DataLogListParams) (*dto.DataLogListResult, int, error) {
 //				panic("mock out the DataLogList method")
 //			},
-//			DataLogReprocessOneFunc: func(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (*common.DataLogInQueueResult, int, error) {
+//			DataLogReprocessOneFunc: func(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (*common.ResponseForTaskQueue, int, error) {
 //				panic("mock out the DataLogReprocessOne method")
 //			},
 //			DataLogReprocessUntilFunc: func(ctx context.Context, untilDate time.Time) (int, error) {
@@ -148,7 +151,7 @@ var _ Service = &ServiceMock{}
 //			IsOwnerOfOrganizationFunc: func(ctx context.Context, accountId string, organizationId string) (bool, int, error) {
 //				panic("mock out the IsOwnerOfOrganization method")
 //			},
-//			MessageSendFunc: func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+//			MessageSendFunc: func(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue {
 //				panic("mock out the MessageSend method")
 //			},
 //			MessageTemplateGetFunc: func(ctx context.Context, accountID string, params *dto.MessageTemplateGetParams) (*entity.MessageTemplate, int, error) {
@@ -196,6 +199,12 @@ var _ Service = &ServiceMock{}
 //			OrganizationSetProfileFunc: func(ctx context.Context, accountID string, orgProfileDTO *dto.OrganizationProfile) (*dto.OrganizationResult, int, error) {
 //				panic("mock out the OrganizationSetProfile method")
 //			},
+//			ScheduledTaskDoFunc: func(ctx context.Context, scheduledTask *entity.ScheduledTask) *common.ResponseForTaskQueue {
+//				panic("mock out the ScheduledTaskDo method")
+//			},
+//			ScheduledTaskPostFunc: func(ctx context.Context, scheduledTask entity.ScheduledTask) error {
+//				panic("mock out the ScheduledTaskPost method")
+//			},
 //			SegmentCreateFunc: func(ctx context.Context, accountID string, segmentDTO *dto.Segment) (int, error) {
 //				panic("mock out the SegmentCreate method")
 //			},
@@ -211,10 +220,10 @@ var _ Service = &ServiceMock{}
 //			SegmentUpdateFunc: func(ctx context.Context, accountID string, segmentDTO *dto.Segment) (int, error) {
 //				panic("mock out the SegmentUpdate method")
 //			},
-//			SendEmailWithSMTPFunc: func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+//			SendEmailWithSMTPFunc: func(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue {
 //				panic("mock out the SendEmailWithSMTP method")
 //			},
-//			SendEmailWithSparkpostFunc: func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+//			SendEmailWithSparkpostFunc: func(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue {
 //				panic("mock out the SendEmailWithSparkpost method")
 //			},
 //			SendSystemEmailFunc: func(ctx context.Context, systemEmail *dto.SystemEmail) error {
@@ -232,7 +241,7 @@ var _ Service = &ServiceMock{}
 //			TaskExecCreateFunc: func(ctx context.Context, accountID string, params *dto.TaskExecCreateParams) (int, error) {
 //				panic("mock out the TaskExecCreate method")
 //			},
-//			TaskExecDoFunc: func(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) *common.DataLogInQueueResult {
+//			TaskExecDoFunc: func(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) *common.ResponseForTaskQueue {
 //				panic("mock out the TaskExecDo method")
 //			},
 //			TaskExecJobInfoFunc: func(ctx context.Context, accountID string, params *dto.TaskExecJobInfoParams) (*dto.TaskExecJobInfoInfo, int, error) {
@@ -335,6 +344,9 @@ type ServiceMock struct {
 	// AppStopFunc mocks the AppStop method.
 	AppStopFunc func(ctx context.Context, accountID string, params *dto.AppDelete) (*entity.App, int, error)
 
+	// BroadcastCampaignLaunchFunc mocks the BroadcastCampaignLaunch method.
+	BroadcastCampaignLaunchFunc func(ctx context.Context, accountID string, data *dto.BroadcastCampaignLaunchParams) (int, error)
+
 	// BroadcastCampaignListFunc mocks the BroadcastCampaignList method.
 	BroadcastCampaignListFunc func(ctx context.Context, accountID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, int, error)
 
@@ -366,13 +378,13 @@ type ServiceMock struct {
 	DataHookUpdateFunc func(ctx context.Context, accountID string, dataHookDTO *dto.DataHook) (*entity.Workspace, int, error)
 
 	// DataLogImportFromQueueFunc mocks the DataLogImportFromQueue method.
-	DataLogImportFromQueueFunc func(ctx context.Context, dataLogInQueue *common.DataLogInQueue) *common.DataLogInQueueResult
+	DataLogImportFromQueueFunc func(ctx context.Context, dataLogInQueue *common.DataLogInQueue) *common.ResponseForTaskQueue
 
 	// DataLogListFunc mocks the DataLogList method.
 	DataLogListFunc func(ctx context.Context, accountID string, params *dto.DataLogListParams) (*dto.DataLogListResult, int, error)
 
 	// DataLogReprocessOneFunc mocks the DataLogReprocessOne method.
-	DataLogReprocessOneFunc func(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (*common.DataLogInQueueResult, int, error)
+	DataLogReprocessOneFunc func(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (*common.ResponseForTaskQueue, int, error)
 
 	// DataLogReprocessUntilFunc mocks the DataLogReprocessUntil method.
 	DataLogReprocessUntilFunc func(ctx context.Context, untilDate time.Time) (int, error)
@@ -417,7 +429,7 @@ type ServiceMock struct {
 	IsOwnerOfOrganizationFunc func(ctx context.Context, accountId string, organizationId string) (bool, int, error)
 
 	// MessageSendFunc mocks the MessageSend method.
-	MessageSendFunc func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult
+	MessageSendFunc func(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue
 
 	// MessageTemplateGetFunc mocks the MessageTemplateGet method.
 	MessageTemplateGetFunc func(ctx context.Context, accountID string, params *dto.MessageTemplateGetParams) (*entity.MessageTemplate, int, error)
@@ -464,6 +476,12 @@ type ServiceMock struct {
 	// OrganizationSetProfileFunc mocks the OrganizationSetProfile method.
 	OrganizationSetProfileFunc func(ctx context.Context, accountID string, orgProfileDTO *dto.OrganizationProfile) (*dto.OrganizationResult, int, error)
 
+	// ScheduledTaskDoFunc mocks the ScheduledTaskDo method.
+	ScheduledTaskDoFunc func(ctx context.Context, scheduledTask *entity.ScheduledTask) *common.ResponseForTaskQueue
+
+	// ScheduledTaskPostFunc mocks the ScheduledTaskPost method.
+	ScheduledTaskPostFunc func(ctx context.Context, scheduledTask entity.ScheduledTask) error
+
 	// SegmentCreateFunc mocks the SegmentCreate method.
 	SegmentCreateFunc func(ctx context.Context, accountID string, segmentDTO *dto.Segment) (int, error)
 
@@ -480,10 +498,10 @@ type ServiceMock struct {
 	SegmentUpdateFunc func(ctx context.Context, accountID string, segmentDTO *dto.Segment) (int, error)
 
 	// SendEmailWithSMTPFunc mocks the SendEmailWithSMTP method.
-	SendEmailWithSMTPFunc func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult
+	SendEmailWithSMTPFunc func(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue
 
 	// SendEmailWithSparkpostFunc mocks the SendEmailWithSparkpost method.
-	SendEmailWithSparkpostFunc func(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult
+	SendEmailWithSparkpostFunc func(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue
 
 	// SendSystemEmailFunc mocks the SendSystemEmail method.
 	SendSystemEmailFunc func(ctx context.Context, systemEmail *dto.SystemEmail) error
@@ -501,7 +519,7 @@ type ServiceMock struct {
 	TaskExecCreateFunc func(ctx context.Context, accountID string, params *dto.TaskExecCreateParams) (int, error)
 
 	// TaskExecDoFunc mocks the TaskExecDo method.
-	TaskExecDoFunc func(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) *common.DataLogInQueueResult
+	TaskExecDoFunc func(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) *common.ResponseForTaskQueue
 
 	// TaskExecJobInfoFunc mocks the TaskExecJobInfo method.
 	TaskExecJobInfoFunc func(ctx context.Context, accountID string, params *dto.TaskExecJobInfoParams) (*dto.TaskExecJobInfoInfo, int, error)
@@ -679,6 +697,15 @@ type ServiceMock struct {
 			AccountID string
 			// Params is the params argument value.
 			Params *dto.AppDelete
+		}
+		// BroadcastCampaignLaunch holds details about calls to the BroadcastCampaignLaunch method.
+		BroadcastCampaignLaunch []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AccountID is the accountID argument value.
+			AccountID string
+			// Data is the data argument value.
+			Data *dto.BroadcastCampaignLaunchParams
 		}
 		// BroadcastCampaignList holds details about calls to the BroadcastCampaignList method.
 		BroadcastCampaignList []struct {
@@ -1029,6 +1056,20 @@ type ServiceMock struct {
 			// OrgProfileDTO is the orgProfileDTO argument value.
 			OrgProfileDTO *dto.OrganizationProfile
 		}
+		// ScheduledTaskDo holds details about calls to the ScheduledTaskDo method.
+		ScheduledTaskDo []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ScheduledTask is the scheduledTask argument value.
+			ScheduledTask *entity.ScheduledTask
+		}
+		// ScheduledTaskPost holds details about calls to the ScheduledTaskPost method.
+		ScheduledTaskPost []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ScheduledTask is the scheduledTask argument value.
+			ScheduledTask entity.ScheduledTask
+		}
 		// SegmentCreate holds details about calls to the SegmentCreate method.
 		SegmentCreate []struct {
 			// Ctx is the ctx argument value.
@@ -1296,6 +1337,7 @@ type ServiceMock struct {
 	lockAppList                                 sync.RWMutex
 	lockAppMutateState                          sync.RWMutex
 	lockAppStop                                 sync.RWMutex
+	lockBroadcastCampaignLaunch                 sync.RWMutex
 	lockBroadcastCampaignList                   sync.RWMutex
 	lockBroadcastCampaignUpsert                 sync.RWMutex
 	lockChannelCreate                           sync.RWMutex
@@ -1339,6 +1381,8 @@ type ServiceMock struct {
 	lockOrganizationInvitationRead              sync.RWMutex
 	lockOrganizationList                        sync.RWMutex
 	lockOrganizationSetProfile                  sync.RWMutex
+	lockScheduledTaskDo                         sync.RWMutex
+	lockScheduledTaskPost                       sync.RWMutex
 	lockSegmentCreate                           sync.RWMutex
 	lockSegmentDelete                           sync.RWMutex
 	lockSegmentList                             sync.RWMutex
@@ -1954,6 +1998,46 @@ func (mock *ServiceMock) AppStopCalls() []struct {
 	return calls
 }
 
+// BroadcastCampaignLaunch calls BroadcastCampaignLaunchFunc.
+func (mock *ServiceMock) BroadcastCampaignLaunch(ctx context.Context, accountID string, data *dto.BroadcastCampaignLaunchParams) (int, error) {
+	if mock.BroadcastCampaignLaunchFunc == nil {
+		panic("ServiceMock.BroadcastCampaignLaunchFunc: method is nil but Service.BroadcastCampaignLaunch was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		AccountID string
+		Data      *dto.BroadcastCampaignLaunchParams
+	}{
+		Ctx:       ctx,
+		AccountID: accountID,
+		Data:      data,
+	}
+	mock.lockBroadcastCampaignLaunch.Lock()
+	mock.calls.BroadcastCampaignLaunch = append(mock.calls.BroadcastCampaignLaunch, callInfo)
+	mock.lockBroadcastCampaignLaunch.Unlock()
+	return mock.BroadcastCampaignLaunchFunc(ctx, accountID, data)
+}
+
+// BroadcastCampaignLaunchCalls gets all the calls that were made to BroadcastCampaignLaunch.
+// Check the length with:
+//
+//	len(mockedService.BroadcastCampaignLaunchCalls())
+func (mock *ServiceMock) BroadcastCampaignLaunchCalls() []struct {
+	Ctx       context.Context
+	AccountID string
+	Data      *dto.BroadcastCampaignLaunchParams
+} {
+	var calls []struct {
+		Ctx       context.Context
+		AccountID string
+		Data      *dto.BroadcastCampaignLaunchParams
+	}
+	mock.lockBroadcastCampaignLaunch.RLock()
+	calls = mock.calls.BroadcastCampaignLaunch
+	mock.lockBroadcastCampaignLaunch.RUnlock()
+	return calls
+}
+
 // BroadcastCampaignList calls BroadcastCampaignListFunc.
 func (mock *ServiceMock) BroadcastCampaignList(ctx context.Context, accountID string, params *dto.BroadcastCampaignListParams) ([]*entity.BroadcastCampaign, int, error) {
 	if mock.BroadcastCampaignListFunc == nil {
@@ -2355,7 +2439,7 @@ func (mock *ServiceMock) DataHookUpdateCalls() []struct {
 }
 
 // DataLogImportFromQueue calls DataLogImportFromQueueFunc.
-func (mock *ServiceMock) DataLogImportFromQueue(ctx context.Context, dataLogInQueue *common.DataLogInQueue) *common.DataLogInQueueResult {
+func (mock *ServiceMock) DataLogImportFromQueue(ctx context.Context, dataLogInQueue *common.DataLogInQueue) *common.ResponseForTaskQueue {
 	if mock.DataLogImportFromQueueFunc == nil {
 		panic("ServiceMock.DataLogImportFromQueueFunc: method is nil but Service.DataLogImportFromQueue was just called")
 	}
@@ -2431,7 +2515,7 @@ func (mock *ServiceMock) DataLogListCalls() []struct {
 }
 
 // DataLogReprocessOne calls DataLogReprocessOneFunc.
-func (mock *ServiceMock) DataLogReprocessOne(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (*common.DataLogInQueueResult, int, error) {
+func (mock *ServiceMock) DataLogReprocessOne(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (*common.ResponseForTaskQueue, int, error) {
 	if mock.DataLogReprocessOneFunc == nil {
 		panic("ServiceMock.DataLogReprocessOneFunc: method is nil but Service.DataLogReprocessOne was just called")
 	}
@@ -2982,7 +3066,7 @@ func (mock *ServiceMock) IsOwnerOfOrganizationCalls() []struct {
 }
 
 // MessageSend calls MessageSendFunc.
-func (mock *ServiceMock) MessageSend(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+func (mock *ServiceMock) MessageSend(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue {
 	if mock.MessageSendFunc == nil {
 		panic("ServiceMock.MessageSendFunc: method is nil but Service.MessageSend was just called")
 	}
@@ -3597,6 +3681,78 @@ func (mock *ServiceMock) OrganizationSetProfileCalls() []struct {
 	return calls
 }
 
+// ScheduledTaskDo calls ScheduledTaskDoFunc.
+func (mock *ServiceMock) ScheduledTaskDo(ctx context.Context, scheduledTask *entity.ScheduledTask) *common.ResponseForTaskQueue {
+	if mock.ScheduledTaskDoFunc == nil {
+		panic("ServiceMock.ScheduledTaskDoFunc: method is nil but Service.ScheduledTaskDo was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ScheduledTask *entity.ScheduledTask
+	}{
+		Ctx:           ctx,
+		ScheduledTask: scheduledTask,
+	}
+	mock.lockScheduledTaskDo.Lock()
+	mock.calls.ScheduledTaskDo = append(mock.calls.ScheduledTaskDo, callInfo)
+	mock.lockScheduledTaskDo.Unlock()
+	return mock.ScheduledTaskDoFunc(ctx, scheduledTask)
+}
+
+// ScheduledTaskDoCalls gets all the calls that were made to ScheduledTaskDo.
+// Check the length with:
+//
+//	len(mockedService.ScheduledTaskDoCalls())
+func (mock *ServiceMock) ScheduledTaskDoCalls() []struct {
+	Ctx           context.Context
+	ScheduledTask *entity.ScheduledTask
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ScheduledTask *entity.ScheduledTask
+	}
+	mock.lockScheduledTaskDo.RLock()
+	calls = mock.calls.ScheduledTaskDo
+	mock.lockScheduledTaskDo.RUnlock()
+	return calls
+}
+
+// ScheduledTaskPost calls ScheduledTaskPostFunc.
+func (mock *ServiceMock) ScheduledTaskPost(ctx context.Context, scheduledTask entity.ScheduledTask) error {
+	if mock.ScheduledTaskPostFunc == nil {
+		panic("ServiceMock.ScheduledTaskPostFunc: method is nil but Service.ScheduledTaskPost was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ScheduledTask entity.ScheduledTask
+	}{
+		Ctx:           ctx,
+		ScheduledTask: scheduledTask,
+	}
+	mock.lockScheduledTaskPost.Lock()
+	mock.calls.ScheduledTaskPost = append(mock.calls.ScheduledTaskPost, callInfo)
+	mock.lockScheduledTaskPost.Unlock()
+	return mock.ScheduledTaskPostFunc(ctx, scheduledTask)
+}
+
+// ScheduledTaskPostCalls gets all the calls that were made to ScheduledTaskPost.
+// Check the length with:
+//
+//	len(mockedService.ScheduledTaskPostCalls())
+func (mock *ServiceMock) ScheduledTaskPostCalls() []struct {
+	Ctx           context.Context
+	ScheduledTask entity.ScheduledTask
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ScheduledTask entity.ScheduledTask
+	}
+	mock.lockScheduledTaskPost.RLock()
+	calls = mock.calls.ScheduledTaskPost
+	mock.lockScheduledTaskPost.RUnlock()
+	return calls
+}
+
 // SegmentCreate calls SegmentCreateFunc.
 func (mock *ServiceMock) SegmentCreate(ctx context.Context, accountID string, segmentDTO *dto.Segment) (int, error) {
 	if mock.SegmentCreateFunc == nil {
@@ -3798,7 +3954,7 @@ func (mock *ServiceMock) SegmentUpdateCalls() []struct {
 }
 
 // SendEmailWithSMTP calls SendEmailWithSMTPFunc.
-func (mock *ServiceMock) SendEmailWithSMTP(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+func (mock *ServiceMock) SendEmailWithSMTP(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue {
 	if mock.SendEmailWithSMTPFunc == nil {
 		panic("ServiceMock.SendEmailWithSMTPFunc: method is nil but Service.SendEmailWithSMTP was just called")
 	}
@@ -3834,7 +3990,7 @@ func (mock *ServiceMock) SendEmailWithSMTPCalls() []struct {
 }
 
 // SendEmailWithSparkpost calls SendEmailWithSparkpostFunc.
-func (mock *ServiceMock) SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) *common.DataLogInQueueResult {
+func (mock *ServiceMock) SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) *common.ResponseForTaskQueue {
 	if mock.SendEmailWithSparkpostFunc == nil {
 		panic("ServiceMock.SendEmailWithSparkpostFunc: method is nil but Service.SendEmailWithSparkpost was just called")
 	}
@@ -4066,7 +4222,7 @@ func (mock *ServiceMock) TaskExecCreateCalls() []struct {
 }
 
 // TaskExecDo calls TaskExecDoFunc.
-func (mock *ServiceMock) TaskExecDo(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) *common.DataLogInQueueResult {
+func (mock *ServiceMock) TaskExecDo(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) *common.ResponseForTaskQueue {
 	if mock.TaskExecDoFunc == nil {
 		panic("ServiceMock.TaskExecDoFunc: method is nil but Service.TaskExecDo was just called")
 	}

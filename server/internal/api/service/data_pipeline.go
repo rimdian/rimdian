@@ -31,7 +31,7 @@ type IDataLogPipeline interface {
 	Net() httpClient.HTTPClient
 	Repo() repository.Repository
 	GetWorkspace() *entity.Workspace
-	GetQueueResult() *common.DataLogInQueueResult
+	GetQueueResult() *common.ResponseForTaskQueue
 	Execute(ctx context.Context)
 	ProcessNextStep(ctx context.Context)
 	InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) error
@@ -105,7 +105,7 @@ type DataLogPipeline struct {
 	DataLogInQueue *common.DataLogInQueue
 	// data_log generated & persisted from the dDataLogInQueue
 	DataLog     *entity.DataLog
-	QueueResult *common.DataLogInQueueResult
+	QueueResult *common.ResponseForTaskQueue
 	// user ids impacted by the data_log that need to be locked
 	// in order to serialize the data_log processing at the user leve
 	// and guarantee idempotency of the data_log
@@ -136,7 +136,7 @@ func (pipe *DataLogPipeline) GetWorkspace() *entity.Workspace {
 	return pipe.Workspace
 }
 
-func (pipe *DataLogPipeline) GetQueueResult() *common.DataLogInQueueResult {
+func (pipe *DataLogPipeline) GetQueueResult() *common.ResponseForTaskQueue {
 	return pipe.QueueResult
 }
 
@@ -661,7 +661,7 @@ func NewDataPipeline(props *DataPipelineProps) IDataLogPipeline {
 		TaskOrchestrator:  props.TaskOrchestrator,
 		Workspace:         props.Workspace,
 		DataLogInQueue:    props.DataLogInQueue,
-		QueueResult:       &common.DataLogInQueueResult{},
+		QueueResult:       &common.ResponseForTaskQueue{},
 		UsersLock:         entity.NewUsersLock(),
 		DataLogsGenerated: []*entity.DataLog{},
 	}

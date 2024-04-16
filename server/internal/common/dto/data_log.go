@@ -536,14 +536,14 @@ func ComputeDataLogID(cfgSecretKey string, origin int, item string) string {
 }
 
 // result of a data log import
-type DataLogInQueueResult struct {
+type ResponseForTaskQueue struct {
 	HasError         bool   `json:"has_error"`
 	Error            string `json:"error,omitempty"`
 	QueueShouldRetry bool   `json:"queue_should_retry,omitempty"`
 	// QueueShouldReplay bool   `json:"queue_should_replay,omitempty"`
 }
 
-func (x *DataLogInQueueResult) SetError(err string, shouldRetry bool) {
+func (x *ResponseForTaskQueue) SetError(err string, shouldRetry bool) {
 	x.HasError = true
 	x.Error = err
 	x.QueueShouldRetry = shouldRetry

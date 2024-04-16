@@ -16,7 +16,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-func (svc *ServiceImpl) MessageSend(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult) {
+func (svc *ServiceImpl) MessageSend(ctx context.Context, data *dto.SendMessage) (result *common.ResponseForTaskQueue) {
 
 	spanCtx, span := trace.StartSpan(ctx, "MessageSend")
 	defer span.End()
@@ -47,7 +47,7 @@ func (svc *ServiceImpl) MessageSend(ctx context.Context, data *dto.SendMessage) 
 
 		// decrypt credentials
 		if err := data.Email.EmailProvider.Decrypt(svc.Config.SECRET_KEY); err != nil {
-			return &common.DataLogInQueueResult{
+			return &common.ResponseForTaskQueue{
 				HasError:         true,
 				QueueShouldRetry: false,
 				Error:            "decrypt error",
@@ -59,14 +59,14 @@ func (svc *ServiceImpl) MessageSend(ctx context.Context, data *dto.SendMessage) 
 		} else if data.Email.EmailProvider.Provider == "smtp" {
 			result = svc.SendEmailWithSMTP(spanCtx, data)
 		} else {
-			result = &common.DataLogInQueueResult{
+			result = &common.ResponseForTaskQueue{
 				HasError:         true,
 				QueueShouldRetry: false,
 				Error:            "no email provider",
 			}
 		}
 	} else {
-		result = &common.DataLogInQueueResult{
+		result = &common.ResponseForTaskQueue{
 			HasError:         true,
 			QueueShouldRetry: false,
 			Error:            "no channel implemented",
@@ -76,7 +76,7 @@ func (svc *ServiceImpl) MessageSend(ctx context.Context, data *dto.SendMessage) 
 	return
 }
 
-func (svc *ServiceImpl) SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult) {
+func (svc *ServiceImpl) SendEmailWithSparkpost(ctx context.Context, data *dto.SendMessage) (result *common.ResponseForTaskQueue) {
 
 	spanCtx, span := trace.StartSpan(ctx, "SendEmailWithSparkpost")
 	defer span.End()
@@ -116,7 +116,7 @@ func (svc *ServiceImpl) SendEmailWithSparkpost(ctx context.Context, data *dto.Se
 	// marshal
 	jsonData, err := json.Marshal(msg)
 	if err != nil {
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			QueueShouldRetry: false,
 			Error:            fmt.Sprintf("SendEmailWithSparkpost error: %v", err),
@@ -130,7 +130,7 @@ func (svc *ServiceImpl) SendEmailWithSparkpost(ctx context.Context, data *dto.Se
 	res, err := svc.NetClient.Do(req)
 
 	if err != nil {
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			QueueShouldRetry: true,
 			Error:            fmt.Sprintf("SendEmailWithSparkpost error: %v", err),
@@ -142,7 +142,7 @@ func (svc *ServiceImpl) SendEmailWithSparkpost(ctx context.Context, data *dto.Se
 	// read body
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			QueueShouldRetry: true,
 			Error:            fmt.Sprintf("SendEmailWithSparkpost error: %v", err),
@@ -152,20 +152,20 @@ func (svc *ServiceImpl) SendEmailWithSparkpost(ctx context.Context, data *dto.Se
 	response := string(body)
 
 	if res.StatusCode < 300 {
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         false,
 			QueueShouldRetry: false,
 			Error:            "",
 		}
 	} else if res.StatusCode == 420 {
 		// 420 is a rate limit error
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			QueueShouldRetry: true,
 			Error:            fmt.Sprintf("SendEmailWithSparkpost error: %v", response),
 		}
 	} else {
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			QueueShouldRetry: false,
 			Error:            fmt.Sprintf("SendEmailWithSparkpost error: %v", response),
@@ -173,7 +173,7 @@ func (svc *ServiceImpl) SendEmailWithSparkpost(ctx context.Context, data *dto.Se
 	}
 }
 
-func (svc *ServiceImpl) SendEmailWithSMTP(ctx context.Context, data *dto.SendMessage) (result *common.DataLogInQueueResult) {
+func (svc *ServiceImpl) SendEmailWithSMTP(ctx context.Context, data *dto.SendMessage) (result *common.ResponseForTaskQueue) {
 
 	// spanCtx, span := trace.StartSpan(ctx, "SendEmailWithSMTP")
 	// defer span.End()
@@ -202,7 +202,7 @@ func (svc *ServiceImpl) SendEmailWithSMTP(ctx context.Context, data *dto.SendMes
 	smtpClient, err := server.Connect()
 
 	if err != nil {
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			QueueShouldRetry: false,
 			Error:            fmt.Sprintf("SendEmailWithSMTP error: %v", err),
@@ -227,7 +227,7 @@ func (svc *ServiceImpl) SendEmailWithSMTP(ctx context.Context, data *dto.SendMes
 	}
 
 	if err := email.Send(smtpClient); err != nil {
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			QueueShouldRetry: false,
 			Error:            fmt.Sprintf("SendEmailWithSMTP error: %v", err),

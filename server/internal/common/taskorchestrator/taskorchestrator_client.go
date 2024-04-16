@@ -29,10 +29,9 @@ var (
 type TaskRequest struct {
 	QueueLocation     string
 	QueueName         string
-	JobID             *string
+	UniqueID          *string // deduplication key
 	PostEndpoint      string
 	Payload           interface{}
-	DeduplicationKey  *string
 	ScheduleTime      *time.Time
 	TaskTimeoutInSecs *int64
 }
@@ -44,17 +43,14 @@ func (t *TaskRequest) Validate() error {
 	if t.QueueName == "" {
 		return eris.New("task queue name is required")
 	}
-	if t.JobID != nil && *t.JobID == "" {
-		return eris.New("task queue job id is required")
+	if t.UniqueID != nil && *t.UniqueID == "" {
+		return eris.New("task queue unique id is required")
 	}
 	if !govalidator.IsURL(t.PostEndpoint) {
 		return eris.New("task queue post endpoint is not valid URL")
 	}
 	if t.Payload == nil {
 		return eris.New("task queue payload is required")
-	}
-	if t.DeduplicationKey != nil && *t.DeduplicationKey == "" {
-		return eris.New("cloud task deduplication key is not valid")
 	}
 	return nil
 }
@@ -254,8 +250,8 @@ func (client *ClientImpl) PostRequest(ctx context.Context, taskRequest *TaskRequ
 	}
 
 	// use a specific task name to retrieve its status later
-	if taskRequest.JobID != nil && *taskRequest.JobID != "" {
-		req.Task.Name = fmt.Sprintf("%v/tasks/%v", queuePath, *taskRequest.JobID)
+	if taskRequest.UniqueID != nil && *taskRequest.UniqueID != "" {
+		req.Task.Name = fmt.Sprintf("%v/tasks/%v", queuePath, *taskRequest.UniqueID)
 	}
 
 	// retry task if not returned after deadline
@@ -270,11 +266,6 @@ func (client *ClientImpl) PostRequest(ctx context.Context, taskRequest *TaskRequ
 		req.Task.ScheduleTime = &timestamppb.Timestamp{
 			Seconds: taskRequest.ScheduleTime.Unix(),
 		}
-	}
-
-	// Google Cloud Tasks deduplicates tasks by their names
-	if taskRequest.DeduplicationKey != nil {
-		req.Task.Name = queuePath + "/tasks/" + *taskRequest.DeduplicationKey
 	}
 
 	if _, err := client.CloudTask.CreateTask(ctx, req); err != nil {

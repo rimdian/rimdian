@@ -16,12 +16,6 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-var (
-	TaskTimeoutInSecs int64  = 25
-	TaskExecEndpoint  string = "/api/taskExec.do"
-	TasksQueueName           = "tasks"
-)
-
 func (svc *ServiceImpl) TaskExecJobs(ctx context.Context, accountID string, params *dto.TaskExecJobsParams) (result *dto.TaskExecJobsResult, code int, err error) {
 
 	_, code, err = svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
@@ -77,7 +71,7 @@ func (svc *ServiceImpl) TaskExecJobInfo(ctx context.Context, accountID string, p
 		return nil, 400, eris.New("the job is already done, info not available")
 	}
 
-	jobInfo, err = svc.TaskOrchestrator.GetTaskRunningJob(ctx, svc.Config.TASK_QUEUE_LOCATION, TasksQueueName, params.JobID)
+	jobInfo, err = svc.TaskOrchestrator.GetTaskRunningJob(ctx, svc.Config.TASK_QUEUE_LOCATION, entity.TasksQueueName, params.JobID)
 
 	if err != nil {
 		// code 400 to propagate the error to the browser UI
@@ -110,25 +104,10 @@ func (svc *ServiceImpl) TaskExecList(ctx context.Context, accountID string, para
 // abort runnig task
 func (svc *ServiceImpl) TaskExecAbort(ctx context.Context, accountID string, params *dto.TaskExecAbortParams) (code int, err error) {
 
-	// fetch workspace
-	workspace, err := svc.Repo.GetWorkspace(ctx, params.WorkspaceID)
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
 
 	if err != nil {
-		if sqlscan.NotFound(err) {
-			return 400, err
-		}
-		return 500, eris.Wrap(err, "TaskAbort")
-	}
-
-	// verify that token is account of its organization
-	isAccount, code, err := svc.IsAccountOfOrganization(ctx, accountID, workspace.OrganizationID)
-
-	if err != nil {
-		return code, eris.Wrap(err, "TaskAbort")
-	}
-
-	if !isAccount {
-		return 400, eris.New("account is not part of the organization")
+		return code, eris.Wrap(err, "BroadcastCampaigLaunch")
 	}
 
 	// automaticaly set the message if not provided
@@ -156,25 +135,10 @@ func (svc *ServiceImpl) TaskExecAbort(ctx context.Context, accountID string, par
 // create new task
 func (svc *ServiceImpl) TaskExecCreate(ctx context.Context, accountID string, params *dto.TaskExecCreateParams) (code int, err error) {
 
-	// fetch workspace
-	workspace, err := svc.Repo.GetWorkspace(ctx, params.WorkspaceID)
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
 
 	if err != nil {
-		if sqlscan.NotFound(err) {
-			return 400, err
-		}
-		return 500, eris.Wrap(err, "TaskCreate")
-	}
-
-	// verify that token is account of its organization
-	isAccount, code, err := svc.IsAccountOfOrganization(ctx, accountID, workspace.OrganizationID)
-
-	if err != nil {
-		return code, eris.Wrap(err, "TaskCreate")
-	}
-
-	if !isAccount {
-		return 400, eris.New("account is not part of the organization")
+		return code, eris.Wrap(err, "BroadcastCampaigLaunch")
 	}
 
 	if err := params.Validate(); err != nil {
@@ -201,10 +165,10 @@ func (svc *ServiceImpl) TaskExecCreate(ctx context.Context, accountID string, pa
 // code 500 will persist error message, and retry
 // code 200 will clean eventual error previously persisted, and end task
 
-func (svc *ServiceImpl) TaskExecDo(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) (result *common.DataLogInQueueResult) {
+func (svc *ServiceImpl) TaskExecDo(ctx context.Context, workspaceID string, payload *dto.TaskExecRequestPayload) (result *common.ResponseForTaskQueue) {
 
 	if payload == nil {
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			Error:            "task payload required",
 			QueueShouldRetry: false,
@@ -217,21 +181,21 @@ func (svc *ServiceImpl) TaskExecDo(ctx context.Context, workspaceID string, payl
 	if err != nil {
 		// check if not found
 		if sqlscan.NotFound(err) {
-			return &common.DataLogInQueueResult{
+			return &common.ResponseForTaskQueue{
 				HasError:         true,
 				Error:            fmt.Sprintf("TaskExecDo: workspace not found: %v", workspaceID),
 				QueueShouldRetry: false,
 			}
 		}
 
-		return &common.DataLogInQueueResult{
+		return &common.ResponseForTaskQueue{
 			HasError:         true,
 			Error:            fmt.Sprintf("TaskExecDo: %v", err),
 			QueueShouldRetry: true,
 		}
 	}
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(TaskTimeoutInSecs)*time.Second)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(entity.TaskTimeoutInSecs)*time.Second)
 	defer cancel()
 
 	props := &TaskExecPipelineProps{
@@ -296,11 +260,11 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 		job := entity.NewTaskExecJob(taskExec.TaskID)
 
 		googleTaskQueueJob := &taskorchestrator.TaskRequest{
-			JobID:             &job.ID,
+			UniqueID:          &job.ID,
 			QueueLocation:     svc.Config.TASK_QUEUE_LOCATION,
-			QueueName:         TasksQueueName,
-			PostEndpoint:      svc.Config.API_ENDPOINT + TaskExecEndpoint + "?workspace_id=" + workspaceID,
-			TaskTimeoutInSecs: &TaskTimeoutInSecs,
+			QueueName:         entity.TasksQueueName,
+			PostEndpoint:      svc.Config.API_ENDPOINT + entity.TaskExecEndpoint + "?workspace_id=" + workspaceID,
+			TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 		}
 
 		taskExec.EnsureID()
@@ -321,7 +285,8 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 		case entity.TaskKindDataLogReprocessUntil,
 			entity.TaskKindReattributeConversions,
 			entity.TaskKindRecomputeSegment,
-			entity.TaskKindImportUsersToSubscriptionList:
+			entity.TaskKindImportUsersToSubscriptionList,
+			entity.TaskKindLaunchBroadcastCampaign:
 
 			job.TaskExecID = taskExec.ID
 

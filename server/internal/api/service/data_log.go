@@ -108,7 +108,7 @@ func DataLogEnqueue(ctx context.Context, cfg *entity.Config, netClient httpClien
 // receives a DataLogInQueue from the Queue and process it
 // it can be a replay of a previous data_log
 // or a new data_log import
-func (svc *ServiceImpl) DataLogImportFromQueue(ctx context.Context, dataLogInQueue *commonDTO.DataLogInQueue) (result *commonDTO.DataLogInQueueResult) {
+func (svc *ServiceImpl) DataLogImportFromQueue(ctx context.Context, dataLogInQueue *commonDTO.DataLogInQueue) (result *commonDTO.ResponseForTaskQueue) {
 
 	// fetch workspace from DB
 	workspace, err := svc.Repo.GetWorkspace(ctx, dataLogInQueue.Context.WorkspaceID)
@@ -117,14 +117,14 @@ func (svc *ServiceImpl) DataLogImportFromQueue(ctx context.Context, dataLogInQue
 	if err != nil {
 		// check if not found
 		if sqlscan.NotFound(err) {
-			return &commonDTO.DataLogInQueueResult{
+			return &commonDTO.ResponseForTaskQueue{
 				HasError:         true,
 				Error:            fmt.Sprintf("DataLogImportFromQueue: workspace not found: %v", dataLogInQueue.Context.WorkspaceID),
 				QueueShouldRetry: false,
 			}
 		}
 
-		return &commonDTO.DataLogInQueueResult{
+		return &commonDTO.ResponseForTaskQueue{
 			HasError:         true,
 			Error:            fmt.Sprintf("DataLogImportFromQueue: %v", err),
 			QueueShouldRetry: true,
@@ -148,7 +148,7 @@ func (svc *ServiceImpl) DataLogImportFromQueue(ctx context.Context, dataLogInQue
 }
 
 // takes a  data import from the DB and  into the queue
-func (svc *ServiceImpl) DataLogReprocessOne(ctx context.Context, accountID string, payload *dto.DataLogReprocessOne) (result *commonDTO.DataLogInQueueResult, code int, err error) {
+func (svc *ServiceImpl) DataLogReprocessOne(ctx context.Context, accountID string, payload *dto.DataLogReprocessOne) (result *commonDTO.ResponseForTaskQueue, code int, err error) {
 
 	workspace, code, err := svc.GetWorkspaceForAccount(ctx, payload.WorkspaceID, accountID)
 

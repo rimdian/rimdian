@@ -29,7 +29,7 @@ type ITaskExecPipeline interface {
 	Net() httpClient.HTTPClient
 	Repo() repository.Repository
 	GetWorkspace() *entity.Workspace
-	GetQueueResult() *common.DataLogInQueueResult
+	GetQueueResult() *common.ResponseForTaskQueue
 	Execute(ctx context.Context)
 	ProcessNextStep(ctx context.Context)
 	InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) error
@@ -64,7 +64,7 @@ type TaskExecPipeline struct {
 	Task           *entity.Task
 	TaskExec       *entity.TaskExec
 	TaskExecResult *entity.TaskExecResult
-	QueueResult    *common.DataLogInQueueResult
+	QueueResult    *common.ResponseForTaskQueue
 	// user ids impacted by the task that need to be locked
 	// in order to serialize the data_log processing at the user level
 	// and guarantee idempotency of the data_log
@@ -95,7 +95,7 @@ func (pipe *TaskExecPipeline) GetWorkspace() *entity.Workspace {
 	return pipe.Workspace
 }
 
-func (pipe *TaskExecPipeline) GetQueueResult() *common.DataLogInQueueResult {
+func (pipe *TaskExecPipeline) GetQueueResult() *common.ResponseForTaskQueue {
 	return pipe.QueueResult
 }
 
@@ -185,7 +185,7 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 
 		// queue result depends on the task result
 		if pipe.TaskExecResult.IsError {
-			pipe.QueueResult = &common.DataLogInQueueResult{
+			pipe.QueueResult = &common.ResponseForTaskQueue{
 				HasError:         pipe.TaskExecResult.IsError,
 				Error:            *pipe.TaskExecResult.Message,
 				QueueShouldRetry: true,
@@ -263,9 +263,9 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 
 				job := &taskorchestrator.TaskRequest{
 					QueueLocation:     pipe.Config.TASK_QUEUE_LOCATION,
-					QueueName:         TasksQueueName,
-					PostEndpoint:      pipe.Config.API_ENDPOINT + TaskExecEndpoint + "?workspace_id=" + pipe.Workspace.ID,
-					TaskTimeoutInSecs: &TaskTimeoutInSecs,
+					QueueName:         entity.TasksQueueName,
+					PostEndpoint:      pipe.Config.API_ENDPOINT + entity.TaskExecEndpoint + "?workspace_id=" + pipe.Workspace.ID,
+					TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 					Payload: dto.TaskExecRequestPayload{
 						TaskExecID: pipe.TaskExec.ID,
 						WorkerID:   pipe.TaskExecPayload.WorkerID,
@@ -322,6 +322,11 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 			return
 		case entity.TaskKindImportUsersToSubscriptionList:
 			pipe.TaskExecResult = TaskExecImportUsersToSubscriptionList(spanCtx, pipe)
+			pipe.ProcessNextStep(spanCtx)
+			return
+		case entity.TaskKindLaunchBroadcastCampaign:
+			// TODO:
+			// pipe.TaskExecResult = TaskExecImportUsersToSubscriptionList(spanCtx, pipe)
 			pipe.ProcessNextStep(spanCtx)
 			return
 		case entity.TaskKindTestingNotDone:
@@ -423,9 +428,9 @@ func (pipe *TaskExecPipeline) TaskExecAddWorker(ctx context.Context, workerID in
 		// enqueue job
 		job := &taskorchestrator.TaskRequest{
 			QueueLocation:     pipe.Config.TASK_QUEUE_LOCATION,
-			QueueName:         TasksQueueName,
-			PostEndpoint:      pipe.Config.API_ENDPOINT + TaskExecEndpoint + "?workspace_id=" + pipe.Workspace.ID,
-			TaskTimeoutInSecs: &TaskTimeoutInSecs,
+			QueueName:         entity.TasksQueueName,
+			PostEndpoint:      pipe.Config.API_ENDPOINT + entity.TaskExecEndpoint + "?workspace_id=" + pipe.Workspace.ID,
+			TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 			Payload: dto.TaskExecRequestPayload{
 				TaskExecID: pipe.TaskExec.ID,
 				WorkerID:   workerID,
@@ -555,7 +560,7 @@ func NewTaskExecPipeline(props *TaskExecPipelineProps) ITaskExecPipeline {
 		Workspace:         props.Workspace,
 		TaskOrchestrator:  props.TaskOrchestrator,
 		TaskExecPayload:   props.TaskExecPayload,
-		QueueResult:       &common.DataLogInQueueResult{},
+		QueueResult:       &common.ResponseForTaskQueue{},
 		UsersLock:         entity.NewUsersLock(),
 		DataLogsGenerated: []*entity.DataLog{},
 	}

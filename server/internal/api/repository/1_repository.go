@@ -208,7 +208,7 @@ type Repository interface {
 	// broadcast campaigns
 	ListBroadcastCampaigns(ctx context.Context, workspaceID string, params *dto.BroadcastCampaignListParams) (campaigns []*entity.BroadcastCampaign, err error)
 	GetBroadcastCampaign(ctx context.Context, workspaceID string, campaignID string) (campaign *entity.BroadcastCampaign, err error)
-	UpdateBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) (err error)
+	UpdateBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign, tx *sql.Tx) (err error)
 	InsertBroadcastCampaign(ctx context.Context, workspaceID string, campaign *entity.BroadcastCampaign) (err error)
 
 	// message templates

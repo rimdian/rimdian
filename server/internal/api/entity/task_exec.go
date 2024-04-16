@@ -14,6 +14,10 @@ import (
 type TaskExecStatusType = int
 
 var (
+	TaskTimeoutInSecs int64  = 25
+	TaskExecEndpoint  string = "/api/taskExec.do"
+	TasksQueueName           = "tasks"
+
 	// status from 0 to 100, to have room to add new steps in between
 	TaskExecStatusAborted       TaskExecStatusType = -2 // aborted (non-retryable error...)
 	TaskExecStatusRetryingError TaskExecStatusType = -1 // is retrying...

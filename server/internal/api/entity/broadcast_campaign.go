@@ -17,6 +17,8 @@ var (
 	BroadcastCampaignStatusLaunched  string = "launched"
 	BroadcastCampaignStatusSent      string = "sent"
 	BroadcastCampaignStatusFailed    string = "failed"
+
+	TaskKindLaunchBroadcastCampaign = "launch_broadcast_campaign"
 )
 
 type BroadcastCampaign struct {
@@ -33,6 +35,13 @@ type BroadcastCampaign struct {
 	LaunchedAt        *time.Time                         `db:"launched_at" json:"launched_at,omitempty"`
 	DBCreatedAt       time.Time                          `db:"db_created_at" json:"db_created_at"`
 	DBUpdatedAt       time.Time                          `db:"db_updated_at" json:"db_updated_at"`
+}
+
+func (bc *BroadcastCampaign) LaunchNow() {
+	now := time.Now()
+	bc.ScheduledAt = nil
+	bc.LaunchedAt = &now
+	bc.Status = BroadcastCampaignStatusLaunched
 }
 
 func (bc *BroadcastCampaign) Validate() error {

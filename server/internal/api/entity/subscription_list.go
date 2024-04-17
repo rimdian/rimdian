@@ -17,7 +17,9 @@ type SubscriptionList struct {
 	DBUpdatedAt       time.Time `db:"db_updated_at" json:"db_updated_at"`
 
 	// joined server side
-	UsersCount int64 `db:"users_count" json:"users_count"`
+	ActiveUsers       int64 `db:"active_users" json:"active_users"`
+	PausedUsers       int64 `db:"paused_users" json:"paused_users"`
+	UnsubscribedUsers int64 `db:"unsubscribed_users" json:"unsubscribed_users"`
 }
 
 func (sl *SubscriptionList) Validate() error {

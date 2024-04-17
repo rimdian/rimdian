@@ -410,8 +410,8 @@ var _ Repository = &RepositoryMock{}
 //			ListSessionsForUserFunc: func(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.Session, error) {
 //				panic("mock out the ListSessionsForUser method")
 //			},
-//			ListSubscriptionListUserFunc: func(ctx context.Context, workspaceID string, userID string) ([]*entity.SubscriptionListUser, error) {
-//				panic("mock out the ListSubscriptionListUser method")
+//			ListSubscriptionListUsersFunc: func(ctx context.Context, workspaceID string, userIDs []string) ([]*entity.SubscriptionListUser, error) {
+//				panic("mock out the ListSubscriptionListUsers method")
 //			},
 //			ListSubscriptionListsFunc: func(ctx context.Context, workspaceID string, withUsersCount bool) ([]*entity.SubscriptionList, error) {
 //				panic("mock out the ListSubscriptionLists method")
@@ -978,8 +978,8 @@ type RepositoryMock struct {
 	// ListSessionsForUserFunc mocks the ListSessionsForUser method.
 	ListSessionsForUserFunc func(ctx context.Context, workspace *entity.Workspace, userID string, orderBy string, tx *sql.Tx) ([]*entity.Session, error)
 
-	// ListSubscriptionListUserFunc mocks the ListSubscriptionListUser method.
-	ListSubscriptionListUserFunc func(ctx context.Context, workspaceID string, userID string) ([]*entity.SubscriptionListUser, error)
+	// ListSubscriptionListUsersFunc mocks the ListSubscriptionListUsers method.
+	ListSubscriptionListUsersFunc func(ctx context.Context, workspaceID string, userIDs []string) ([]*entity.SubscriptionListUser, error)
 
 	// ListSubscriptionListsFunc mocks the ListSubscriptionLists method.
 	ListSubscriptionListsFunc func(ctx context.Context, workspaceID string, withUsersCount bool) ([]*entity.SubscriptionList, error)
@@ -2495,14 +2495,14 @@ type RepositoryMock struct {
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
-		// ListSubscriptionListUser holds details about calls to the ListSubscriptionListUser method.
-		ListSubscriptionListUser []struct {
+		// ListSubscriptionListUsers holds details about calls to the ListSubscriptionListUsers method.
+		ListSubscriptionListUsers []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// WorkspaceID is the workspaceID argument value.
 			WorkspaceID string
-			// UserID is the userID argument value.
-			UserID string
+			// UserIDs is the userIDs argument value.
+			UserIDs []string
 		}
 		// ListSubscriptionLists holds details about calls to the ListSubscriptionLists method.
 		ListSubscriptionLists []struct {
@@ -3199,7 +3199,7 @@ type RepositoryMock struct {
 	lockListPostviewsForUser                  sync.RWMutex
 	lockListSegments                          sync.RWMutex
 	lockListSessionsForUser                   sync.RWMutex
-	lockListSubscriptionListUser              sync.RWMutex
+	lockListSubscriptionListUsers             sync.RWMutex
 	lockListSubscriptionLists                 sync.RWMutex
 	lockListTaskExecs                         sync.RWMutex
 	lockListTasks                             sync.RWMutex
@@ -8779,43 +8779,43 @@ func (mock *RepositoryMock) ListSessionsForUserCalls() []struct {
 	return calls
 }
 
-// ListSubscriptionListUser calls ListSubscriptionListUserFunc.
-func (mock *RepositoryMock) ListSubscriptionListUser(ctx context.Context, workspaceID string, userID string) ([]*entity.SubscriptionListUser, error) {
-	if mock.ListSubscriptionListUserFunc == nil {
-		panic("RepositoryMock.ListSubscriptionListUserFunc: method is nil but Repository.ListSubscriptionListUser was just called")
+// ListSubscriptionListUsers calls ListSubscriptionListUsersFunc.
+func (mock *RepositoryMock) ListSubscriptionListUsers(ctx context.Context, workspaceID string, userIDs []string) ([]*entity.SubscriptionListUser, error) {
+	if mock.ListSubscriptionListUsersFunc == nil {
+		panic("RepositoryMock.ListSubscriptionListUsersFunc: method is nil but Repository.ListSubscriptionListUsers was just called")
 	}
 	callInfo := struct {
 		Ctx         context.Context
 		WorkspaceID string
-		UserID      string
+		UserIDs     []string
 	}{
 		Ctx:         ctx,
 		WorkspaceID: workspaceID,
-		UserID:      userID,
+		UserIDs:     userIDs,
 	}
-	mock.lockListSubscriptionListUser.Lock()
-	mock.calls.ListSubscriptionListUser = append(mock.calls.ListSubscriptionListUser, callInfo)
-	mock.lockListSubscriptionListUser.Unlock()
-	return mock.ListSubscriptionListUserFunc(ctx, workspaceID, userID)
+	mock.lockListSubscriptionListUsers.Lock()
+	mock.calls.ListSubscriptionListUsers = append(mock.calls.ListSubscriptionListUsers, callInfo)
+	mock.lockListSubscriptionListUsers.Unlock()
+	return mock.ListSubscriptionListUsersFunc(ctx, workspaceID, userIDs)
 }
 
-// ListSubscriptionListUserCalls gets all the calls that were made to ListSubscriptionListUser.
+// ListSubscriptionListUsersCalls gets all the calls that were made to ListSubscriptionListUsers.
 // Check the length with:
 //
-//	len(mockedRepository.ListSubscriptionListUserCalls())
-func (mock *RepositoryMock) ListSubscriptionListUserCalls() []struct {
+//	len(mockedRepository.ListSubscriptionListUsersCalls())
+func (mock *RepositoryMock) ListSubscriptionListUsersCalls() []struct {
 	Ctx         context.Context
 	WorkspaceID string
-	UserID      string
+	UserIDs     []string
 } {
 	var calls []struct {
 		Ctx         context.Context
 		WorkspaceID string
-		UserID      string
+		UserIDs     []string
 	}
-	mock.lockListSubscriptionListUser.RLock()
-	calls = mock.calls.ListSubscriptionListUser
-	mock.lockListSubscriptionListUser.RUnlock()
+	mock.lockListSubscriptionListUsers.RLock()
+	calls = mock.calls.ListSubscriptionListUsers
+	mock.lockListSubscriptionListUsers.RUnlock()
 	return calls
 }
 

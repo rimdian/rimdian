@@ -152,7 +152,7 @@ const RouteBroadcasts = () => {
                       <p key={list.id}>
                         <Tag color={subscriptionList?.color}>{subscriptionList?.name}</Tag>(
                         {subscriptionList &&
-                          numbro(subscriptionList.users_count).format({
+                          numbro(subscriptionList.active_users).format({
                             totalLength: 3,
                             trimMantissa: true
                           })}

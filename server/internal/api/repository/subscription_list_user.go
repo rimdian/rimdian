@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
 
-func (repo *RepositoryImpl) ListSubscriptionListUser(ctx context.Context, workspaceID string, userID string) (subscriptions []*entity.SubscriptionListUser, err error) {
+func (repo *RepositoryImpl) ListSubscriptionListUsers(ctx context.Context, workspaceID string, userIDs []string) (subscriptions []*entity.SubscriptionListUser, err error) {
 
 	conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
 
@@ -24,7 +25,14 @@ func (repo *RepositoryImpl) ListSubscriptionListUser(ctx context.Context, worksp
 
 	subscriptions = []*entity.SubscriptionListUser{}
 
-	err = sqlscan.Select(ctx, conn, &subscriptions, "SELECT * FROM subscription_list_user WHERE user_id = ?", userID)
+	query, args, err := squirrel.Select("*").From("subscription_list_user").Where(sq.Eq{"user_id": userIDs}).ToSql()
+
+	if err != nil {
+		err = eris.Wrap(err, "ListUserSegments")
+		return
+	}
+
+	err = sqlscan.Select(ctx, conn, &subscriptions, query, args...)
 
 	return
 }

@@ -70,26 +70,39 @@ func (repo *RepositoryImpl) ListSubscriptionLists(ctx context.Context, workspace
 
 	lists = []*entity.SubscriptionList{}
 
-	queryBuilder := sq.Select("subscription_list.*").From("subscription_list")
+	query := "SELECT * FROM subscription_list"
 
 	if withUsersCount {
-		queryBuilder = queryBuilder.LeftJoin("subscription_list_user ON subscription_list.id = subscription_list_user.subscription_list_id")
-		queryBuilder = queryBuilder.GroupBy("subscription_list.id")
-		queryBuilder = queryBuilder.Column("COALESCE(COUNT(subscription_list_user.user_id), 0) AS users_count")
+		query = `
+			SELECT subscription_list.*,
+				COALESCE(active_users, 0) AS active_users,
+				COALESCE(paused_users, 0) AS paused_users,
+				COALESCE(unsubscribed_users, 0) AS unsubscribed_users
+			FROM subscription_list
+			LEFT JOIN (
+				SELECT subscription_list_id,
+				COUNT(CASE WHEN status = 1 THEN 1 END) AS active_users,
+				COUNT(CASE WHEN status = 2 THEN 1 END) AS paused_users,
+				COUNT(CASE WHEN status = 3 THEN 1 END) AS unsubscribed_users
+				FROM subscription_list_user
+				GROUP BY subscription_list_id
+			) AS subscription_list_user ON subscription_list.id = subscription_list_user.subscription_list_id
+		`
+		// query = `SELECT
+		// 	sl.*,
+		// 	COUNT(CASE WHEN ul.status = 1 THEN 1 END) AS active_users,
+		// 	COUNT(CASE WHEN ul.status = 2 THEN 1 END) AS paused_users,
+		// 	COUNT(CASE WHEN ul.status = 3 THEN 1 END) AS unsubscribed_users
+		// FROM
+		// 	subscription_list sl
+		// JOIN
+		// 	subscription_list_user ul ON sl.id = ul.subscription_list_id
+		// GROUP BY
+		// 	sl.id`
 	}
 
-	// fetch lists
-	query, args, err := queryBuilder.ToSql()
-
-	// log.Printf("query: %v, args: %+v", query, args)
-
-	if err != nil {
-		err = eris.Wrapf(err, "ListSubscriptionLists fetch query: %v, args: %+v", query, args)
-		return
-	}
-
-	if err = sqlscan.Select(ctx, conn, &lists, query, args...); err != nil {
-		err = eris.Wrapf(err, "ListSubscriptionLists query: %v, args: %+v", query, args)
+	if err = sqlscan.Select(ctx, conn, &lists, query); err != nil {
+		err = eris.Wrapf(err, "ListSubscriptionLists query: %v", query)
 		return
 	}
 

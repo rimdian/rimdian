@@ -214,6 +214,52 @@ func (repo *RepositoryImpl) ListUsers(ctx context.Context, workspace *entity.Wor
 		}
 	}
 
+	// enrichments
+	userIDs := []string{}
+	for _, user := range users {
+		userIDs = append(userIDs, user.ID)
+	}
+
+	log.Printf("userIDs = %+v\n", userIDs)
+	log.Printf("params = %+v\n", params)
+
+	// fetch user segments
+	if params.WithSegments {
+		userSegments, err := repo.ListUserSegments(ctx, workspace.ID, userIDs, nil)
+		if err != nil {
+			return nil, "", "", eris.Wrap(err, "ListUsers")
+		}
+
+		// map user segments to users
+		for _, user := range users {
+			user.Segments = []*entity.UserSegment{}
+			for _, segment := range userSegments {
+				if user.ID == segment.UserID {
+					user.Segments = append(user.Segments, segment)
+				}
+			}
+		}
+	}
+
+	if params.WithSubscriptionLists {
+		// fetch user subscription lists
+		userSubscriptionLists, err := repo.ListSubscriptionListUsers(ctx, workspace.ID, userIDs)
+
+		if err != nil {
+			return nil, "", "", eris.Wrap(err, "ListUsers")
+		}
+
+		// map user subscription lists to users
+		for _, user := range users {
+			user.SubscriptionLists = []*entity.SubscriptionListUser{}
+			for _, subscriptionList := range userSubscriptionLists {
+				if user.ID == subscriptionList.UserID {
+					user.SubscriptionLists = append(user.SubscriptionLists, subscriptionList)
+				}
+			}
+		}
+	}
+
 	return
 }
 
@@ -582,7 +628,7 @@ func (repo *RepositoryImpl) FindUserByID(ctx context.Context, workspace *entity.
 	}
 
 	if userWith.SubscriptionLists {
-		userFound.SubscriptionLists, err = repo.ListSubscriptionListUser(ctx, workspace.ID, userFound.ID)
+		userFound.SubscriptionLists, err = repo.ListSubscriptionListUsers(ctx, workspace.ID, []string{userFound.ID})
 
 		if err != nil {
 			return nil, eris.Wrap(err, "UserShow")

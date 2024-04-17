@@ -60,6 +60,9 @@ type UserListParams struct {
 	UserIDs   *string `json:"user_ids,omitempty"` // comma separated user_ids
 	SegmentID *string `json:"segment_id,omitempty"`
 	ListID    *string `json:"list_id,omitempty"`
+	// enrichments:
+	WithSegments          bool `json:"with_segments"`
+	WithSubscriptionLists bool `json:"with_subscription_lists"`
 	// pagination computed server side:
 	NextID       string
 	NextDate     time.Time
@@ -125,6 +128,12 @@ func (params *UserListParams) FromRequest(r *http.Request) (err error) {
 	if listID != "" {
 		params.ListID = &listID
 	}
+
+	// check if with_segments contains a value if provided
+	params.WithSegments = r.FormValue("with_segments") == "true"
+
+	// check if with_subscription_lists contains a value if provided
+	params.WithSubscriptionLists = r.FormValue("with_subscription_lists") == "true"
 
 	return nil
 }

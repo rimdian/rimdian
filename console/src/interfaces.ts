@@ -1155,7 +1155,9 @@ export interface SubscriptionList {
   email_template_version?: number
   db_created_at: string
   db_updated_at: string
-  users_count?: number
+  active_users?: number
+  paused_users?: number
+  unsubscribed_users?: number
 }
 
 export interface EmailTemplateBlock {

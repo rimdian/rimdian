@@ -220,9 +220,6 @@ func (repo *RepositoryImpl) ListUsers(ctx context.Context, workspace *entity.Wor
 		userIDs = append(userIDs, user.ID)
 	}
 
-	log.Printf("userIDs = %+v\n", userIDs)
-	log.Printf("params = %+v\n", params)
-
 	// fetch user segments
 	if params.WithSegments {
 		userSegments, err := repo.ListUserSegments(ctx, workspace.ID, userIDs, nil)

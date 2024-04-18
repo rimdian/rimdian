@@ -19,6 +19,9 @@ var _ Client = &ClientMock{}
 //
 //		// make and configure a mocked Client
 //		mockedClient := &ClientMock{
+//			DeleteTaskFunc: func(ctx context.Context, queueLocation string, queueName string, taskID string) error {
+//				panic("mock out the DeleteTask method")
+//			},
 //			EnsureQueueFunc: func(ctx context.Context, queueLocation string, queueName string, maxConcurrent int32) error {
 //				panic("mock out the EnsureQueue method")
 //			},
@@ -47,6 +50,9 @@ var _ Client = &ClientMock{}
 //
 //	}
 type ClientMock struct {
+	// DeleteTaskFunc mocks the DeleteTask method.
+	DeleteTaskFunc func(ctx context.Context, queueLocation string, queueName string, taskID string) error
+
 	// EnsureQueueFunc mocks the EnsureQueue method.
 	EnsureQueueFunc func(ctx context.Context, queueLocation string, queueName string, maxConcurrent int32) error
 
@@ -70,6 +76,17 @@ type ClientMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// DeleteTask holds details about calls to the DeleteTask method.
+		DeleteTask []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// QueueLocation is the queueLocation argument value.
+			QueueLocation string
+			// QueueName is the queueName argument value.
+			QueueName string
+			// TaskID is the taskID argument value.
+			TaskID string
+		}
 		// EnsureQueue holds details about calls to the EnsureQueue method.
 		EnsureQueue []struct {
 			// Ctx is the ctx argument value.
@@ -120,6 +137,7 @@ type ClientMock struct {
 			TaskRequest *TaskRequest
 		}
 	}
+	lockDeleteTask                                   sync.RWMutex
 	lockEnsureQueue                                  sync.RWMutex
 	lockGetHistoricalQueueNameForWorkspace           sync.RWMutex
 	lockGetLiveQueueNameForWorkspace                 sync.RWMutex
@@ -127,6 +145,50 @@ type ClientMock struct {
 	lockGetTaskRunningJob                            sync.RWMutex
 	lockGetTransactionalMessageQueueNameForWorkspace sync.RWMutex
 	lockPostRequest                                  sync.RWMutex
+}
+
+// DeleteTask calls DeleteTaskFunc.
+func (mock *ClientMock) DeleteTask(ctx context.Context, queueLocation string, queueName string, taskID string) error {
+	if mock.DeleteTaskFunc == nil {
+		panic("ClientMock.DeleteTaskFunc: method is nil but Client.DeleteTask was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		QueueLocation string
+		QueueName     string
+		TaskID        string
+	}{
+		Ctx:           ctx,
+		QueueLocation: queueLocation,
+		QueueName:     queueName,
+		TaskID:        taskID,
+	}
+	mock.lockDeleteTask.Lock()
+	mock.calls.DeleteTask = append(mock.calls.DeleteTask, callInfo)
+	mock.lockDeleteTask.Unlock()
+	return mock.DeleteTaskFunc(ctx, queueLocation, queueName, taskID)
+}
+
+// DeleteTaskCalls gets all the calls that were made to DeleteTask.
+// Check the length with:
+//
+//	len(mockedClient.DeleteTaskCalls())
+func (mock *ClientMock) DeleteTaskCalls() []struct {
+	Ctx           context.Context
+	QueueLocation string
+	QueueName     string
+	TaskID        string
+} {
+	var calls []struct {
+		Ctx           context.Context
+		QueueLocation string
+		QueueName     string
+		TaskID        string
+	}
+	mock.lockDeleteTask.RLock()
+	calls = mock.calls.DeleteTask
+	mock.lockDeleteTask.RUnlock()
+	return calls
 }
 
 // EnsureQueue calls EnsureQueueFunc.

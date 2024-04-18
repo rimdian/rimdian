@@ -71,7 +71,7 @@ func (svc *ServiceImpl) TaskExecJobInfo(ctx context.Context, accountID string, p
 		return nil, 400, eris.New("the job is already done, info not available")
 	}
 
-	jobInfo, err = svc.TaskOrchestrator.GetTaskRunningJob(ctx, svc.Config.TASK_QUEUE_LOCATION, entity.TasksQueueName, params.JobID)
+	jobInfo, err = svc.TaskOrchestrator.GetTaskRunningJob(ctx, svc.Config.TASK_QUEUE_LOCATION, entity.TaskExecsQueueName, params.JobID)
 
 	if err != nil {
 		// code 400 to propagate the error to the browser UI
@@ -262,7 +262,7 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 		googleTaskQueueJob := &taskorchestrator.TaskRequest{
 			UniqueID:          &job.ID,
 			QueueLocation:     svc.Config.TASK_QUEUE_LOCATION,
-			QueueName:         entity.TasksQueueName,
+			QueueName:         entity.TaskExecsQueueName,
 			PostEndpoint:      svc.Config.API_ENDPOINT + entity.TaskExecEndpoint + "?workspace_id=" + workspaceID,
 			TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 		}

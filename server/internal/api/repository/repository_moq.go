@@ -245,6 +245,9 @@ var _ Repository = &RepositoryMock{}
 //			GetSubscriptionListFunc: func(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (*entity.SubscriptionList, error) {
 //				panic("mock out the GetSubscriptionList method")
 //			},
+//			GetSubscriptionListUsersToMessageFunc: func(ctx context.Context, workspaceID string, listIDs []string, offset int64, limit int64) ([]*entity.SubscriptionListUser, error) {
+//				panic("mock out the GetSubscriptionListUsersToMessage method")
+//			},
 //			GetSystemConnectionFunc: func(ctx context.Context) (*sql.Conn, error) {
 //				panic("mock out the GetSystemConnection method")
 //			},
@@ -812,6 +815,9 @@ type RepositoryMock struct {
 
 	// GetSubscriptionListFunc mocks the GetSubscriptionList method.
 	GetSubscriptionListFunc func(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (*entity.SubscriptionList, error)
+
+	// GetSubscriptionListUsersToMessageFunc mocks the GetSubscriptionListUsersToMessage method.
+	GetSubscriptionListUsersToMessageFunc func(ctx context.Context, workspaceID string, listIDs []string, offset int64, limit int64) ([]*entity.SubscriptionListUser, error)
 
 	// GetSystemConnectionFunc mocks the GetSystemConnection method.
 	GetSystemConnectionFunc func(ctx context.Context) (*sql.Conn, error)
@@ -1945,6 +1951,19 @@ type RepositoryMock struct {
 			ListID string
 			// Tx is the tx argument value.
 			Tx *sql.Tx
+		}
+		// GetSubscriptionListUsersToMessage holds details about calls to the GetSubscriptionListUsersToMessage method.
+		GetSubscriptionListUsersToMessage []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// ListIDs is the listIDs argument value.
+			ListIDs []string
+			// Offset is the offset argument value.
+			Offset int64
+			// Limit is the limit argument value.
+			Limit int64
 		}
 		// GetSystemConnection holds details about calls to the GetSystemConnection method.
 		GetSystemConnection []struct {
@@ -3144,6 +3163,7 @@ type RepositoryMock struct {
 	lockGetSegment                            sync.RWMutex
 	lockGetSettings                           sync.RWMutex
 	lockGetSubscriptionList                   sync.RWMutex
+	lockGetSubscriptionListUsersToMessage     sync.RWMutex
 	lockGetSystemConnection                   sync.RWMutex
 	lockGetTask                               sync.RWMutex
 	lockGetTaskExec                           sync.RWMutex
@@ -6468,6 +6488,54 @@ func (mock *RepositoryMock) GetSubscriptionListCalls() []struct {
 	mock.lockGetSubscriptionList.RLock()
 	calls = mock.calls.GetSubscriptionList
 	mock.lockGetSubscriptionList.RUnlock()
+	return calls
+}
+
+// GetSubscriptionListUsersToMessage calls GetSubscriptionListUsersToMessageFunc.
+func (mock *RepositoryMock) GetSubscriptionListUsersToMessage(ctx context.Context, workspaceID string, listIDs []string, offset int64, limit int64) ([]*entity.SubscriptionListUser, error) {
+	if mock.GetSubscriptionListUsersToMessageFunc == nil {
+		panic("RepositoryMock.GetSubscriptionListUsersToMessageFunc: method is nil but Repository.GetSubscriptionListUsersToMessage was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		ListIDs     []string
+		Offset      int64
+		Limit       int64
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		ListIDs:     listIDs,
+		Offset:      offset,
+		Limit:       limit,
+	}
+	mock.lockGetSubscriptionListUsersToMessage.Lock()
+	mock.calls.GetSubscriptionListUsersToMessage = append(mock.calls.GetSubscriptionListUsersToMessage, callInfo)
+	mock.lockGetSubscriptionListUsersToMessage.Unlock()
+	return mock.GetSubscriptionListUsersToMessageFunc(ctx, workspaceID, listIDs, offset, limit)
+}
+
+// GetSubscriptionListUsersToMessageCalls gets all the calls that were made to GetSubscriptionListUsersToMessage.
+// Check the length with:
+//
+//	len(mockedRepository.GetSubscriptionListUsersToMessageCalls())
+func (mock *RepositoryMock) GetSubscriptionListUsersToMessageCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	ListIDs     []string
+	Offset      int64
+	Limit       int64
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		ListIDs     []string
+		Offset      int64
+		Limit       int64
+	}
+	mock.lockGetSubscriptionListUsersToMessage.RLock()
+	calls = mock.calls.GetSubscriptionListUsersToMessage
+	mock.lockGetSubscriptionListUsersToMessage.RUnlock()
 	return calls
 }
 

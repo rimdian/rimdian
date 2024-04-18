@@ -41,7 +41,7 @@ func (svc *ServiceImpl) InstallOrVerifyServer(ctx context.Context) (success bool
 		}
 
 		// install global queues
-		if err = svc.TaskOrchestrator.EnsureQueue(ctx, svc.Config.TASK_QUEUE_LOCATION, entity.TasksQueueName, 1000); err != nil {
+		if err = svc.TaskOrchestrator.EnsureQueue(ctx, svc.Config.TASK_QUEUE_LOCATION, entity.TaskExecsQueueName, 1000); err != nil {
 			return false, eris.Wrap(err, "InstallOrVerifyServer")
 		}
 

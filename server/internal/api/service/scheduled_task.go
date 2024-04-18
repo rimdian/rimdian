@@ -11,7 +11,33 @@ import (
 )
 
 func (svc *ServiceImpl) ScheduledTaskDo(ctx context.Context, scheduledTask *entity.ScheduledTask) (result *common.ResponseForTaskQueue) {
-	// TODO: post the tasks exec
+
+	if scheduledTask == nil {
+		return &common.ResponseForTaskQueue{
+			HasError: true,
+			Error:    eris.New("ScheduledTaskDo: scheduledTask is nil").Error(),
+		}
+	}
+
+	if err := scheduledTask.Validate(svc.Config.SECRET_KEY); err != nil {
+		return &common.ResponseForTaskQueue{
+			HasError: true,
+			Error:    err.Error(),
+		}
+	}
+
+	result = &common.ResponseForTaskQueue{}
+
+	code, err := svc.doTaskCreate(ctx, scheduledTask.WorkspaceID, &scheduledTask.TaskExec)
+
+	if err != nil {
+		result.HasError = true
+		if code == 500 {
+			result.QueueShouldRetry = true
+		}
+		result.Error = eris.Wrap(err, "ScheduledTaskDo").Error()
+	}
+
 	return nil
 }
 
@@ -21,8 +47,9 @@ func (svc *ServiceImpl) ScheduledTaskPost(ctx context.Context, scheduledTask ent
 	defer span.End()
 
 	scheduledTask.TaskExec.EnsureID()
+	scheduledTask.Sign(svc.Config.SECRET_KEY)
 
-	if err = scheduledTask.Validate(); err != nil {
+	if err = scheduledTask.Validate(svc.Config.SECRET_KEY); err != nil {
 		return eris.Wrap(err, "ScheduledTaskPost")
 	}
 

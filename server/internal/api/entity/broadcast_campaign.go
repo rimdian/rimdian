@@ -44,6 +44,25 @@ func (bc *BroadcastCampaign) LaunchNow() {
 	bc.Status = BroadcastCampaignStatusLaunched
 }
 
+func (bc *BroadcastCampaign) GetScheduledAt() (*time.Time, error) {
+	if bc.ScheduledAt == nil {
+		return nil, eris.New("ScheduledAt is nil")
+	}
+	// parse date in location
+	location, err := time.LoadLocation(*bc.Timezone)
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to load timezone")
+	}
+
+	datetime, err := time.ParseInLocation("2006-01-02 15:04", *bc.ScheduledAt, location)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to parse datetime")
+	}
+
+	return &datetime, nil
+}
+
 func (bc *BroadcastCampaign) Validate() error {
 	if bc.ID == "" {
 		return eris.New("ID is required")

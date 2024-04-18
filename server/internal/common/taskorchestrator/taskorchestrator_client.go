@@ -63,6 +63,7 @@ type Client interface {
 	GetTransactionalMessageQueueNameForWorkspace(workspaceID string) string
 	GetMarketingMessageQueueNameForWorkspace(workspaceID string) string
 	GetTaskRunningJob(ctx context.Context, queueLocation string, queueName string, taskID string) (jobInfo *dto.TaskExecJobInfoInfo, err error)
+	DeleteTask(ctx context.Context, queueLocation string, queueName string, taskID string) error
 }
 
 type ClientImpl struct {
@@ -77,6 +78,24 @@ func NewClient(gcloudProject string, env string, cloudClient *cloudtasks.Client)
 		Env:           env,
 		CloudTask:     cloudClient,
 	}
+}
+
+func (client *ClientImpl) DeleteTask(ctx context.Context, queueLocation string, queueName string, taskID string) (err error) {
+
+	// See https://pkg.go.dev/cloud.google.com/go/cloudtasks/apiv2/cloudtaskspb#DeleteTaskRequest.
+	if err = client.CloudTask.DeleteTask(ctx, &cloudtaskspb.DeleteTaskRequest{
+		// projects/PROJECT_ID/locations/LOCATION_ID/queues/QUEUE_ID/tasks/TASK_ID
+		Name: fmt.Sprintf("projects/%s/locations/%s/queues/%s/tasks/%s", client.GcloudProject, queueLocation, queueName, taskID),
+	}); err != nil {
+		// should error if task not found
+		if strings.Contains(err.Error(), "not found") {
+			return nil
+		}
+		log.Printf("cloudtasks.DeleteTask error: %v", err)
+		return eris.Wrap(err, "DeleteTask")
+	}
+
+	return nil
 }
 
 func (client *ClientImpl) GetTaskRunningJob(ctx context.Context, queueLocation string, queueName string, taskID string) (jobInfo *dto.TaskExecJobInfoInfo, err error) {

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	seededRand      = rand.New(rand.NewSource(time.Now().UnixNano()))
+	SeededRand      = rand.New(rand.NewSource(time.Now().UnixNano()))
 	maleFaceCount   = 0 // keep track of how many females are generated today
 	femaleFaceCount = 0 // keep track of how many females are generated today
 	lastTimezone    = "Europe/Paris"
@@ -30,7 +30,7 @@ var (
 	adroll        = entity.Channel{}
 )
 
-func randomInt(seededRandom *rand.Rand, min, max int) int {
+func RandomInt(seededRandom *rand.Rand, min, max int) int {
 	return seededRandom.Intn(max-min) + min
 }
 
@@ -100,7 +100,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		}
 
 		date := time.Now().AddDate(0, 0, -totalDays-1).AddDate(0, 0, currentDay)
-		date = time.Date(date.Year(), date.Month(), date.Day(), randomInt(seededRand, 9, 22), randomInt(seededRand, 0, 59), randomInt(seededRand, 0, 59), 0, tzLocation)
+		date = time.Date(date.Year(), date.Month(), date.Day(), RandomInt(SeededRand, 9, 22), RandomInt(SeededRand, 0, 59), RandomInt(SeededRand, 0, 59), 0, tzLocation)
 
 		if date.After(time.Now()) {
 			continue
@@ -145,9 +145,9 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		// generate a DataImportItemDevice, 55% mobile, 40% desktop, 15% tablet
 
 		deviceType := "mobile"
-		if seededRand.Intn(100) <= 40 {
+		if SeededRand.Intn(100) <= 40 {
 			deviceType = "desktop"
-		} else if seededRand.Intn(100) <= 15 {
+		} else if SeededRand.Intn(100) <= 15 {
 			deviceType = "tablet"
 		}
 
@@ -157,22 +157,22 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		scenario := entity.IphoneSE
 
 		// 40% iphone 13
-		if seededRand.Intn(100) <= 40 {
+		if SeededRand.Intn(100) <= 40 {
 			scenario = entity.Iphone13
-		} else if seededRand.Intn(100) <= 30 {
+		} else if SeededRand.Intn(100) <= 30 {
 			// 30% will buy an ipad
 			scenario = entity.IpadAir
 
 			// 40% ipad pro
-			if seededRand.Intn(100) <= 40 {
+			if SeededRand.Intn(100) <= 40 {
 				scenario = entity.IpadPro
 			}
-		} else if seededRand.Intn(100) <= 20 {
+		} else if SeededRand.Intn(100) <= 20 {
 			// 20% will buy a mac
 			scenario = entity.MacBookAir
 
 			// 40% macbook pro
-			if seededRand.Intn(100) <= 40 {
+			if SeededRand.Intn(100) <= 40 {
 				scenario = entity.MacBookPro
 			}
 		}
@@ -287,13 +287,13 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// otherwise set pageview duration over 15 secs
-		duration := entity.Int64Ptr(int64(randomInt(seededRand, 15, 60)))
+		duration := entity.Int64Ptr(int64(RandomInt(SeededRand, 15, 60)))
 		bounce := false
 
 		// 20% will bounce, set pageview duration under 20 secs
-		if x := randomInt(seededRand, 1, 100); x <= 20 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 20 {
 			bounce = true
-			duration = entity.Int64Ptr(int64(randomInt(seededRand, 3, 14)))
+			duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 3, 14)))
 		}
 
 		// add elapsed time on the page
@@ -369,7 +369,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 15 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session1_ctx, duration)
 
 		if session1_json, err = sjson.Set(session1_json, "duration", *session1_ctx.Duration); err != nil {
@@ -405,7 +405,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// 20% won't look at 3rd page
-		if seededRand.Intn(100) <= 20 {
+		if SeededRand.Intn(100) <= 20 {
 			continue
 		}
 
@@ -445,7 +445,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 15 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session1_ctx, duration)
 
 		if session1_json, err = sjson.Set(session1_json, "duration", *session1_ctx.Duration); err != nil {
@@ -481,12 +481,12 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// 20% will never come back
-		if x := randomInt(seededRand, 1, 100); x <= 20 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 20 {
 			continue
 		}
 
 		// generate second session in few days after 1st session (if not in the future)
-		currentTime = currentTime.Add(time.Duration(randomInt(seededRand, 1, 15)) * 24 * time.Hour)
+		currentTime = currentTime.Add(time.Duration(RandomInt(SeededRand, 1, 15)) * 24 * time.Hour)
 
 		if currentTime.After(time.Now()) {
 			continue
@@ -495,9 +495,9 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		// SECOND SESSION, new device
 
 		deviceType = "mobile"
-		if seededRand.Intn(100) <= 40 {
+		if SeededRand.Intn(100) <= 40 {
 			deviceType = "desktop"
-		} else if seededRand.Intn(100) <= 15 {
+		} else if SeededRand.Intn(100) <= 15 {
 			deviceType = "tablet"
 		}
 
@@ -616,7 +616,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 15 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session2_ctx, duration)
 
 		if session2_json, err = sjson.Set(session2_json, "duration", *session2_ctx.Duration); err != nil {
@@ -686,7 +686,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 			anonUserJSON,
 		))
 
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session2_ctx, duration)
 
 		if session2_json, err = sjson.Set(session2_json, "duration", *session2_ctx.Duration); err != nil {
@@ -723,7 +723,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// 20% won't look at 3rd page
-		if seededRand.Intn(100) <= 20 {
+		if SeededRand.Intn(100) <= 20 {
 			continue
 		}
 
@@ -763,7 +763,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 15 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session2_ctx, duration)
 
 		if session2_json, err = sjson.Set(session2_json, "duration", *session2_ctx.Duration); err != nil {
@@ -800,12 +800,12 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// 40% will never come back
-		if x := randomInt(seededRand, 1, 100); x <= 40 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 40 {
 			continue
 		}
 
 		// generate third session in few days after 2nd session
-		currentTime = currentTime.Add(time.Duration(randomInt(seededRand, 1, 8)) * 24 * time.Hour)
+		currentTime = currentTime.Add(time.Duration(RandomInt(SeededRand, 1, 8)) * 24 * time.Hour)
 
 		if currentTime.After(time.Now()) {
 			continue
@@ -813,10 +813,10 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 
 		// THIRD SESSION, new device
 		deviceType = "mobile"
-		if seededRand.Intn(100) <= 70 {
+		if SeededRand.Intn(100) <= 70 {
 			// 70% buy on laptop
 			deviceType = "desktop"
-		} else if seededRand.Intn(100) <= 15 {
+		} else if SeededRand.Intn(100) <= 15 {
 			deviceType = "tablet"
 		}
 
@@ -935,7 +935,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 15 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session3_ctx, duration)
 
 		if session3_json, err = sjson.Set(session3_json, "duration", *session3_ctx.Duration); err != nil {
@@ -972,7 +972,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// 50% will not add products to cart and leave
-		if x := randomInt(seededRand, 1, 100); x <= 50 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 50 {
 			continue
 		}
 
@@ -1012,7 +1012,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 15 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session3_ctx, duration)
 
 		if session3_json, err = sjson.Set(session3_json, "duration", *session3_ctx.Duration); err != nil {
@@ -1110,7 +1110,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// 10% will abandon the cart
-		if x := randomInt(seededRand, 1, 100); x <= 10 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 10 {
 			continue
 		}
 
@@ -1149,7 +1149,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 30 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 30, 120)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 30, 120)))
 		addSessionDuration(session3_ctx, duration)
 
 		if session3_json, err = sjson.Set(session3_json, "duration", *session3_ctx.Duration); err != nil {
@@ -1256,7 +1256,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		subtotal := session3_cart1.Items[0].Price
 
 		// shipping is a randomint64 from 5 to 30
-		shipping := int64(randomInt(seededRand, 5, 30))
+		shipping := int64(RandomInt(SeededRand, 5, 30))
 
 		// tax is a 20% of the subtotal
 		tax := subtotal * 20 / 100
@@ -1333,33 +1333,33 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		scenario2 := entity.IphoneSE
 
 		// 40% iphone 13
-		if seededRand.Intn(100) <= 40 {
+		if SeededRand.Intn(100) <= 40 {
 			scenario2 = entity.Iphone13
-		} else if seededRand.Intn(100) <= 30 {
+		} else if SeededRand.Intn(100) <= 30 {
 			// 30% will buy an ipad
 			scenario2 = entity.IpadAir
 
 			// 40% ipad pro
-			if seededRand.Intn(100) <= 40 {
+			if SeededRand.Intn(100) <= 40 {
 				scenario2 = entity.IpadPro
 			}
-		} else if seededRand.Intn(100) <= 20 {
+		} else if SeededRand.Intn(100) <= 20 {
 			// 20% will buy a mac
 			scenario2 = entity.MacBookAir
 
 			// 40% macbook pro
-			if seededRand.Intn(100) <= 40 {
+			if SeededRand.Intn(100) <= 40 {
 				scenario2 = entity.MacBookPro
 			}
 		}
 
 		// 40% will never come back
-		if x := randomInt(seededRand, 1, 100); x <= 40 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 40 {
 			continue
 		}
 
 		// generate fourth session in few weeks after 2nd session
-		currentTime = currentTime.Add(time.Duration(randomInt(seededRand, 15, 25)) * 24 * time.Hour)
+		currentTime = currentTime.Add(time.Duration(RandomInt(SeededRand, 15, 25)) * 24 * time.Hour)
 
 		if currentTime.After(time.Now()) {
 			continue
@@ -1367,10 +1367,10 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 
 		// 4th SESSION, new device
 		deviceType = "mobile"
-		if seededRand.Intn(100) <= 70 {
+		if SeededRand.Intn(100) <= 70 {
 			// 70% buy on laptop
 			deviceType = "desktop"
-		} else if seededRand.Intn(100) <= 15 {
+		} else if SeededRand.Intn(100) <= 15 {
 			deviceType = "tablet"
 		}
 
@@ -1489,7 +1489,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 15 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session4_ctx, duration)
 
 		if session4_json, err = sjson.Set(session4_json, "duration", *session4_ctx.Duration); err != nil {
@@ -1526,7 +1526,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// 50% will not add products to cart and leave
-		if x := randomInt(seededRand, 1, 100); x <= 50 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 50 {
 			continue
 		}
 
@@ -1566,7 +1566,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 15 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 16, 60)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 16, 60)))
 		addSessionDuration(session4_ctx, duration)
 
 		if session4_json, err = sjson.Set(session4_json, "duration", *session4_ctx.Duration); err != nil {
@@ -1664,7 +1664,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// 10% will abandon the cart
-		if x := randomInt(seededRand, 1, 100); x <= 10 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 10 {
 			continue
 		}
 
@@ -1702,7 +1702,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		))
 
 		// set pageview duration over 30 secs
-		duration = entity.Int64Ptr(int64(randomInt(seededRand, 30, 120)))
+		duration = entity.Int64Ptr(int64(RandomInt(SeededRand, 30, 120)))
 		addSessionDuration(session4_ctx, duration)
 
 		if session4_json, err = sjson.Set(session4_json, "duration", *session4_ctx.Duration); err != nil {
@@ -1742,7 +1742,7 @@ func generateOrderDemoFixtures(ctx context.Context, workspace *entity.Workspace,
 		subtotal = session4_cart1.Items[0].Price
 
 		// shipping is a randomint64 from 5 to 30
-		shipping = int64(randomInt(seededRand, 5, 30))
+		shipping = int64(RandomInt(SeededRand, 5, 30))
 
 		// tax is a 20% of the subtotal
 		tax = subtotal * 20 / 100
@@ -1822,13 +1822,13 @@ func generateAuthUser(externalID string, createdAt time.Time) (userItem *entity.
 	isMale := true
 
 	// 56% of females
-	if x := randomInt(seededRand, 0, 100); x > 55 {
+	if x := RandomInt(SeededRand, 0, 100); x > 55 {
 		isMale = false
 	}
 
-	birthDate := randomInt(seededRand, 1, 31)
-	birthMonth := randomInt(seededRand, 1, 12)
-	birthYear := randomInt(seededRand, 1975, 2000)
+	birthDate := RandomInt(SeededRand, 1, 31)
+	birthMonth := RandomInt(SeededRand, 1, 12)
+	birthYear := RandomInt(SeededRand, 1975, 2000)
 
 	birthday := time.Date(birthYear, time.Month(birthMonth), birthDate, 0, 0, 0, 0, time.UTC).Format("2006-01-02")
 
@@ -1989,21 +1989,21 @@ func generateDeviceCtx(deviceType string, language string, createdAt time.Time) 
 	browserVersionMajor := ""
 	os := ""
 
-	if x := randomInt(seededRand, 1, 100); x <= 25 {
+	if x := RandomInt(SeededRand, 1, 100); x <= 25 {
 		resolution = "1366x768"
 	}
-	if x := randomInt(seededRand, 1, 100); x <= 11 {
+	if x := RandomInt(SeededRand, 1, 100); x <= 11 {
 		resolution = "1536x864"
 	}
-	if x := randomInt(seededRand, 1, 100); x <= 7 {
+	if x := RandomInt(SeededRand, 1, 100); x <= 7 {
 		resolution = "1440x900"
 	}
-	if x := randomInt(seededRand, 1, 100); x <= 7 {
+	if x := RandomInt(SeededRand, 1, 100); x <= 7 {
 		resolution = "1280x720"
 	}
 
 	// 20% are firefox
-	if x := randomInt(seededRand, 1, 100); x <= 20 {
+	if x := RandomInt(SeededRand, 1, 100); x <= 20 {
 		userAgent = firefoxDesktop
 		browser = "Firefox"
 		browserVersion = "101.0"
@@ -2011,7 +2011,7 @@ func generateDeviceCtx(deviceType string, language string, createdAt time.Time) 
 		os = "Mac OS X"
 	}
 	// 30% are safari
-	if x := randomInt(seededRand, 1, 100); x <= 30 {
+	if x := RandomInt(SeededRand, 1, 100); x <= 30 {
 		userAgent = safariDesktop
 		browser = "Safari"
 		browserVersion = "15.4"
@@ -2028,7 +2028,7 @@ func generateDeviceCtx(deviceType string, language string, createdAt time.Time) 
 		os = "Android"
 
 		// 35% are ios
-		if x := randomInt(seededRand, 1, 100); x <= 35 {
+		if x := RandomInt(SeededRand, 1, 100); x <= 35 {
 			userAgent = safariIOS
 			browser = "Safari"
 			browserVersion = "15.4"
@@ -2118,34 +2118,34 @@ func generateSessionOrigin(sessionIndex int, session *entity.DemoSession) {
 	session.SetOrigin("https://www.google.com", sessionOrigin.Origins[0].UTMSource, sessionOrigin.Origins[0].UTMMedium, utmCampaign, utmContent)
 
 	// 50% adwords
-	if seededRand.Intn(100) <= 50 {
+	if SeededRand.Intn(100) <= 50 {
 		sessionOrigin = googleAds
 		utmCampaign := "Black friday"
-		if seededRand.Intn(100) <= 30 {
+		if SeededRand.Intn(100) <= 30 {
 			utmCampaign = "Chrismas"
 		}
-		if seededRand.Intn(100) <= 20 {
+		if SeededRand.Intn(100) <= 20 {
 			utmCampaign = "Easter"
 		}
-		utmContent := fmt.Sprintf("Ad %v", seededRand.Intn(8))
+		utmContent := fmt.Sprintf("Ad %v", SeededRand.Intn(8))
 		session.SetOrigin("https://www.google.com", sessionOrigin.Origins[0].UTMSource, sessionOrigin.Origins[0].UTMMedium, utmCampaign, utmContent)
-	} else if seededRand.Intn(100) <= 20 {
+	} else if SeededRand.Intn(100) <= 20 {
 		// 20% fb organic
 		sessionOrigin = fbOrganic
 		session.SetOrigin("https://www.facebook.com", sessionOrigin.Origins[0].UTMSource, sessionOrigin.Origins[0].UTMMedium, utmCampaign, utmContent)
-	} else if seededRand.Intn(100) <= 10 {
+	} else if SeededRand.Intn(100) <= 10 {
 		// 10% engadget
 		sessionOrigin = engadget
 		utmCampaign = "Engadget partnership"
 		utmContent = "Home splash"
 		session.SetOrigin("https://www.engadget.com", sessionOrigin.Origins[0].UTMSource, sessionOrigin.Origins[0].UTMMedium, utmCampaign, utmContent)
-	} else if seededRand.Intn(100) <= 8 {
+	} else if SeededRand.Intn(100) <= 8 {
 		// 8% gizmodo
 		sessionOrigin = gizmodo
 		utmCampaign = "Gizmodo partnership"
 		utmContent = "Search bar"
 		session.SetOrigin("https://www.gizmodo.com", sessionOrigin.Origins[0].UTMSource, sessionOrigin.Origins[0].UTMMedium, utmCampaign, utmContent)
-	} else if seededRand.Intn(100) <= 5 {
+	} else if SeededRand.Intn(100) <= 5 {
 		// 5% techcrunch
 		sessionOrigin = techcrunch
 		utmCampaign = "Techcrunch partnership"
@@ -2158,24 +2158,24 @@ func generateSessionOrigin(sessionIndex int, session *entity.DemoSession) {
 	}
 
 	// has 40% of direct traffic for the second pageview
-	if seededRand.Intn(100) <= 50 {
+	if SeededRand.Intn(100) <= 50 {
 		sessionOrigin = direct
 		utmCampaign := ""
 		utmContent := ""
 		session.SetOrigin("https://www.apple.com", sessionOrigin.Origins[0].UTMSource, sessionOrigin.Origins[0].UTMMedium, utmCampaign, utmContent)
 	}
 
-	if seededRand.Intn(100) <= 20 {
+	if SeededRand.Intn(100) <= 20 {
 		// has 20% retargeting on second session
 		sessionOrigin = adroll
 		utmCampaign := "Black friday"
-		if seededRand.Intn(100) <= 30 {
+		if SeededRand.Intn(100) <= 30 {
 			utmCampaign = "Chrismas"
 		}
-		if seededRand.Intn(100) <= 20 {
+		if SeededRand.Intn(100) <= 20 {
 			utmCampaign = "Easter"
 		}
-		utmContent := fmt.Sprintf("Ad %v", seededRand.Intn(8))
+		utmContent := fmt.Sprintf("Ad %v", SeededRand.Intn(8))
 		session.SetOrigin("https://www.adroll.com", sessionOrigin.Origins[0].UTMSource, sessionOrigin.Origins[0].UTMMedium, utmCampaign, utmContent)
 	}
 
@@ -2184,7 +2184,7 @@ func generateSessionOrigin(sessionIndex int, session *entity.DemoSession) {
 	}
 
 	// has 20% coupon on last session
-	if seededRand.Intn(100) <= 50 {
+	if SeededRand.Intn(100) <= 50 {
 		sessionOrigin = retailmenot
 		utmCampaign = "Black friday"
 		utmContent = "voucher 5%"

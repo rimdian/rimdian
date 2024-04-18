@@ -103,7 +103,11 @@ func (svc *ServiceImpl) BroadcastCampaignUpsert(ctx context.Context, accountID s
 		}
 
 		// cancel eventual scheduled_tasks from the queue
-		// TODO:
+		taskID := fmt.Sprintf("%v-%v", entity.TaskKindLaunchBroadcastCampaign, campaign.ID)
+
+		if err = svc.TaskOrchestrator.DeleteTask(ctx, svc.Config.TASK_QUEUE_LOCATION, entity.ScheduledTasksQueueName, taskID); err != nil {
+			return 500, eris.Wrap(err, "BroadcastCampaignUpsert")
+		}
 
 		// post a scheduled_tasks if scheduled_at is set
 		if campaign.Status == entity.BroadcastCampaignStatusScheduled {
@@ -112,14 +116,20 @@ func (svc *ServiceImpl) BroadcastCampaignUpsert(ctx context.Context, accountID s
 				"broadcast_campaign_id": campaign.ID,
 			}
 
+			scheduledAt, err := campaign.GetScheduledAt()
+
+			if err != nil {
+				return 500, eris.Wrap(err, "BroadcastCampaignUpsert")
+			}
+
 			scheduledTask := entity.NewScheduledTask(workspace.ID, entity.TaskExec{
-				ID:              fmt.Sprintf("%v-%v", entity.TaskKindLaunchBroadcastCampaign, campaign.ID),
+				ID:              taskID,
 				TaskID:          entity.TaskKindLaunchBroadcastCampaign,
 				Name:            fmt.Sprintf("Launch %v campaign %v", campaign.Channel, campaign.Name),
 				State:           state,
 				MultipleExecKey: entity.StringPtr(campaign.ID),   // deduplicate tasks by campaign ID
 				OnMultipleExec:  entity.OnMultipleExecDiscardNew, // aborting new task if campaign is already launched
-			})
+			}, *scheduledAt)
 
 			// enqueue job
 			if err := svc.ScheduledTaskPost(ctx, scheduledTask); err != nil {

@@ -263,7 +263,7 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 
 				job := &taskorchestrator.TaskRequest{
 					QueueLocation:     pipe.Config.TASK_QUEUE_LOCATION,
-					QueueName:         entity.TasksQueueName,
+					QueueName:         entity.TaskExecsQueueName,
 					PostEndpoint:      pipe.Config.API_ENDPOINT + entity.TaskExecEndpoint + "?workspace_id=" + pipe.Workspace.ID,
 					TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 					Payload: dto.TaskExecRequestPayload{
@@ -325,8 +325,7 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 			pipe.ProcessNextStep(spanCtx)
 			return
 		case entity.TaskKindLaunchBroadcastCampaign:
-			// TODO:
-			// pipe.TaskExecResult = TaskExecImportUsersToSubscriptionList(spanCtx, pipe)
+			pipe.TaskExecResult = TaskExecLaunchBroadcastCampaign(spanCtx, pipe)
 			pipe.ProcessNextStep(spanCtx)
 			return
 		case entity.TaskKindTestingNotDone:
@@ -428,7 +427,7 @@ func (pipe *TaskExecPipeline) TaskExecAddWorker(ctx context.Context, workerID in
 		// enqueue job
 		job := &taskorchestrator.TaskRequest{
 			QueueLocation:     pipe.Config.TASK_QUEUE_LOCATION,
-			QueueName:         entity.TasksQueueName,
+			QueueName:         entity.TaskExecsQueueName,
 			PostEndpoint:      pipe.Config.API_ENDPOINT + entity.TaskExecEndpoint + "?workspace_id=" + pipe.Workspace.ID,
 			TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 			Payload: dto.TaskExecRequestPayload{

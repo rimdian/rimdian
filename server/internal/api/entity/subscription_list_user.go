@@ -32,6 +32,9 @@ type SubscriptionListUser struct {
 	// attached in data pipeline for easy access:
 	HasDoubleOptIn   bool              `db:"-" json:"-"`
 	SubscriptionList *SubscriptionList `db:"-" json:"-"`
+	// joined server-side for sending messages:
+	UserExternalID      string `db:"user_external_id" json:"-"`
+	UserIsAuthenticated bool   `db:"user_is_authenticated" json:"-"`
 }
 
 func NewSubscriptionListUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, lists []*SubscriptionList) (subscribeToList *SubscriptionListUser, err error) {

@@ -13,6 +13,38 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+func (repo *RepositoryImpl) GetSubscriptionListUsersToMessage(ctx context.Context, workspaceID string, listIDs []string, offset int64, limit int64) (subscribers []*entity.SubscriptionListUser, err error) {
+
+	conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
+
+	if err != nil {
+		return
+	}
+
+	defer conn.Close()
+
+	subscribers = []*entity.SubscriptionListUser{}
+
+	query, args, err := squirrel.Select("subscription_list_user.*, user.external_id as user_external_id, user.is_authenticated as user_is_authenticated").
+		From("subscription_list_user").
+		Where(sq.Eq{"subscription_list_id": listIDs}).
+		Where(sq.Eq{"subscription_list_user.status": 1}).
+		Join("`user` ON subscription_list_user.user_id = user.id").
+		OrderBy("subscription_list_user.updated_at ASC"). // allow recent unsubscribed users to be skipped
+		Offset(uint64(offset)).
+		Limit(uint64(limit)).
+		ToSql()
+
+	if err != nil {
+		err = eris.Wrap(err, "GetSubscriptionListUsersToMessage")
+		return
+	}
+
+	err = sqlscan.Select(ctx, conn, &subscribers, query, args...)
+
+	return
+}
+
 func (repo *RepositoryImpl) ListSubscriptionListUsers(ctx context.Context, workspaceID string, userIDs []string) (subscriptions []*entity.SubscriptionListUser, err error) {
 
 	conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)

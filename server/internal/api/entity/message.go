@@ -3,9 +3,11 @@ package entity
 import (
 	"crypto/sha1"
 	"fmt"
+	"strings"
 	"time"
 
 	"aidanwoods.dev/go-paseto"
+	"github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rotisserie/eris"
 	"github.com/teris-io/shortid"
 	"github.com/tidwall/gjson"
@@ -129,7 +131,7 @@ type Message struct {
 	MessageTemplate  *MessageTemplate  `db:"-" json:"-"`
 }
 
-func (message *Message) BeforeInsert() {
+func (message *Message) BeforeInsert(cfg *Config, user *User, workspaceID string, dataLogID string) (err error) {
 	// set status
 	if message.Status == nil {
 		message.Status = &MessageStatusQueued
@@ -146,6 +148,88 @@ func (message *Message) BeforeInsert() {
 	if message.IsTransactional == nil {
 		message.IsTransactional = BoolPtr(false)
 	}
+
+	// attach the utm_id to the data
+	// the utm_id is collected by the JS SDK with sessions, to track the message who generated the session
+	message.Data["rmd_utm_id"] = fmt.Sprintf("rmd~%v~%v", message.Channel, message.ExternalID)
+
+	// attach the whole user profile to the message.data payload
+	message.Data["user"] = *user
+	// jsonUser, err := json.Marshal(pipe.DataLog.UpsertedUser)
+	// if err != nil {
+	// 	pipe.SetError("server", fmt.Sprintf("attach user json err %v", err), false)
+	// 	return
+	// }
+
+	// jsonData := string(jsonDataBytes)
+
+	// if jsonData, err = sjson.SetRaw(jsonData, "user", string(jsonUser)); err != nil {
+	// 	pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
+	// 	return
+	// }
+
+	// add double opt-in / unsubscribe link to the data
+	if message.MessageTemplate.Channel == "email" {
+
+		if user.Email == nil || user.Email.String == "" {
+			return eris.New("BeforeInsert: user has no email")
+		}
+
+		// check if template contains a double optin link
+		if strings.Contains(message.MessageTemplate.Email.Content, DoubleOptInKeyword) {
+			message.Data[DoubleOptInKeyword], err = GenerateEmailLink(GenerateEmailLinkOptions{
+				DataLogID:         dataLogID,
+				MessageExternalID: message.ExternalID,
+				APIEndpoint:       cfg.API_ENDPOINT,
+				Path:              dto.DoubleOptInPath,
+				WorkspaceID:       workspaceID,
+				SecretKey:         cfg.SECRET_KEY,
+				SubscriptionList:  message.SubscriptionList,
+				User:              user,
+			})
+			if err != nil {
+				return eris.Errorf("GenerateEmailLink err %v", err)
+			}
+		}
+
+		// check if template contains an unsubscribe link
+		if strings.Contains(message.MessageTemplate.Email.Content, UnsubscribeKeyword) {
+			message.Data[UnsubscribeKeyword], err = GenerateEmailLink(GenerateEmailLinkOptions{
+				DataLogID:         dataLogID,
+				MessageExternalID: message.ExternalID,
+				APIEndpoint:       cfg.API_ENDPOINT,
+				Path:              dto.UnsubscribeEmailPath,
+				WorkspaceID:       workspaceID,
+				SecretKey:         cfg.SECRET_KEY,
+				SubscriptionList:  message.SubscriptionList,
+				User:              user,
+			})
+
+			if err != nil {
+				return eris.Errorf("GenerateEmailLink err %v", err)
+			}
+		}
+
+		// check if template contains an unsubscribe link
+		if strings.Contains(message.MessageTemplate.Email.Content, OpenTrackingPixelKeyword) {
+			message.Data[OpenTrackingPixelKeyword], err = GenerateEmailLink(GenerateEmailLinkOptions{
+				DataLogID:         dataLogID,
+				MessageExternalID: message.ExternalID,
+				APIEndpoint:       cfg.API_ENDPOINT,
+				Path:              dto.OpenTrackingEmailPath,
+				WorkspaceID:       workspaceID,
+				SecretKey:         cfg.SECRET_KEY,
+				SubscriptionList:  message.SubscriptionList,
+				User:              user,
+			})
+
+			if err != nil {
+				return eris.Errorf("GenerateEmailLink err %v", err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func NewMessageFromUTMID(channel string, externalID string, userID string, updatedAt time.Time) (message *Message) {

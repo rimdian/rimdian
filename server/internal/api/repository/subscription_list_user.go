@@ -30,7 +30,7 @@ func (repo *RepositoryImpl) GetSubscriptionListUsersToMessage(ctx context.Contex
 		Where(sq.Eq{"subscription_list_id": listIDs}).
 		Where(sq.Eq{"subscription_list_user.status": 1}).
 		Join("`user` ON subscription_list_user.user_id = user.id").
-		OrderBy("subscription_list_user.updated_at ASC"). // allow recent unsubscribed users to be skipped
+		OrderBy("subscription_list_user.db_updated_at ASC"). // allow recent unsubscribed users to be skipped
 		Offset(uint64(offset)).
 		Limit(uint64(limit)).
 		ToSql()

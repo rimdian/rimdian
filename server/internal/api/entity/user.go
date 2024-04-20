@@ -563,23 +563,6 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		user.UpdatedAt = &user.CreatedAt
 	}
 
-	if user.Timezone == nil {
-		user.Timezone = &workspace.DefaultUserTimezone
-	}
-
-	if user.Language == nil {
-		user.Language = &workspace.DefaultUserLanguage
-	}
-
-	if user.Country == nil {
-		user.Country = &workspace.DefaultUserCountry
-	}
-
-	// signed_up_at is mandatory for authenticated users
-	if user.IsAuthenticated && (user.SignedUpAt == nil || user.SignedUpAt.IsZero()) {
-		user.SignedUpAt = &user.CreatedAt
-	}
-
 	// Validation
 	if user.ExternalID == "" {
 		return nil, eris.New("user.external_id is required")
@@ -587,10 +570,6 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 
 	if user.CreatedAt.IsZero() {
 		return nil, eris.New("user.created_at is required")
-	}
-
-	if user.LastInteractionAt.IsZero() {
-		user.LastInteractionAt = user.CreatedAt.Truncate(time.Second)
 	}
 
 	// only verify user HMAC for untrusted client data
@@ -695,6 +674,26 @@ type User struct {
 	Devices           []*Device               `json:"devices,omitempty"`
 	Aliases           []*UserAlias            `json:"aliases,omitempty"`
 	SubscriptionLists []*SubscriptionListUser `json:"subscription_lists,omitempty"`
+}
+
+func (u *User) BeforeInsert(workspace *Workspace) {
+
+	if u.Timezone == nil {
+		u.Timezone = &workspace.DefaultUserTimezone
+	}
+
+	if u.Language == nil {
+		u.Language = &workspace.DefaultUserLanguage
+	}
+
+	if u.Country == nil {
+		u.Country = &workspace.DefaultUserCountry
+	}
+
+	// signed_up_at is mandatory for authenticated users
+	if u.IsAuthenticated && (u.SignedUpAt == nil || u.SignedUpAt.IsZero()) {
+		u.SignedUpAt = &u.CreatedAt
+	}
 }
 
 // update a field timestamp to its most recent value
@@ -1953,10 +1952,6 @@ func (u *User) ComputeEmailHashes() {
 // merges two user profiles and returns the list of updated fields
 func (fromUser *User) MergeInto(toUser *User, workspace *Workspace) (updatedFields []*UpdatedField) {
 
-	// if fromUser.IsAuthenticated != toUser.IsAuthenticated {
-	// 	// TODO check
-	// }
-
 	updatedFields = []*UpdatedField{} // init
 
 	if toUser.FieldsTimestamp == nil {
@@ -2046,39 +2041,7 @@ func (fromUser *User) MergeInto(toUser *User, workspace *Workspace) (updatedFiel
 	if fieldUpdate := toUser.SetState(fromUser.State, fromUser.GetFieldDate("state")); fieldUpdate != nil {
 		updatedFields = append(updatedFields, fieldUpdate)
 	}
-	if fieldUpdate := toUser.SetOrdersCount(fromUser.OrdersCount, fromUser.GetFieldDate("orders_count")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetOrdersLTV(fromUser.OrdersLTV, fromUser.GetFieldDate("orders_ltv")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetOrdersAvgCart(fromUser.OrdersAvgCart, fromUser.GetFieldDate("orders_avg_cart")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetFirstOrderAt(fromUser.FirstOrderAt, fromUser.GetFieldDate("first_order_at")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetFirstOrderDomainID(fromUser.FirstOrderDomainID, fromUser.GetFieldDate("first_order_domain_id")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetFirstOrderDomainType(fromUser.FirstOrderDomainType, fromUser.GetFieldDate("first_order_domain_type")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetFirstOrderSubtotal(fromUser.FirstOrderSubtotal, fromUser.GetFieldDate("first_order_subtotal")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetFirstOrderTTC(fromUser.FirstOrderTTC, fromUser.GetFieldDate("first_order_ttc")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetLastOrderAt(fromUser.LastOrderAt, fromUser.GetFieldDate("last_order_at")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetAvgRepeatCart(fromUser.AvgRepeatCart, fromUser.GetFieldDate("avg_repeat_cart")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
-	if fieldUpdate := toUser.SetAvgRepeatOrderTTC(fromUser.AvgRepeatOrderTTC, fromUser.GetFieldDate("avg_repeat_order_ttc")); fieldUpdate != nil {
-		updatedFields = append(updatedFields, fieldUpdate)
-	}
+	// computed KPIs cant be merged, they are computed later
 
 	for key, value := range fromUser.ExtraColumns {
 		if fieldUpdate := toUser.SetExtraColumns(key, value, TimePtr(fromUser.GetFieldDate(key))); fieldUpdate != nil {

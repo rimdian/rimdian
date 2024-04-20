@@ -3,7 +3,7 @@ import Layout from 'components/common/layout'
 import CSS from 'utils/css'
 import { useQuery } from '@tanstack/react-query'
 import { BroadcastCampaign } from 'interfaces'
-import { Button, Popconfirm, Space, Table, Tag, Tooltip, message } from 'antd'
+import { Alert, Button, Popconfirm, Space, Table, Tag, Tooltip, message } from 'antd'
 import ButtonUpsertCampaign from './button_upsert_broadcast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-regular-svg-icons'
@@ -13,6 +13,7 @@ import { faPause, faPlay, faRefresh } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
 import ButtonPreviewMessageTemplate from 'components/assets/message_template/button_preview_template'
 import numbro from 'numbro'
+import { EmailProviderSettings } from 'components/workspace/block_messaging_settings'
 
 const RouteBroadcasts = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -99,6 +100,26 @@ const RouteBroadcasts = () => {
             </ButtonUpsertCampaign>
           )}
         </div>
+
+        {!workspaceCtx.workspace.messaging_settings.marketing_email_provider && (
+          <div className={CSS.margin_b_l}>
+            <Alert
+              message={
+                <>
+                  No marketing email provider configured.{' '}
+                  <EmailProviderSettings
+                    btnProps={{ size: 'small', type: 'primary' }}
+                    kind="marketing_email_provider"
+                    workspaceCtx={workspaceCtx}
+                  >
+                    <>Setup now</>
+                  </EmailProviderSettings>
+                </>
+              }
+              type="warning"
+            />
+          </div>
+        )}
 
         <Table
           pagination={false}
@@ -271,15 +292,17 @@ const RouteBroadcasts = () => {
               render: (row: BroadcastCampaign) => (
                 <div className={CSS.text_right}>
                   <Space>
-                    <ButtonUpsertCampaign
-                      btnProps={{ size: 'small', type: 'text' }}
-                      onSuccess={() => refetch()}
-                      campaign={row}
-                    >
-                      <Tooltip title="Edit campaign" placement="bottomRight">
-                        <FontAwesomeIcon icon={faPenToSquare} />
-                      </Tooltip>
-                    </ButtonUpsertCampaign>
+                    {(row.status === 'draft' || row.status === 'scheduled') && (
+                      <ButtonUpsertCampaign
+                        btnProps={{ size: 'small', type: 'text' }}
+                        onSuccess={() => refetch()}
+                        campaign={row}
+                      >
+                        <Tooltip title="Edit campaign" placement="bottomRight">
+                          <FontAwesomeIcon icon={faPenToSquare} />
+                        </Tooltip>
+                      </ButtonUpsertCampaign>
+                    )}
 
                     {row.status === 'scheduled' && (
                       <Tooltip title="Pause campaign" placement="bottomRight">

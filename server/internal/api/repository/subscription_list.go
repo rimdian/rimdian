@@ -12,6 +12,8 @@ import (
 
 func (repo *RepositoryImpl) GetSubscriptionList(ctx context.Context, workspaceID string, listID string, tx *sql.Tx) (list *entity.SubscriptionList, err error) {
 
+	list = &entity.SubscriptionList{}
+
 	if tx != nil {
 		err = sqlscan.Get(ctx, tx, &list, "SELECT * FROM subscription_list WHERE id = ?", listID)
 	} else {
@@ -23,7 +25,12 @@ func (repo *RepositoryImpl) GetSubscriptionList(ctx context.Context, workspaceID
 
 		defer conn.Close()
 
-		err = sqlscan.Get(ctx, conn, &list, "SELECT * FROM subscription_list WHERE id = ?", listID)
+		err = sqlscan.Get(ctx, conn, list, "SELECT * FROM subscription_list WHERE id = ?", listID)
+
+		if err != nil {
+			err = eris.Wrapf(err, "GetSubscriptionList: %v", listID)
+			return
+		}
 	}
 
 	return

@@ -301,3 +301,5 @@ const EmailProviderSettings = ({
     </>
   )
 }
+
+export { EmailProviderSettings }

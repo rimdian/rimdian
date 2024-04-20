@@ -300,10 +300,11 @@ func (pipe *DataLogPipeline) UpsertUser(ctx context.Context, isChild bool, tx *s
 	updatedFields := []*entity.UpdatedField{}
 
 	if existingUser != nil {
-		// svc.Logger.Printf("USER ALREADY EXISTS %+v\n", existingUser)
+		// svc.Logger.Infof("USER ALREADY EXISTS %+v\n", existingUser)
 		updatedFields = upsertedUser.MergeInto(existingUser, pipe.Workspace)
 		upsertedUser = existingUser
-		// svc.Logger.Printf("AFTER MERGE %+v\n", upsertedUser)
+		pipe.DataLog.UpsertedUser = upsertedUser // data log should have the merged user for further processing
+		// svc.Logger.Infof("AFTER MERGE %+v\n", upsertedUser)
 	}
 
 	// handle default mandatory values
@@ -327,6 +328,8 @@ func (pipe *DataLogPipeline) UpsertUser(ctx context.Context, isChild bool, tx *s
 				}
 			}
 		}
+
+		upsertedUser.BeforeInsert(pipe.Workspace)
 
 		// clear fields timestamp if object is new, to avoid storing extra data
 		upsertedUser.FieldsTimestamp = entity.FieldsTimestamp{}

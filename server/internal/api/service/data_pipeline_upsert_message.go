@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 	"go.opencensus.io/trace"
@@ -20,7 +21,7 @@ func (pipe *DataLogPipeline) UpsertMessage(ctx context.Context, isChild bool, tx
 
 	existingMessage, err = pipe.Repository.FindMessageByID(spanCtx, pipe.Workspace, pipe.DataLog.UpsertedMessage.ID, pipe.DataLog.UpsertedMessage.UserID, tx)
 
-	if err != nil {
+	if err != nil && !sqlscan.NotFound(err) {
 		return eris.Wrap(err, "MessageUpsert")
 	}
 
@@ -30,7 +31,7 @@ func (pipe *DataLogPipeline) UpsertMessage(ctx context.Context, isChild bool, tx
 		// just for insert: clear fields timestamp if object is new, to avoid storing extra data
 		pipe.DataLog.UpsertedMessage.FieldsTimestamp = entity.FieldsTimestamp{}
 
-		pipe.DataLog.UpsertedMessage.BeforeInsert()
+		pipe.DataLog.UpsertedMessage.BeforeInsert(pipe.Config, pipe.DataLog.UpsertedUser, pipe.Workspace.ID, pipe.DataLog.ID)
 
 		if err = pipe.Repository.InsertMessage(spanCtx, pipe.DataLog.UpsertedMessage, tx); err != nil {
 			return

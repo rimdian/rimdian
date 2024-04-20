@@ -39,6 +39,9 @@ func (repo *RepositoryImpl) FindMessageByID(ctx context.Context, workspace *enti
 	}
 
 	if err != nil {
+		if sqlscan.NotFound(err) {
+			return nil, err
+		}
 		return nil, eris.Wrap(err, "FindMessageByID")
 	}
 

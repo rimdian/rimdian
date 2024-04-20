@@ -34,12 +34,6 @@ func (svc *ServiceImpl) BroadcastCampaignLaunch(ctx context.Context, accountID s
 		return 400, eris.New("Campaign already launched")
 	}
 
-	// campaign.ScheduledAt = data.ScheduledAt
-	// campaign.Timezone = data.Timezone
-	// if err = campaign.Validate(); err != nil {
-	// 	return 400, eris.Wrap(err, "BroadcastCampaignLaunch")
-	// }
-
 	// workspace tx
 	code, err = svc.Repo.RunInTransactionForWorkspace(ctx, workspace.ID, func(ctx context.Context, tx *sql.Tx) (int, error) {
 

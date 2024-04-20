@@ -447,27 +447,6 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 		return
 	}
 
-	// attach the utm_id to the data
-	// the utm_id is collected by the JS SDK with sessions, to track the message who generated the session
-	message.Data["rmd_utm_id"] = fmt.Sprintf("rmd~%v~%v", message.Channel, message.ExternalID)
-
-	// attach user to the message.data
-	if pipe.DataLog.UpsertedUser != nil {
-		message.Data["user"] = pipe.DataLog.UpsertedUser
-		// jsonUser, err := json.Marshal(pipe.DataLog.UpsertedUser)
-		// if err != nil {
-		// 	pipe.SetError("server", fmt.Sprintf("attach user json err %v", err), false)
-		// 	return
-		// }
-
-		// jsonData := string(jsonDataBytes)
-
-		// if jsonData, err = sjson.SetRaw(jsonData, "user", string(jsonUser)); err != nil {
-		// 	pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
-		// 	return
-		// }
-	}
-
 	if message.MessageTemplateID != nil {
 		message.MessageTemplate, err = pipe.Repository.GetMessageTemplate(ctx, pipe.Workspace.ID, *message.MessageTemplateID, message.MessageTemplateVersion, nil)
 
@@ -475,7 +454,6 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 			pipe.SetError("message", err.Error(), false)
 			return
 		}
-
 	}
 
 	// attach subscription list + email_template to message
@@ -490,72 +468,6 @@ func (pipe *DataLogPipeline) ExtractMessageFromDataLogItem(ctx context.Context) 
 		if message.MessageTemplate == nil {
 			pipe.SetError("message", "message has no message_template_id", false)
 			return
-		}
-
-		// add double opt-in / unsubscribe link to the data
-		if message.MessageTemplate.Channel == "email" {
-
-			// check if template contains a double optin link
-			if strings.Contains(message.MessageTemplate.Email.Content, entity.DoubleOptInKeyword) {
-				doubleOptInLink, err := entity.GenerateEmailLink(entity.GenerateEmailLinkOptions{
-					DataLogID:         pipe.DataLog.ID,
-					MessageExternalID: message.ExternalID,
-					APIEndpoint:       pipe.Config.API_ENDPOINT,
-					Path:              dto.DoubleOptInPath,
-					WorkspaceID:       pipe.Workspace.ID,
-					SecretKey:         pipe.Config.SECRET_KEY,
-					SubscriptionList:  pipe.DataLog.UpsertedMessage.SubscriptionList,
-					User:              pipe.DataLog.UpsertedUser,
-				})
-				if err != nil {
-					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
-					return
-				}
-
-				message.Data[entity.DoubleOptInKeyword] = doubleOptInLink
-			}
-
-			// check if template contains an unsubscribe link
-			if strings.Contains(message.MessageTemplate.Email.Content, entity.UnsubscribeKeyword) {
-				unsubLink, err := entity.GenerateEmailLink(entity.GenerateEmailLinkOptions{
-					DataLogID:         pipe.DataLog.ID,
-					MessageExternalID: message.ExternalID,
-					APIEndpoint:       pipe.Config.API_ENDPOINT,
-					Path:              dto.UnsubscribeEmailPath,
-					WorkspaceID:       pipe.Workspace.ID,
-					SecretKey:         pipe.Config.SECRET_KEY,
-					SubscriptionList:  pipe.DataLog.UpsertedMessage.SubscriptionList,
-					User:              pipe.DataLog.UpsertedUser,
-				})
-
-				if err != nil {
-					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
-					return
-				}
-
-				message.Data[entity.UnsubscribeKeyword] = unsubLink
-			}
-
-			// check if template contains an unsubscribe link
-			if strings.Contains(message.MessageTemplate.Email.Content, entity.OpenTrackingPixelKeyword) {
-				openTrackingPixelSrc, err := entity.GenerateEmailLink(entity.GenerateEmailLinkOptions{
-					DataLogID:         pipe.DataLog.ID,
-					MessageExternalID: message.ExternalID,
-					APIEndpoint:       pipe.Config.API_ENDPOINT,
-					Path:              dto.OpenTrackingEmailPath,
-					WorkspaceID:       pipe.Workspace.ID,
-					SecretKey:         pipe.Config.SECRET_KEY,
-					SubscriptionList:  pipe.DataLog.UpsertedMessage.SubscriptionList,
-					User:              pipe.DataLog.UpsertedUser,
-				})
-
-				if err != nil {
-					pipe.SetError("server", fmt.Sprintf("GenerateEmailLink err %v", err), false)
-					return
-				}
-
-				message.Data[entity.OpenTrackingPixelKeyword] = openTrackingPixelSrc
-			}
 		}
 	}
 

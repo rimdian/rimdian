@@ -377,23 +377,28 @@ func (pipe *TaskExecPipeline) Init(ctx context.Context) {
 		return
 	}
 
-	pipe.TaskExec.ResetStatus()
-
 	// in dev we can use the "todo" task ID to fetch a not-yet-done task from the DB
 	if pipe.TaskExecPayload.TaskExecID == entity.TaskExecIDDev {
 		pipe.TaskExecPayload.TaskExecID = pipe.TaskExec.ID
-	}
-
-	// abort task if too many retries
-	if pipe.TaskExec.RetryCount > entity.TaskMaxRetries {
-		pipe.SetError("retry", eris.Wrapf(entity.ErrTaskRetryCountExceeded, "(%v)", pipe.TaskExec.RetryCount).Error(), false)
-		return
 	}
 
 	// abort if task is already completed
 	if pipe.TaskExec.Status == entity.TaskExecStatusDone {
 		return
 	}
+
+	// abort task if too many retries
+	if pipe.TaskExec.RetryCount > entity.TaskMaxRetries {
+		// keep original error message and wrap it with count retry
+		msg := ""
+		if pipe.TaskExec.Message != nil {
+			msg = *pipe.TaskExec.Message
+		}
+		pipe.SetError("retry", fmt.Sprintf("(%v, %v) %v", entity.ErrTaskRetryCountExceeded, pipe.TaskExec.RetryCount, msg), false)
+		return
+	}
+
+	pipe.TaskExec.ResetStatus()
 }
 
 // add a parallel worker for a given task

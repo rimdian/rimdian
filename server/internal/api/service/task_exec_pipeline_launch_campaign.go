@@ -45,6 +45,7 @@ func TaskExecLaunchBroadcastCampaign(ctx context.Context, pipe *TaskExecPipeline
 	}
 
 	if campaignID == "" {
+		pipe.Logger.Printf("TaskExecLaunchBroadcastCampaign: broadcast_campaign_id is required")
 		result.SetError("broadcast_campaign_id is required", true)
 		return
 	}
@@ -84,8 +85,16 @@ func TaskExecLaunchBroadcastCampaign(ctx context.Context, pipe *TaskExecPipeline
 		return
 	}
 
+	pipe.Logger.Infof("TaskExecLaunchBroadcastCampaign: campaign %s, offset %d, subscribers %d", campaign.ID, offset, len(subscribers))
+
 	// if no subscribers found, mark task as completed
 	if len(subscribers) == 0 {
+		// update campaign status
+		campaign.Status = entity.BroadcastCampaignStatusSent
+		if err = pipe.Repository.UpdateBroadcastCampaign(bgCtx, pipe.Workspace.ID, campaign, nil); err != nil {
+			result.SetError(err.Error(), false)
+			return
+		}
 		result.IsDone = true
 		return
 	}

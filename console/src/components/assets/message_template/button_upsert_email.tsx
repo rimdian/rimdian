@@ -93,7 +93,8 @@ logo.data.image.width = '50px'
 heading.data.paddingControl = 'separate'
 heading.data.paddingTop = '40px'
 heading.data.paddingBottom = '40px'
-heading.data.editorData[0].children[0].text = 'Hi {{ user.first_name }} 👋'
+heading.data.editorData[0].children[0].text =
+  'Hello {{ user.first_name | default("my friend") }} 👋'
 
 divider.data.paddingControl = 'separate'
 divider.data.paddingTop = '40px'

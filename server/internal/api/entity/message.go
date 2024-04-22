@@ -131,7 +131,35 @@ type Message struct {
 	MessageTemplate  *MessageTemplate  `db:"-" json:"-"`
 }
 
-func (message *Message) BeforeInsert(cfg *Config, user *User, workspaceID string, dataLogID string) (err error) {
+func (message *Message) CanBeSent() bool {
+	if message.IsInbound {
+		return false
+	}
+	if *message.Status == MessageStatusPending || *message.Status == MessageStatusScheduled || *message.Status == MessageStatusRetrying {
+		return true
+	}
+	return false
+}
+
+func (message *Message) BeforeInsert(cfg *Config, user *User, workspace *Workspace, dataLogID string) {
+
+	isTransactional := false
+
+	if message.IsTransactional != nil && *message.IsTransactional {
+		isTransactional = true
+	}
+
+	if isTransactional && workspace.MessagingSettings.TransactionalEmailProvider == nil {
+		message.Status = &MessageStatusFailed
+		message.Comment = NewNullableString(StringPtr("transactional email provider not configured"))
+		return
+	}
+
+	if !isTransactional && workspace.MessagingSettings.MarketingEmailProvider == nil {
+		message.Status = &MessageStatusFailed
+		message.Comment = NewNullableString(StringPtr("marketing email provider not configured"))
+	}
+
 	// set status
 	if message.Status == nil {
 		message.Status = &MessageStatusQueued
@@ -155,24 +183,17 @@ func (message *Message) BeforeInsert(cfg *Config, user *User, workspaceID string
 
 	// attach the whole user profile to the message.data payload
 	message.Data["user"] = *user
-	// jsonUser, err := json.Marshal(pipe.DataLog.UpsertedUser)
-	// if err != nil {
-	// 	pipe.SetError("server", fmt.Sprintf("attach user json err %v", err), false)
-	// 	return
-	// }
 
-	// jsonData := string(jsonDataBytes)
-
-	// if jsonData, err = sjson.SetRaw(jsonData, "user", string(jsonUser)); err != nil {
-	// 	pipe.SetError("server", fmt.Sprintf("send message json err %v", err), false)
-	// 	return
-	// }
+	var err error
 
 	// add double opt-in / unsubscribe link to the data
 	if message.MessageTemplate.Channel == "email" {
 
 		if user.Email == nil || user.Email.String == "" {
-			return eris.New("BeforeInsert: user has no email")
+			// return eris.New("BeforeInsert: user has no email")
+			message.Status = &MessageStatusFailed
+			message.Comment = NewNullableString(StringPtr("user has no email"))
+			return
 		}
 
 		// check if template contains a double optin link
@@ -182,13 +203,15 @@ func (message *Message) BeforeInsert(cfg *Config, user *User, workspaceID string
 				MessageExternalID: message.ExternalID,
 				APIEndpoint:       cfg.API_ENDPOINT,
 				Path:              dto.DoubleOptInPath,
-				WorkspaceID:       workspaceID,
+				WorkspaceID:       workspace.ID,
 				SecretKey:         cfg.SECRET_KEY,
 				SubscriptionList:  message.SubscriptionList,
 				User:              user,
 			})
 			if err != nil {
-				return eris.Errorf("GenerateEmailLink err %v", err)
+				message.Status = &MessageStatusFailed
+				message.Comment = NewNullableString(StringPtr(fmt.Sprintf("GenerateEmailLink err %v", err)))
+				return
 			}
 		}
 
@@ -199,14 +222,16 @@ func (message *Message) BeforeInsert(cfg *Config, user *User, workspaceID string
 				MessageExternalID: message.ExternalID,
 				APIEndpoint:       cfg.API_ENDPOINT,
 				Path:              dto.UnsubscribeEmailPath,
-				WorkspaceID:       workspaceID,
+				WorkspaceID:       workspace.ID,
 				SecretKey:         cfg.SECRET_KEY,
 				SubscriptionList:  message.SubscriptionList,
 				User:              user,
 			})
 
 			if err != nil {
-				return eris.Errorf("GenerateEmailLink err %v", err)
+				message.Status = &MessageStatusFailed
+				message.Comment = NewNullableString(StringPtr(fmt.Sprintf("GenerateEmailLink err %v", err)))
+				return
 			}
 		}
 
@@ -217,19 +242,19 @@ func (message *Message) BeforeInsert(cfg *Config, user *User, workspaceID string
 				MessageExternalID: message.ExternalID,
 				APIEndpoint:       cfg.API_ENDPOINT,
 				Path:              dto.OpenTrackingEmailPath,
-				WorkspaceID:       workspaceID,
+				WorkspaceID:       workspace.ID,
 				SecretKey:         cfg.SECRET_KEY,
 				SubscriptionList:  message.SubscriptionList,
 				User:              user,
 			})
 
 			if err != nil {
-				return eris.Errorf("GenerateEmailLink err %v", err)
+				message.Status = &MessageStatusFailed
+				message.Comment = NewNullableString(StringPtr(fmt.Sprintf("GenerateEmailLink err %v", err)))
+				return
 			}
 		}
 	}
-
-	return nil
 }
 
 func NewMessageFromUTMID(channel string, externalID string, userID string, updatedAt time.Time) (message *Message) {

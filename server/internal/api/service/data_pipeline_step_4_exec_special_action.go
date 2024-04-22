@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -38,7 +39,7 @@ func (pipe *DataLogPipeline) StepExecuteSpecialAction(ctx context.Context) {
 	switch pipe.DataLog.Kind {
 	case entity.ItemKindMessage:
 		// only send messages on create
-		if pipe.DataLog.Action == "create" {
+		if pipe.DataLog.Action == "create" && pipe.DataLog.UpsertedMessage.CanBeSent() {
 			EnqueueMessage(spanCtx, pipe)
 		}
 	default:
@@ -122,9 +123,9 @@ func EnqueueMessage(ctx context.Context, pipe *DataLogPipeline) {
 		}
 	}
 
-	log.Printf("subject: %v", subject)
-	log.Printf("html: %v", html)
-	log.Printf("text: %v", text)
+	// log.Printf("subject: %v", subject)
+	// log.Printf("html: %v", html)
+	// log.Printf("text: %v", text)
 
 	queueName := MarketingMessageQueue
 	isTransactional := false
@@ -204,14 +205,22 @@ func CompileNunjucksTemplate(templateString string, jsonData string) (result str
 	scriptPath := dir + "nunjucks.js"
 
 	// call nodejs cmd
-	output, err := exec.Command("node", scriptPath, templateStringB64, dataB64).Output()
 
-	log.Printf("output: %v", string(output))
-	log.Printf("err: %v", err)
+	cmd := exec.Command("node", scriptPath, templateStringB64, dataB64)
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
 
-	if err != nil {
-		return "", eris.Wrap(err, "CompileNunjucksTemplate")
+	errCmd := cmd.Run()
+
+	// log.Printf("output: %v", string(output))
+	if errCmd != nil {
+		log.Printf("dataB64 %v", dataB64)
+		err := eris.Wrap(errCmd, stderr.String())
+		log.Println("CompileNunjucksTemplate err: ", err)
+		return "", errCmd
 	}
 
-	return string(output), nil
+	return out.String(), nil
 }

@@ -8,11 +8,11 @@ const mysql = require('mysql');
 const args = process.argv.slice(2);
 if (args.length < 1) {
     console.error('Usage: node query.js <payload>');
-    process.exit(1);
+    return
 }
 
 // decode base64
-const payload = JSON.parse(Buffer.from(args[0], 'base64').toString('ascii'));
+const payload = JSON.parse(Buffer.from(args[0], 'base64').toString('utf8'));
 
 let conn = null;
 try {
@@ -31,7 +31,7 @@ try {
             password: process.env.DB_PASSWORD,
             database: payload.db,
             ssl: {
-                ca: Buffer.from(process.env.DB_CA_CERT_BASE64, 'base64').toString('ascii'),
+                ca: Buffer.from(process.env.DB_CA_CERT_BASE64, 'base64').toString('utf8'),
                 rejectUnauthorized: false
             }
         }

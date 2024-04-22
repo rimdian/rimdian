@@ -844,6 +844,18 @@ const Preview = (props: PreviewProps) => {
     id: 'htmlCompiled'
   }
 
+  let nunjucksError
+  let jsonData = {}
+  if (props.templateData && props.templateData !== '') {
+    jsonData = JSON.parse(props.templateData)
+  }
+
+  try {
+    Nunjucks.renderString(html.html, jsonData)
+  } catch (e: any) {
+    nunjucksError = e.message
+  }
+
   // console.log('html', html.errors)
   return (
     <div className="rmdeditor-layout-middle preview">
@@ -891,6 +903,7 @@ const Preview = (props: PreviewProps) => {
           ]}
         />
       </div>
+      {nunjucksError && <Alert message={nunjucksError} type="error" />}
       {tab === 'html' && (
         <div id="iframe-container">
           <div className="rmdeditor-transparent">

@@ -694,6 +694,10 @@ func (u *User) BeforeInsert(workspace *Workspace) {
 	if u.IsAuthenticated && (u.SignedUpAt == nil || u.SignedUpAt.IsZero()) {
 		u.SignedUpAt = &u.CreatedAt
 	}
+
+	if u.LastInteractionAt.IsZero() {
+		u.LastInteractionAt = u.CreatedAt.Truncate(time.Second)
+	}
 }
 
 // update a field timestamp to its most recent value

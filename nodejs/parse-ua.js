@@ -4,10 +4,10 @@ const UAParser = require('ua-parser-js');
 const args = process.argv.slice(2);
 if (args.length < 1) {
     console.error('Usage: node parse-ua.js <user_agent>');
-    process.exit(1);
+    return
 }
 // decode base64
-const decoded = Buffer.from(args[0], 'base64').toString('ascii');
+const decoded = Buffer.from(args[0], 'base64').toString('utf8');
 
 
 try {
@@ -20,6 +20,8 @@ try {
     }
 
     console.log(JSON.stringify(result))
+    return
 } catch (e) {
     console.error('parse error:', e.message)
+    return
 }

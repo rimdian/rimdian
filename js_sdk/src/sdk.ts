@@ -501,7 +501,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.0.0',
+    version: '2.1.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -994,6 +994,13 @@ const Rimdian: IRimdian = {
         Rimdian.currentSession = undefined
         Rimdian._deleteCookie('session')
         Rimdian._handleSession()
+
+        // loop over keys and ignore empty strings
+        Object.keys(data).forEach((key) => {
+          if (typeof data[key] === 'string' && data[key] === '') {
+            delete data[key]
+          }
+        })
 
         Rimdian.currentUser = { ...data }
 

@@ -115,7 +115,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		switch keyString {
 
 		case "external_id":
-			if value.Type == gjson.Null {
+			if value.Type == gjson.Null || len(value.String()) == 0 {
 				err = eris.New("external_id is required")
 				return false
 			}
@@ -146,7 +146,9 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 			}
 
 		case "hmac":
-			user.HMAC = StringPtr(value.String())
+			if value.Type != gjson.Null && len(value.String()) > 0 {
+				user.HMAC = StringPtr(value.String())
+			}
 
 		case "created_at":
 			if user.CreatedAt, err = time.Parse(time.RFC3339, value.String()); err != nil {
@@ -186,7 +188,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 			user.UpdatedAt = &updatedAt
 
 		case "timezone":
-			if value.Type == gjson.Null {
+			if value.Type == gjson.Null || len(value.String()) == 0 {
 				user.Timezone = &workspace.DefaultUserTimezone
 			} else {
 				tz := value.String()
@@ -199,7 +201,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 			}
 
 		case "language":
-			if value.Type == gjson.Null {
+			if value.Type == gjson.Null || len(value.String()) == 0 {
 				user.Language = &workspace.DefaultUserLanguage
 			} else {
 				language := value.String()
@@ -212,7 +214,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 			}
 
 		case "country":
-			if value.Type == gjson.Null {
+			if value.Type == gjson.Null || len(value.String()) == 0 {
 				user.Country = &workspace.DefaultUserCountry
 			} else {
 				country := value.String()
@@ -310,7 +312,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "last_ip":
 			if value.Type == gjson.Null {
 				user.LastIP = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				lastIP := value.String()
 				user.LastIP = NewNullableString(&lastIP)
 			}
@@ -336,7 +338,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "first_name":
 			if value.Type == gjson.Null {
 				user.FirstName = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				firstName := value.String()
 				user.FirstName = NewNullableString(&firstName)
 			}
@@ -344,7 +346,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "last_name":
 			if value.Type == gjson.Null {
 				user.LastName = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				lastName := value.String()
 				user.LastName = NewNullableString(&lastName)
 			}
@@ -352,7 +354,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "gender":
 			if value.Type == gjson.Null {
 				user.Gender = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				gender := value.String()
 				user.Gender = NewNullableString(&gender)
 
@@ -364,7 +366,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "birthday":
 			if value.Type == gjson.Null {
 				user.Birthday = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				birthday := value.String()
 
 				date, errParse := time.Parse("2006-01-02", birthday)
@@ -380,7 +382,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "photo_url":
 			if value.Type == gjson.Null {
 				user.PhotoURL = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				photoURL := value.String()
 				user.PhotoURL = NewNullableString(&photoURL)
 
@@ -393,7 +395,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "email":
 			if value.Type == gjson.Null {
 				user.Email = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				email := value.String()
 				user.Email = NewNullableString(&email)
 
@@ -415,7 +417,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "email_md5":
 			if value.Type == gjson.Null {
 				user.EmailMD5 = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				emailMD5 := value.String()
 				user.EmailMD5 = NewNullableString(&emailMD5)
 
@@ -428,7 +430,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "email_sha1":
 			if value.Type == gjson.Null {
 				user.EmailSHA1 = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				emailSHA1 := value.String()
 				user.EmailSHA1 = NewNullableString(&emailSHA1)
 
@@ -441,7 +443,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "email_sha256":
 			if value.Type == gjson.Null {
 				user.EmailSHA256 = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				emailSHA256 := value.String()
 				user.EmailSHA256 = NewNullableString(&emailSHA256)
 
@@ -454,7 +456,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "telephone":
 			if value.Type == gjson.Null {
 				user.Telephone = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				telephone := value.String()
 				user.Telephone = NewNullableString(&telephone)
 
@@ -486,7 +488,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "address_line_1":
 			if value.Type == gjson.Null {
 				user.AddressLine1 = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				addressLine1 := value.String()
 				user.AddressLine1 = NewNullableString(&addressLine1)
 			}
@@ -494,7 +496,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "address_line_2":
 			if value.Type == gjson.Null {
 				user.AddressLine2 = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				addressLine2 := value.String()
 				user.AddressLine2 = NewNullableString(&addressLine2)
 			}
@@ -502,7 +504,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "city":
 			if value.Type == gjson.Null {
 				user.City = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				city := value.String()
 				user.City = NewNullableString(&city)
 			}
@@ -510,7 +512,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "region":
 			if value.Type == gjson.Null {
 				user.Region = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				region := value.String()
 				user.Region = NewNullableString(&region)
 			}
@@ -518,7 +520,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "postal_code":
 			if value.Type == gjson.Null {
 				user.PostalCode = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				postalCode := value.String()
 				user.PostalCode = NewNullableString(&postalCode)
 			}
@@ -526,7 +528,7 @@ func NewUserFromDataLog(dataLog *DataLog, clockDifference time.Duration, workspa
 		case "state":
 			if value.Type == gjson.Null {
 				user.State = NewNullableString(nil)
-			} else {
+			} else if len(value.String()) > 0 {
 				state := value.String()
 				user.State = NewNullableString(&state)
 			}

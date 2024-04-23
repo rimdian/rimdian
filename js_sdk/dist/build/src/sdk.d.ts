@@ -98,6 +98,7 @@ declare type IUser = {
     user_centric_consent?: boolean;
     consent_all?: boolean;
     consent_personalization?: boolean;
+    consent_marketing?: boolean;
     signed_up_at?: string;
     hmac?: string;
     [key: string]: any;

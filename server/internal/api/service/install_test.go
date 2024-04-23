@@ -8,6 +8,7 @@ import (
 	"github.com/rimdian/rimdian/internal/api/common"
 	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rimdian/rimdian/internal/api/repository"
+	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
 )
 
 func TestServiceImpl_InstallOrVerifyServer(t *testing.T) {
@@ -84,6 +85,11 @@ func TestServiceImpl_InstallOrVerifyServer(t *testing.T) {
 			svc := &ServiceImpl{
 				Config: tt.fields.Config,
 				Repo:   tt.fields.Repo,
+				TaskOrchestrator: &taskorchestrator.ClientMock{
+					EnsureQueueFunc: func(ctx context.Context, queueLocation, queueName string, maxConcurrent int32) error {
+						return nil
+					},
+				},
 			}
 			success, err := svc.InstallOrVerifyServer(tt.args.ctx)
 			if (err != nil) != tt.wantErr {

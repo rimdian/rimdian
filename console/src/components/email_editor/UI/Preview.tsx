@@ -24,6 +24,11 @@ const objectAsKebab = (obj: any) => {
 }
 
 const trackURL = (url: string, urlParams: any) => {
+  // ignore if URL is a placeholder
+  if (url.includes('{{')) {
+    return url
+  }
+
   // parse href and append utm params
   const newURL = new URL(url)
   if (!newURL.searchParams.has('utm_source') && urlParams.utm_source) {
@@ -41,6 +46,7 @@ const trackURL = (url: string, urlParams: any) => {
   if (!newURL.searchParams.has('utm_id') && urlParams.utm_id) {
     newURL.searchParams.append('utm_id', urlParams.utm_id)
   }
+
   return newURL.toString()
 }
 

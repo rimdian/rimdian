@@ -328,7 +328,10 @@ func NewInternalDataLogChild(parent *DataLog, data ChildDataLog) *DataLog {
 		UpdatedFields:  data.UpdatedFields,
 		EventAt:        data.EventAt,
 		EventAtTrunc:   data.EventAt.Truncate(time.Hour),
-		UpsertedUser:   parent.UpsertedUser, // propagate upserted user for data_hooks
+		// propagate upserted user+device+session for data_hooks
+		UpsertedUser:    parent.UpsertedUser,
+		UpsertedDevice:  parent.UpsertedDevice,
+		UpsertedSession: parent.UpsertedSession,
 	}
 
 	child.ID = dto.ComputeDataLogID(child.Context.WorkspaceID, child.Origin, child.Item)

@@ -317,18 +317,7 @@ func (w *Workspace) AttachMetadatas(ctx context.Context, cfg *Config) (err error
 	// CubeJS token
 	accountToken := auth.GetAccountRawTokenFromContext(ctx)
 
-	schemaURL := cfg.API_ENDPOINT + "/api/cubejs.schemas?workspace_id=" + w.ID + "&rmd_token=" + accountToken
-
-	// generate a CubeJS JWT token
-	tokenToSign := jwt.NewWithClaims(jwt.SigningMethodHS256, &CubeClaim{
-		&jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(8 * time.Hour)), // 8 hours
-		},
-		w.ID,
-		schemaURL,
-	})
-
-	w.CubeJSToken, err = tokenToSign.SignedString([]byte(cfg.CUBEJS_API_SECRET))
+	w.CubeJSToken, err = GenerateCubeJSToken(cfg, w.ID, accountToken)
 
 	if err != nil {
 		return err
@@ -1001,6 +990,22 @@ func GenerateDemoWorkspace(workspaceID string, demoKind string, organizationID s
 	}
 
 	return workspace, nil
+}
+
+func GenerateCubeJSToken(cfg *Config, workspaceID string, adminToken string) (token string, err error) {
+
+	schemaURL := cfg.API_ENDPOINT + "/api/cubejs.schemas?workspace_id=" + workspaceID + "&rmd_token=" + adminToken
+
+	// generate a CubeJS JWT token
+	tokenToSign := jwt.NewWithClaims(jwt.SigningMethodHS256, &CubeClaim{
+		&jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(8 * time.Hour)), // 8 hours
+		},
+		workspaceID,
+		schemaURL,
+	})
+
+	return tokenToSign.SignedString([]byte(cfg.CUBEJS_API_SECRET))
 }
 
 // brand_keywords JSON NOT NULL,

@@ -3,7 +3,9 @@ package entity
 import (
 	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/rimdian/rimdian/internal/api/common"
+	"github.com/rimdian/rimdian/internal/common/auth"
 	"github.com/rotisserie/eris"
 )
 
@@ -17,6 +19,16 @@ var (
 	ErrAppNotActive     = eris.New("app is not active")
 )
 
+type AppUITokenClaim struct {
+	*jwt.RegisteredClaims
+	WorkspaceID       string `json:"workspace_id"`
+	AppID             string `json:"app_id"`
+	APIEndpoint       string `json:"api_endpoint"`
+	CollectorEndpoint string `json:"collector_endpoint"`
+	AccountTimezone   string `json:"account_timezone"`
+	AccountID         string `json:"account_id"` // admin account id that his consuming the app
+}
+
 type App struct {
 	ID                 string          `db:"id" json:"id"`
 	Name               string          `db:"name" json:"name"`
@@ -29,9 +41,68 @@ type App struct {
 	UpdatedAt          time.Time       `db:"updated_at" json:"updated_at"`
 	DeletedAt          *time.Time      `db:"deleted_at" json:"deleted_at"`
 
-	// joined server-side
-	UIToken           string `db:"-" json:"ui_token,omitempty"` // JWT given to the app iframe to authenticate the Rimdian Console
+	// enriched server-side for apps
+	SecretKey         string `db:"-" json:"-"`
+	WorkspaceID       string `db:"-" json:"workspace_id,omitempty"`
+	APIEndpoint       string `db:"-" json:"api_endpoint,omitempty"`
 	CollectorEndpoint string `db:"-" json:"collector_endpoint,omitempty"`
+	CubeJSEndpoint    string `db:"-" json:"cubejs_endpoint,omitempty"`
+	CubeJSToken       string `db:"-" json:"cubejs_token,omitempty"`
+	UIToken           string `db:"-" json:"ui_token,omitempty"` // JWT given to the app iframe to authenticate the Rimdian Console
+	AccountTimezone   string `db:"-" json:"account_timezone,omitempty"`
+}
+
+func (app *App) EnrichMetadatas(cfg *Config, workspaceID string, accountID string, timezone string, withUIToken bool) (err error) {
+
+	app.WorkspaceID = workspaceID
+	app.CollectorEndpoint = cfg.COLLECTOR_ENDPOINT
+	app.APIEndpoint = cfg.API_ENDPOINT
+	app.CubeJSEndpoint = cfg.CUBEJS_ENDPOINT
+	app.AccountTimezone = timezone
+
+	// generate an accountToken
+	now := time.Now().UTC()
+	accessTokenExpiration := now.Add(time.Duration(AccessTokenDuration) * time.Minute)
+
+	accessToken, err := auth.CreateAccountToken(cfg.SECRET_KEY, cfg.API_ENDPOINT, now, accessTokenExpiration, auth.TypeAccessToken, accountID, "")
+
+	if err != nil {
+		return err
+	}
+
+	app.CubeJSToken, err = GenerateCubeJSToken(cfg, workspaceID, accessToken)
+
+	if err != nil {
+		return err
+	}
+
+	// decrypt secret key
+	app.SecretKey, err = common.DecryptFromHexString(app.EncryptedSecretKey, cfg.SECRET_KEY)
+	if err != nil {
+		return err
+	}
+
+	tokenToSign := jwt.NewWithClaims(jwt.SigningMethodHS256, &AppUITokenClaim{
+		&jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(6 * time.Hour)), // 12 hours
+		},
+		workspaceID,
+		app.ID,
+		cfg.API_ENDPOINT,
+		cfg.COLLECTOR_ENDPOINT,
+		timezone,
+		accountID,
+	})
+
+	// if request comes from a UI token we don't give another one to avoid infinite expiration loop
+	if withUIToken {
+		app.UIToken, err = tokenToSign.SignedString([]byte(app.SecretKey))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (app *App) GetAppSecretKey(serverSecretKey string) (string, error) {

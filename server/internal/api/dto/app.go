@@ -12,11 +12,7 @@ type AppFromTokenParams struct {
 }
 
 type AppFromToken struct {
-	WorkspaceID       string      `json:"workspace_id"`
-	APIEndpoint       string      `json:"api_endpoint"`
-	CollectorEndpoint string      `json:"collector_endpoint"`
-	App               *entity.App `json:"app"`
-	UserTimezone      string      `json:"user_timezone"`
+	App *entity.App `json:"app"`
 }
 
 type AppListResult struct {

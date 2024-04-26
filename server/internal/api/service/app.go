@@ -15,15 +15,6 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-type AppUITokenClaim struct {
-	*jwt.RegisteredClaims
-	WorkspaceID       string `json:"workspace_id"`
-	AppID             string `json:"app_id"`
-	APIEndpoint       string `json:"api_endpoint"`
-	CollectorEndpoint string `json:"collector_endpoint"`
-	UserTimezone      string `json:"user_timezone"`
-}
-
 func (svc *ServiceImpl) AppGet(ctx context.Context, accountID string, params *dto.AppGetParams) (app *entity.App, code int, err error) {
 
 	_, code, err = svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
@@ -42,8 +33,16 @@ func (svc *ServiceImpl) AppGet(ctx context.Context, accountID string, params *dt
 		return nil, 500, eris.Wrap(err, "AppGet")
 	}
 
-	// attach collector endpoint for private apps who might need it to import data
-	app.CollectorEndpoint = svc.Config.COLLECTOR_ENDPOINT
+	// get account for timezone
+	account, err := svc.Repo.GetAccountFromID(ctx, accountID)
+
+	if err != nil {
+		return nil, 500, eris.Wrap(err, "AppGet")
+	}
+
+	if err = app.EnrichMetadatas(svc.Config, params.WorkspaceID, account.ID, account.Timezone, true); err != nil {
+		return nil, 500, eris.Wrap(err, "AppList")
+	}
 
 	return app, 200, nil
 }
@@ -71,9 +70,14 @@ func (svc *ServiceImpl) AppFromToken(ctx context.Context, params *dto.AppFromTok
 			return nil, eris.New("AppFromToken: invalid app_id")
 		}
 
-		timezone, ok := claims["user_timezone"].(string)
+		timezone, ok := claims["account_timezone"].(string)
 		if !ok {
-			return nil, eris.New("AppFromToken: invalid user_timezone")
+			return nil, eris.New("AppFromToken: invalid account_timezone")
+		}
+
+		accountID, ok := claims["account_id"].(string)
+		if !ok {
+			return nil, eris.New("AppFromToken: invalid account°id")
 		}
 
 		// fetch app from DB
@@ -86,20 +90,11 @@ func (svc *ServiceImpl) AppFromToken(ctx context.Context, params *dto.AppFromTok
 			return nil, eris.Wrap(err, "AppFromToken")
 		}
 
-		result.App.CollectorEndpoint = svc.Config.COLLECTOR_ENDPOINT
-
-		// decrypt secret key
-		secretKey, err := common.DecryptFromHexString(result.App.EncryptedSecretKey, svc.Config.SECRET_KEY)
-		if err != nil {
+		if err = result.App.EnrichMetadatas(svc.Config, workspaceID, accountID, timezone, false); err != nil {
 			return nil, eris.Wrap(err, "AppFromToken")
 		}
 
-		result.WorkspaceID = workspaceID
-		result.APIEndpoint = svc.Config.API_ENDPOINT
-		result.CollectorEndpoint = svc.Config.COLLECTOR_ENDPOINT
-		result.UserTimezone = timezone
-
-		return []byte(secretKey), nil
+		return []byte(result.App.SecretKey), nil
 	})
 
 	if err != nil {
@@ -733,29 +728,9 @@ func (svc *ServiceImpl) AppList(ctx context.Context, accountID string, params *d
 			continue
 		}
 
-		// decrypt secret key
-		secretKey, err := common.DecryptFromHexString(app.EncryptedSecretKey, svc.Config.SECRET_KEY)
-		if err != nil {
+		if err = app.EnrichMetadatas(svc.Config, params.WorkspaceID, account.ID, account.Timezone, true); err != nil {
 			return nil, 500, eris.Wrap(err, "AppList")
 		}
-
-		tokenToSign := jwt.NewWithClaims(jwt.SigningMethodHS256, &AppUITokenClaim{
-			&jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(6 * time.Hour)), // 12 hours
-			},
-			workspace.ID,
-			app.ID,
-			svc.Config.API_ENDPOINT,
-			svc.Config.COLLECTOR_ENDPOINT,
-			account.Timezone,
-		})
-
-		app.UIToken, err = tokenToSign.SignedString([]byte(secretKey))
-		if err != nil {
-			return nil, 500, eris.Wrap(err, "AppList")
-		}
-
-		app.CollectorEndpoint = svc.Config.COLLECTOR_ENDPOINT
 	}
 
 	return result, 200, nil

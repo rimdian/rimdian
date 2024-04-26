@@ -59,7 +59,7 @@ const RouteOrganizationDashboard = () => {
               />
 
               {currentOrgCtx.organizations.length > 1 && (
-                <Button ghost onClick={() => navigate('/orgs')}>
+                <Button type="text" onClick={() => navigate('/orgs')}>
                   <FontAwesomeIcon icon={faShuffle} />
                 </Button>
               )}

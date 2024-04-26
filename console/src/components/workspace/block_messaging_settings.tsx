@@ -156,6 +156,7 @@ const EmailProviderSettings = ({
         workspaceCtx
           .refreshWorkspace()
           .then(() => {
+            form.resetFields()
             message.success('The email provider settings have been updated!')
             setLoading(false)
             setModalVisible(false)
@@ -189,7 +190,9 @@ const EmailProviderSettings = ({
 
       {modalVisible && (
         <Modal
-          title="Transactional email provider"
+          title={`Setup ${
+            kind === 'marketing_email_provider' ? 'marketing' : 'transactional'
+          } email provider`}
           open={true}
           onCancel={() => setModalVisible(false)}
           okText="Save"

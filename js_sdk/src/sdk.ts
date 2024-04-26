@@ -116,8 +116,8 @@ type IOrigin = {
 }
 
 type ISessionDTO = {
-  utm_source: string
-  utm_medium: string
+  utm_source?: string
+  utm_medium?: string
   utm_campaign?: string
   utm_content?: string
   utm_term?: string
@@ -501,7 +501,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.1.0',
+    version: '2.3.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -528,7 +528,7 @@ const Rimdian: IRimdian = {
         (['pageview', 'cart', 'order'].includes(kind) ||
           (kind === 'custom_event' && (data as ICustomEvent).non_interactive === true))
       ) {
-        Rimdian._startNewSession({ utm_source: 'direct', utm_medium: 'none' })
+        Rimdian._startNewSession({})
       }
 
       const item: IItem = { kind: kind }
@@ -635,6 +635,11 @@ const Rimdian: IRimdian = {
         Rimdian.log('info', 'document is now', document.readyState)
         Rimdian._onReady(cfg)
       }
+    }
+
+    const logLevel = Rimdian._getCookie('debug')
+    if (logLevel) {
+      Rimdian.config.log_level = 'info'
     }
   },
 
@@ -1741,14 +1746,6 @@ const Rimdian: IRimdian = {
       utm_medium = 'ads'
     }
 
-    // default to direct / none on empty origin
-    if (!utm_source || utm_source === '') {
-      utm_source = 'direct'
-    }
-    if (!utm_medium || utm_medium === '') {
-      utm_medium = 'none'
-    }
-
     Rimdian.log('info', 'RMD utm_source is:', utm_source)
     Rimdian.log('info', 'RMD utm_medium is:', utm_medium)
     Rimdian.log('info', 'RMD utm_campaign is:', utm_campaign)
@@ -1762,6 +1759,8 @@ const Rimdian: IRimdian = {
 
     // 1. no existing session -> create new session
     if (!sessionCookie || sessionCookie === '') {
+      Rimdian.log('info', 'RMD session cookie not found')
+
       Rimdian._startNewSession({
         utm_source,
         utm_medium,
@@ -1801,49 +1800,18 @@ const Rimdian: IRimdian = {
     let existingSession = JSON.parse(sessionCookie)
     Rimdian.log('info', 'RMD existing session is:', existingSession)
 
-    // check if the session was legacy
-    if (Rimdian.config.from_cm === true && existingSession.from !== undefined) {
-      // rewrite the session to the new format
-      existingSession = {
-        external_id: existingSession.id,
-        created_at: new Date().toISOString(),
-        device_external_id: Rimdian.currentDevice.external_id,
-        landing_page: window.location.href,
-        referrer: Rimdian.getReferrer(),
-        timezone: Rimdian.getTimezone(),
-
-        utm_source: existingSession.from.source || 'direct',
-        utm_medium: existingSession.from.medium || 'none',
-        utm_campaign: existingSession.from.campaign || undefined,
-        utm_content: existingSession.from.creative || undefined,
-        utm_term: existingSession.from.keyword || undefined,
-        utm_id: existingSession.from.gclid || undefined,
-        utm_id_from:
-          existingSession.from.gclid && existingSession.from.gclid !== '' ? 'gclid' : undefined
-      }
-
-      // get session expiration date
-      const sessionExpiresCookie = Rimdian._getCookie('_cm_sessionExpiresAt')
-      if (sessionExpiresCookie && sessionExpiresCookie !== '') {
-        existingSession.created_at = new Date(sessionExpiresCookie).toISOString()
-      }
-
-      // persist new session format to cookie
-      Rimdian._setCookie(
-        'session',
-        JSON.stringify(Rimdian.currentSession),
-        Rimdian.config.session_timeout
-      )
-    }
-
     // check if session origin has changed from previous page
     let isEqual = true
-    if (existingSession.utm_source !== utm_source) isEqual = false
-    if (existingSession.utm_medium !== utm_medium) isEqual = false
-    if (existingSession.utm_campaign !== utm_campaign) isEqual = false
-    if (existingSession.utm_content !== utm_content) isEqual = false
-    if (existingSession.utm_term !== utm_term) isEqual = false
-    if (existingSession.utm_id !== utm_id) isEqual = false
+    if (utm_source && utm_source !== '' && existingSession.utm_source !== utm_source)
+      isEqual = false
+    if (utm_medium && utm_medium !== '' && existingSession.utm_medium !== utm_medium)
+      isEqual = false
+    if (utm_campaign && utm_campaign !== '' && existingSession.utm_campaign !== utm_campaign)
+      isEqual = false
+    if (utm_content && utm_content !== '' && existingSession.utm_content !== utm_content)
+      isEqual = false
+    if (utm_term && utm_term !== '' && existingSession.utm_term !== utm_term) isEqual = false
+    if (utm_id && utm_id !== '' && existingSession.utm_id !== utm_id) isEqual = false
 
     // 2. if this origin is ignored, or same origin, or empty origin, resume session
     if (ignoredOrigin || isEqual || !utm_source || utm_source === '') {
@@ -2003,6 +1971,14 @@ const Rimdian: IRimdian = {
   },
 
   _startNewSession: (params: ISessionDTO) => {
+    // default to direct / none on empty origin
+    if (!params.utm_source || params.utm_source === '') {
+      params.utm_source = 'direct'
+    }
+    if (!params.utm_medium || params.utm_medium === '') {
+      params.utm_medium = 'none'
+    }
+
     Rimdian.currentSession = {
       external_id: Rimdian.uuidv4(),
       created_at: new Date().toISOString(),

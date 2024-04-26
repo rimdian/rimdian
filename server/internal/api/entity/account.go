@@ -27,6 +27,8 @@ var (
 	ErrResetPasswordTokenExpired = eris.New("reset password token has expired")
 	ErrNewPasswordInvalid        = eris.New("the new password should contain at least 8 characters")
 
+	AccessTokenDuration int = 60 * 8 // 8 hours
+
 	AccountLocales = []string{
 		"en-US",
 		"fr-FR",

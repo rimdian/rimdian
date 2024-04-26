@@ -19,7 +19,6 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-var AccessTokenDuration int = 60 * 8 // 8 hours
 var ActionResetPassword = "reset-password"
 var ResetPasswordTokenDuration int = 60 // in mins
 
@@ -60,8 +59,8 @@ func (svc *ServiceImpl) AccountLogin(ctx context.Context, loginDTO *dto.AccountL
 		return nil, 500, eris.Wrap(err, "Login generate uuid")
 	}
 
-	refreshTokenExpiration := now.Add(60 * 24 * 7 * time.Minute)                       // 7 days
-	accessTokenExpiration := now.Add(time.Duration(AccessTokenDuration) * time.Minute) // 15 minutes
+	refreshTokenExpiration := now.Add(60 * 24 * 7 * time.Minute)                              // 7 days
+	accessTokenExpiration := now.Add(time.Duration(entity.AccessTokenDuration) * time.Minute) // 15 minutes
 
 	refreshToken, err := auth.CreateAccountToken(svc.Config.SECRET_KEY, svc.Config.API_ENDPOINT, now, refreshTokenExpiration, auth.TypeRefreshToken, account.ID, refreshTokenSessionID.String())
 
@@ -125,7 +124,7 @@ func (svc *ServiceImpl) AccountRefreshAccessToken(ctx context.Context, accountID
 	}
 
 	now := time.Now().UTC()
-	accessTokenExpiration := now.Add(time.Duration(AccessTokenDuration) * time.Minute) // 15 minutes
+	accessTokenExpiration := now.Add(time.Duration(entity.AccessTokenDuration) * time.Minute) // 15 minutes
 
 	accessToken, err := auth.CreateAccountToken(svc.Config.SECRET_KEY, svc.Config.API_ENDPOINT, now, accessTokenExpiration, auth.TypeAccessToken, account.ID, "")
 

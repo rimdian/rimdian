@@ -261,7 +261,10 @@ const DrawerEmailTemplate = (props: {
     "region": "Ile de France",
     "postal_code": "75000",
     "state": "abc"
-  }
+  },
+  "double_opt_in_link": "double_opt_in_link_will_be_computed_at_sending",
+  "unsubscribe_link": "unsubscribe_link_will_be_computed_at_sending",
+  "open_tracking_pixel_src": "link_will_be_computed_at_sending"
 }`
     },
     props.template

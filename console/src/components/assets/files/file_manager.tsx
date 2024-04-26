@@ -200,6 +200,8 @@ export const FileManager = (props: FileManagerProps) => {
         } else {
           message.success('File deleted successfully.')
         }
+        // refresh
+        fetchObjects()
       })
       .catch((error) => {
         message.error('Failed to delete file: ' + error)

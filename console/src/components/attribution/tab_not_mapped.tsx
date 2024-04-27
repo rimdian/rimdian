@@ -17,9 +17,8 @@ import {
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
-import { CubeContext } from '@cubejs-client/react'
 import { Query, ResultSet, SqlData } from '@cubejs-client/core'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   MeasureDefinition,
   SessionsMeasuresMapDefinition,
@@ -41,6 +40,7 @@ import TableTag from 'components/common/partial_table_tag'
 import CSS from 'utils/css'
 import { css } from '@emotion/css'
 import { Fullscreenable } from 'components/common/fullscreenable'
+import { useRimdianCube } from 'components/workspace/context_cube'
 
 interface AttributionParams {
   sortKey: string
@@ -108,7 +108,7 @@ const TabAttributionNotMapped = () => {
   const mutexObj = useMemo(() => {
     return {}
   }, [])
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const [executedSQL, setExecutedSQL] = useState<ExecutedSQL[]>([])
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(['root'])
 

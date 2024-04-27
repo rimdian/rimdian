@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Table,
   Drawer,
@@ -26,12 +26,12 @@ import CSS from 'utils/css'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { CubeSchema, CubeSchemaDimension } from 'interfaces'
 import { find, forEach, map } from 'lodash'
-import { CubeContext } from '@cubejs-client/react'
 import { ResultSet, TimeDimension } from '@cubejs-client/core'
 import dayjs from 'dayjs'
 import { useAccount } from 'components/login/context_account'
 import ReactECharts from 'echarts-for-react'
 import { SeriesOption } from 'echarts'
+import { useRimdianCube } from 'components/workspace/context_cube'
 
 type AddFilterButtonProps = {
   cube?: CubeSchema
@@ -305,7 +305,7 @@ type GraphPreviewProps = {
 }
 
 const GraphPreview = (props: GraphPreviewProps) => {
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const [isLoading, setIsLoading] = useState(true)
   // const [executedSQL, setExecutedSQL] = useState<ExecutedSQL | undefined>(undefined)
   const [error, setError] = useState<string | undefined>(undefined)

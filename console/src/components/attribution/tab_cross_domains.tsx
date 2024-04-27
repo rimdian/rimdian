@@ -2,9 +2,8 @@ import { Radio, RadioChangeEvent, Table, Tooltip } from 'antd'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
-import { CubeContext } from '@cubejs-client/react'
 import { Filter, Query, ResultSet, SqlData } from '@cubejs-client/core'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDateRangeCtx } from 'components/common/context_date_range'
 import { cloneDeep } from 'lodash'
 import FormatNumber from 'utils/format_number'
@@ -18,6 +17,7 @@ import { css } from '@emotion/css'
 import FormatGrowth from 'utils/format_growth'
 import { faCircleQuestion } from '@fortawesome/free-regular-svg-icons'
 import { Fullscreenable } from 'components/common/fullscreenable'
+import { useRimdianCube } from 'components/workspace/context_cube'
 
 interface Params {
   sortKey: string
@@ -40,7 +40,7 @@ const TabAttributionCrossDomains = () => {
   const mutexObj = useMemo(() => {
     return {}
   }, [])
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const [executedSQL, setExecutedSQL] = useState<ExecutedSQL[]>([])
 
   const params: Params = useMemo(() => {

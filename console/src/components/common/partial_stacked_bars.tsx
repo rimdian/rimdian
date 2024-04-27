@@ -1,7 +1,6 @@
 import dayjs from 'dayjs'
 import { Query, TimeDimensionGranularity } from '@cubejs-client/core'
-import { CubeContext } from '@cubejs-client/react'
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactECharts from 'echarts-for-react'
 import { EChartsOption, SeriesOption } from 'echarts'
 import { Alert, Button, Divider, Spin } from 'antd'
@@ -9,6 +8,7 @@ import { css } from '@emotion/css'
 import CSS from 'utils/css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRefresh } from '@fortawesome/free-solid-svg-icons'
+import { useRimdianCube } from 'components/workspace/context_cube'
 
 export interface PartialStackedBarsSerie {
   name: string
@@ -28,7 +28,7 @@ const PartialStackedBars = (props: PartialStackedBarsProps) => {
   //   const now = dayjs().format('YYYY-MM-DD')
   //   const last2days = dayjs().subtract(2, 'days').format('YYYY-MM-DD')
   //   const accountCtx = useAccount()
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const refreshAtRef = useRef(0)
   const [refreshAt, setRefreshAt] = useState(dayjs().unix())
   const [loading, setLoading] = useState<boolean>(true)

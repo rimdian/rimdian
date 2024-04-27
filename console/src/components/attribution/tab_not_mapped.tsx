@@ -108,7 +108,7 @@ const TabAttributionNotMapped = () => {
   const mutexObj = useMemo(() => {
     return {}
   }, [])
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const [executedSQL, setExecutedSQL] = useState<ExecutedSQL[]>([])
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(['root'])
 
@@ -309,8 +309,8 @@ const TabAttributionNotMapped = () => {
       // console.log('childrenQuery', childrenQuery)
 
       Promise.all([
-        cubejsApi.sql(childrenQuery, { mutexObj: mutexObj, mutexKey: 'sql_' + parentKey }),
-        cubejsApi.load(childrenQuery, { mutexObj: mutexObj, mutexKey: 'load_' + parentKey })
+        cubeApi.sql(childrenQuery, { mutexObj: mutexObj, mutexKey: 'sql_' + parentKey }),
+        cubeApi.load(childrenQuery, { mutexObj: mutexObj, mutexKey: 'load_' + parentKey })
       ])
         .then(([sqlQuery, resultSet]: any[]) => {
           // console.log('sqlQuery', sqlQuery)
@@ -463,7 +463,7 @@ const TabAttributionNotMapped = () => {
         })
         .catch((error) => console.error(error))
     },
-    [mutexObj, baseQuery, cubejsApi, params.dimension1, params.dimension2, params.dimension3]
+    [mutexObj, baseQuery, cubeApi, params.dimension1, params.dimension2, params.dimension3]
   )
 
   // load the first time or when the params change

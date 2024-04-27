@@ -16,7 +16,7 @@ const GraphActivity = () => {
   const now = dayjs().format('YYYY-MM-DD')
   const last2days = dayjs().subtract(2, 'days').format('YYYY-MM-DD')
   const accountCtx = useAccount()
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const refreshAtRef = useRef(0)
   const [refreshAt, setRefreshAt] = useState(dayjs().unix())
   const [loading, setLoading] = useState<boolean>(true)
@@ -56,7 +56,7 @@ const GraphActivity = () => {
 
     setLoading(true)
 
-    cubejsApi
+    cubeApi
       .load(query)
       .then((resultSet) => {
         // colors are defined by the series keys
@@ -107,7 +107,7 @@ const GraphActivity = () => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, refreshAt, cubejsApi, accountCtx.account?.account.timezone])
+  }, [query, refreshAt, cubeApi, accountCtx.account?.account.timezone])
 
   // console.log('categories', categories)
   // console.log('series', series)

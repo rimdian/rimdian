@@ -23,7 +23,7 @@ const PartialHistogram = (props: PartialHistogramProps) => {
   //   const now = dayjs().format('YYYY-MM-DD')
   //   const last2days = dayjs().subtract(2, 'days').format('YYYY-MM-DD')
   //   const accountCtx = useAccount()
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const refreshAtRef = useRef(0)
   const [refreshAt, setRefreshAt] = useState(dayjs().unix())
   const [loading, setLoading] = useState<boolean>(true)
@@ -62,7 +62,7 @@ const PartialHistogram = (props: PartialHistogramProps) => {
 
     setLoading(true)
 
-    cubejsApi
+    cubeApi
       .load(query)
       .then((resultSet) => {
         // colors are defined by the series keys
@@ -105,7 +105,7 @@ const PartialHistogram = (props: PartialHistogramProps) => {
         setError(error.toString())
         setLoading(false)
       })
-  }, [query, refreshAt, cubejsApi, props.timezone, props.measure])
+  }, [query, refreshAt, cubeApi, props.timezone, props.measure])
 
   // console.log('categories', categories)
   // console.log('series', series)

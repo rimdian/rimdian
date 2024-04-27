@@ -40,7 +40,7 @@ const TabAttributionCrossDomains = () => {
   const mutexObj = useMemo(() => {
     return {}
   }, [])
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const [executedSQL, setExecutedSQL] = useState<ExecutedSQL[]>([])
 
   const params: Params = useMemo(() => {
@@ -131,8 +131,8 @@ const TabAttributionCrossDomains = () => {
     // console.log('query', query)
 
     Promise.all([
-      cubejsApi.sql(query, { mutexObj: mutexObj, mutexKey: 'sql' }),
-      cubejsApi.load(query, { mutexObj: mutexObj, mutexKey: 'load' })
+      cubeApi.sql(query, { mutexObj: mutexObj, mutexKey: 'sql' }),
+      cubeApi.load(query, { mutexObj: mutexObj, mutexKey: 'load' })
     ])
       .then(([sqlQuery, resultSet]: any[]) => {
         // console.log('sqlQuery', sqlQuery)
@@ -217,7 +217,7 @@ const TabAttributionCrossDomains = () => {
         setTableData(rows)
       })
       .catch((error) => console.error(error))
-  }, [mutexObj, baseQuery, cubejsApi])
+  }, [mutexObj, baseQuery, cubeApi])
 
   // load the first time or when the params change
   useEffect(() => {

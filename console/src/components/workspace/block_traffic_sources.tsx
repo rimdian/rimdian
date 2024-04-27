@@ -22,7 +22,7 @@ export type TrafficSourcesProps = {
 }
 
 export const TrafficSources = (props: TrafficSourcesProps) => {
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const refreshAt = useRef(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
@@ -54,7 +54,7 @@ export const TrafficSources = (props: TrafficSourcesProps) => {
 
     setLoading(true)
 
-    cubejsApi
+    cubeApi
       .load(query)
       .then((resultSet) => {
         setTableData(resultSet.tablePivot())
@@ -64,10 +64,10 @@ export const TrafficSources = (props: TrafficSourcesProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, props.refreshAt, cubejsApi])
+  }, [query, props.refreshAt, cubeApi])
 
   // debug sql query
-  //  cubejsApi
+  //  cubeApi
   //     .sql(query)
   //     .then((q: any) => {
   //       console.log(q[0].sqlQuery.sql.sql)

@@ -21,7 +21,7 @@ export type UsersPerDeviceProps = {
 }
 
 export const UsersPerDevice = (props: UsersPerDeviceProps) => {
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const refreshAt = useRef(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
@@ -60,7 +60,7 @@ export const UsersPerDevice = (props: UsersPerDeviceProps) => {
 
     setLoading(true)
 
-    cubejsApi
+    cubeApi
       .load(query as Query)
       .then((resultSet) => {
         const [currentSet, previousSet] = resultSet.decompose()
@@ -107,10 +107,10 @@ export const UsersPerDevice = (props: UsersPerDeviceProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, props.refreshAt, cubejsApi])
+  }, [query, props.refreshAt, cubeApi])
 
   // debug sql query
-  //   cubejsApi
+  //   cubeApi
   //     .sql(query)
   //     .then((q: any) => {
   //       console.log(q[0].sqlQuery.sql.sql)

@@ -11,12 +11,12 @@ interface LicenseWarningProps {
 
 export default function LicenseWarning(props: LicenseWarningProps) {
   const queryDone = useRef(false)
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const [dataQuotaFull, setDataQuota] = useState(false)
 
   // do a cubejs query to get the count of data_logs in the last 90 days
   useEffect(() => {
-    if (queryDone.current || !cubejsApi) {
+    if (queryDone.current || !cubeApi) {
       return
     }
 
@@ -24,7 +24,7 @@ export default function LicenseWarning(props: LicenseWarningProps) {
 
     const from = dayjs().subtract(90, 'day')
 
-    cubejsApi
+    cubeApi
       .load({
         measures: ['Data_log.count'],
         filters: [
@@ -44,7 +44,7 @@ export default function LicenseWarning(props: LicenseWarningProps) {
       .catch((err) => {
         console.error('error getting data_logs count', err)
       })
-  }, [cubejsApi, props.workspaceCtx.workspace.license_info.dlo90])
+  }, [cubeApi, props.workspaceCtx.workspace.license_info.dlo90])
 
   if (dataQuotaFull) {
     return (

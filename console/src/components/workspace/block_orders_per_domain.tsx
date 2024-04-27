@@ -23,7 +23,7 @@ export type OrdersPerDomainProps = {
 }
 
 export const OrdersPerDomain = (props: OrdersPerDomainProps) => {
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const refreshAt = useRef(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
@@ -53,7 +53,7 @@ export const OrdersPerDomain = (props: OrdersPerDomainProps) => {
 
     setLoading(true)
 
-    cubejsApi
+    cubeApi
       .load(query)
       .then((resultSet) => {
         setTableData(resultSet.tablePivot())
@@ -63,7 +63,7 @@ export const OrdersPerDomain = (props: OrdersPerDomainProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, props.refreshAt, cubejsApi])
+  }, [query, props.refreshAt, cubeApi])
 
   let title = 'Orders per domain'
 

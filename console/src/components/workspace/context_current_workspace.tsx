@@ -16,7 +16,7 @@ import { BadgeRunningTasks } from 'components/task_exec/badge_running_tasks'
 import { useAccount } from 'components/login/context_account'
 import DrawerShowUser from 'components/user/drawer_show'
 import { forEach } from 'lodash'
-import cubejs, { CubejsApi } from '@cubejs-client/core'
+import cubejs, { CubeApi } from '@cubejs-client/core'
 import { CubeProvider } from '@cubejs-client/react'
 import { Segment } from 'components/segment/interfaces'
 import LicenseWarning from './block_license_warning'
@@ -58,7 +58,7 @@ export const CurrentWorkspaceCtx = () => {
   const [searchParams] = useSearchParams()
   // const [segmentsMap, setSegmentsMap] = useState<{ [key: string]: Segment }>({})
   const [cubeSchemasMap, setCubeSchemasMap] = useState<{ [key: string]: CubeSchema }>({})
-  const cubejsApiRef = useRef<CubejsApi | null>(null)
+  const cubeApiRef = useRef<CubeApi | null>(null)
 
   const { isLoading, data, refetch, isFetching } = useQuery<Workspace>(
     ['workspace', params.workspaceId],
@@ -179,8 +179,8 @@ export const CurrentWorkspaceCtx = () => {
 
   useEffect(() => {
     if (!workspace) return
-    if (cubejsApiRef.current) return
-    cubejsApiRef.current = cubejs(workspace.cubejs_token || '', {
+    if (cubeApiRef.current) return
+    cubeApiRef.current = cubejs(workspace.cubejs_token || '', {
       apiUrl: window.Config.CUBEJS_ENDPOINT + '/cubejs-api/v1'
     })
   }, [workspace])
@@ -198,7 +198,7 @@ export const CurrentWorkspaceCtx = () => {
     )
   }
 
-  // const cubejsApi = cubejs('Bearer ' + accountCtx.account?.access_token, {
+  // const cubeApi = cubejs('Bearer ' + accountCtx.account?.access_token, {
   //   apiUrl: window.Config.API_ENDPOINT + '/cubejs',
   //   headers: {
   //     'X-Rmd-Workspace-Id': params.workspaceId
@@ -208,7 +208,7 @@ export const CurrentWorkspaceCtx = () => {
   let isReady = true
   if (workspace.domains.length === 0) isReady = false
   if (workspace.has_orders === false && workspace.has_leads === false) isReady = false
-  if (!cubejsApiRef.current) isReady = false
+  if (!cubeApiRef.current) isReady = false
 
   if (!isReady) {
     return (
@@ -248,7 +248,7 @@ export const CurrentWorkspaceCtx = () => {
 
   return (
     <>
-      <CubeProvider cubejsApi={cubejsApiRef.current}>
+      <CubeProvider cubeApi={cubeApiRef.current}>
         <Outlet context={ctx} />
 
         {showUserId && showUserId !== '' && (

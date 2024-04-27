@@ -42,7 +42,7 @@ export type KPIProps = {
 }
 
 export const KPI = (props: KPIProps) => {
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const [isLoading, setIsLoading] = useState(true)
   const [value, setValue] = useState<number | undefined>(undefined)
   const [previousValue, setPreviousValue] = useState<number | undefined>(undefined)
@@ -118,10 +118,10 @@ export const KPI = (props: KPIProps) => {
     setIsLoadingGraph(true)
 
     Promise.all([
-      cubejsApi.sql(totalQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
-      cubejsApi.load(totalQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' }),
-      cubejsApi.sql(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
-      cubejsApi.load(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' })
+      cubeApi.sql(totalQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
+      cubeApi.load(totalQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' }),
+      cubeApi.sql(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
+      cubeApi.load(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' })
     ])
       .then(([sqlQuery, resultSet, sqlGraphQuery, graphResultSet]: any[]) => {
         const [currentTotal, previousTotal] = resultSet.decompose()
@@ -151,7 +151,7 @@ export const KPI = (props: KPIProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [totalQuery, graphQuery, props.refreshAt, cubejsApi])
+  }, [totalQuery, graphQuery, props.refreshAt, cubeApi])
 
   let title = props.title
 

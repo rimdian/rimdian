@@ -11,7 +11,7 @@ export type UsersOnlineProps = {
 }
 
 export const UsersOnline = (props: UsersOnlineProps) => {
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const refreshAt = useRef(0)
   const [loadingOnline, setLoadingOnline] = useState<boolean>(true)
   const [usersOnline, setUsersOnline] = useState<string | undefined>(undefined)
@@ -28,7 +28,7 @@ export const UsersOnline = (props: UsersOnlineProps) => {
     setLoadingOnline(true)
     setLoading24h(true)
 
-    cubejsApi
+    cubeApi
       .load({
         measures: ['Session.users_online'],
         dimensions: [],
@@ -45,7 +45,7 @@ export const UsersOnline = (props: UsersOnlineProps) => {
         // setError(error.toString())
       })
 
-    cubejsApi
+    cubeApi
       .load({
         measures: ['Session.users_last_24h'],
         dimensions: [],
@@ -61,7 +61,7 @@ export const UsersOnline = (props: UsersOnlineProps) => {
       .catch((_error) => {
         // setErrorGraph(error.toString())
       })
-  }, [props.refreshAt, cubejsApi, props.timezone, loadingOnline])
+  }, [props.refreshAt, cubeApi, props.timezone, loadingOnline])
 
   return (
     <>

@@ -305,7 +305,7 @@ type GraphPreviewProps = {
 }
 
 const GraphPreview = (props: GraphPreviewProps) => {
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const [isLoading, setIsLoading] = useState(true)
   // const [executedSQL, setExecutedSQL] = useState<ExecutedSQL | undefined>(undefined)
   const [error, setError] = useState<string | undefined>(undefined)
@@ -454,8 +454,8 @@ const GraphPreview = (props: GraphPreviewProps) => {
     setIsLoading(true)
 
     Promise.all([
-      cubejsApi.sql(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
-      cubejsApi.load(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' })
+      cubeApi.sql(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
+      cubeApi.load(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' })
     ])
       .then(([sqlQuery, resultSet]: any[]) => {
         const result = resultSet as ResultSet
@@ -475,7 +475,7 @@ const GraphPreview = (props: GraphPreviewProps) => {
         setError(error.toString())
         setIsLoading(false)
       })
-  }, [graphQuery, cubejsApi])
+  }, [graphQuery, cubeApi])
   return (
     <Spin spinning={isLoading}>
       {error && <Alert message={error} type="error" />}

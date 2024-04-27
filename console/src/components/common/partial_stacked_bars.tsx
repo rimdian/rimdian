@@ -28,7 +28,7 @@ const PartialStackedBars = (props: PartialStackedBarsProps) => {
   //   const now = dayjs().format('YYYY-MM-DD')
   //   const last2days = dayjs().subtract(2, 'days').format('YYYY-MM-DD')
   //   const accountCtx = useAccount()
-  const { cubejsApi } = useContext(CubeContext)
+  const { cubeApi } = useContext(CubeContext)
   const refreshAtRef = useRef(0)
   const [refreshAt, setRefreshAt] = useState(dayjs().unix())
   const [loading, setLoading] = useState<boolean>(true)
@@ -62,7 +62,7 @@ const PartialStackedBars = (props: PartialStackedBarsProps) => {
 
     setLoading(true)
 
-    cubejsApi
+    cubeApi
       .load(queries)
       .then((resultSet) => {
         // console.log('resultSet', resultSet)
@@ -104,7 +104,7 @@ const PartialStackedBars = (props: PartialStackedBarsProps) => {
         setError(error.toString())
         setLoading(false)
       })
-  }, [queries, refreshAt, cubejsApi, props.timezone, props.series])
+  }, [queries, refreshAt, cubeApi, props.timezone, props.series])
 
   // console.log('categories', categories)
   // console.log('series', series)

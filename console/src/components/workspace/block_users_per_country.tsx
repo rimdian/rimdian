@@ -1,6 +1,5 @@
-import { ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Row, Table, Col } from 'antd'
-import { CubeContext } from '@cubejs-client/react'
 import numbro from 'numbro'
 import ReactECharts from 'echarts-for-react'
 import * as echarts from 'echarts'
@@ -9,6 +8,7 @@ import FormatGrowth from 'utils/format_growth'
 import worldMap from 'utils/world_map'
 import Block from 'components/common/block'
 import CSS from 'utils/css'
+import { useRimdianCube } from './context_cube'
 
 echarts.registerMap('world', worldMap as any)
 
@@ -24,7 +24,7 @@ export type UsersPerCountryProps = {
 }
 
 export const UsersPerCountry = (props: UsersPerCountryProps) => {
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const refreshAt = useRef(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])

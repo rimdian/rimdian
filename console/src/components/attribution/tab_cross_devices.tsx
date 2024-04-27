@@ -46,9 +46,9 @@ const TabAttributionCrossDevices = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const isMounted = useRef(true)
   const paramsHash = useRef<string | undefined>(undefined)
-  const mutexObj = useMemo(() => {
-    return {}
-  }, [])
+  // const mutexObj = useMemo(() => {
+  //   return {}
+  // }, [])
   const { cubeApi } = useContext(CubeContext)
   const [executedSQL, setExecutedSQL] = useState<ExecutedSQL[]>([])
 
@@ -144,8 +144,10 @@ const TabAttributionCrossDevices = () => {
     // console.log('query', query)
 
     Promise.all([
-      cubeApi.sql(query, { mutexObj: mutexObj, mutexKey: 'sql' }),
-      cubeApi.load(query, { mutexObj: mutexObj, mutexKey: 'load' })
+      cubeApi.sql(query),
+      cubeApi.load(query)
+      // cubeApi.sql(query, { mutexObj: mutexObj, mutexKey: 'sql' }),
+      // cubeApi.load(query, { mutexObj: mutexObj, mutexKey: 'load' })
     ])
       .then(([sqlQuery, resultSet]: any[]) => {
         // console.log('sqlQuery', sqlQuery)
@@ -230,7 +232,7 @@ const TabAttributionCrossDevices = () => {
         setTableData(rows)
       })
       .catch((error) => console.error(error))
-  }, [mutexObj, baseQuery, cubeApi])
+  }, [baseQuery, cubeApi])
 
   // load the first time or when the params change
   useEffect(() => {

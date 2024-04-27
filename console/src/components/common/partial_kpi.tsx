@@ -1,7 +1,6 @@
-import { ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { Popover, Spin, Tooltip } from 'antd'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { CubeContext } from '@cubejs-client/react'
 import FormatCurrency from 'utils/format_currency'
 import FormatDuration from 'utils/format_duration'
 import ReactECharts from 'echarts-for-react'
@@ -14,6 +13,7 @@ import CSS, { colorLabel, colorPrimary } from 'utils/css'
 import { css } from '@emotion/css'
 import { faCircleInfo, faDatabase } from '@fortawesome/free-solid-svg-icons'
 import { TimeDimension } from '@cubejs-client/core'
+import { useRimdianCube } from 'components/workspace/context_cube'
 
 export interface ExecutedSQL {
   name: string
@@ -42,7 +42,7 @@ export type KPIProps = {
 }
 
 export const KPI = (props: KPIProps) => {
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const [isLoading, setIsLoading] = useState(true)
   const [value, setValue] = useState<number | undefined>(undefined)
   const [previousValue, setPreviousValue] = useState<number | undefined>(undefined)
@@ -118,10 +118,14 @@ export const KPI = (props: KPIProps) => {
     setIsLoadingGraph(true)
 
     Promise.all([
-      cubeApi.sql(totalQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
-      cubeApi.load(totalQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' }),
-      cubeApi.sql(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
-      cubeApi.load(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' })
+      cubeApi.sql(totalQuery),
+      cubeApi.load(totalQuery),
+      cubeApi.sql(graphQuery),
+      cubeApi.load(graphQuery)
+      // cubeApi.sql(totalQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
+      // cubeApi.load(totalQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' }),
+      // cubeApi.sql(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'sql' }),
+      // cubeApi.load(graphQuery, { mutexObj: window.MutexCubeJS, mutexKey: 'load' })
     ])
       .then(([sqlQuery, resultSet, sqlGraphQuery, graphResultSet]: any[]) => {
         const [currentTotal, previousTotal] = resultSet.decompose()

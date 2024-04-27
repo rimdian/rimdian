@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Organization,
   Workspace,
@@ -16,10 +16,9 @@ import { BadgeRunningTasks } from 'components/task_exec/badge_running_tasks'
 import { useAccount } from 'components/login/context_account'
 import DrawerShowUser from 'components/user/drawer_show'
 import { forEach } from 'lodash'
-import cubejs, { CubeApi } from '@cubejs-client/core'
-import { CubeProvider } from '@cubejs-client/react'
 import { Segment } from 'components/segment/interfaces'
 import LicenseWarning from './block_license_warning'
+import { RimdianCubeProvider } from './context_cube'
 
 interface SegmentList {
   segments: Segment[]
@@ -58,7 +57,7 @@ export const CurrentWorkspaceCtx = () => {
   const [searchParams] = useSearchParams()
   // const [segmentsMap, setSegmentsMap] = useState<{ [key: string]: Segment }>({})
   const [cubeSchemasMap, setCubeSchemasMap] = useState<{ [key: string]: CubeSchema }>({})
-  const cubeApiRef = useRef<CubeApi | null>(null)
+  // const cubeApiRef = useRef<CubeApi | null>(null)
 
   const { isLoading, data, refetch, isFetching } = useQuery<Workspace>(
     ['workspace', params.workspaceId],
@@ -177,13 +176,13 @@ export const CurrentWorkspaceCtx = () => {
     return { ...data, apps: apps || [] }
   }, [data, apps])
 
-  useEffect(() => {
-    if (!workspace) return
-    if (cubeApiRef.current) return
-    cubeApiRef.current = cubejs(workspace.cubejs_token || '', {
-      apiUrl: window.Config.CUBEJS_ENDPOINT + '/cubejs-api/v1'
-    })
-  }, [workspace])
+  // useEffect(() => {
+  //   if (!workspace) return
+  //   if (cubeApiRef.current) return
+  //   cubeApiRef.current = cubejs(workspace.cubejs_token || '', {
+  //     apiUrl: window.Config.CUBEJS_ENDPOINT + '/cubejs-api/v1'
+  //   })
+  // }, [workspace])
 
   if (
     isLoading ||
@@ -208,7 +207,7 @@ export const CurrentWorkspaceCtx = () => {
   let isReady = true
   if (workspace.domains.length === 0) isReady = false
   if (workspace.has_orders === false && workspace.has_leads === false) isReady = false
-  if (!cubeApiRef.current) isReady = false
+  // if (!cubeApiRef.current) isReady = false
 
   if (!isReady) {
     return (
@@ -248,7 +247,7 @@ export const CurrentWorkspaceCtx = () => {
 
   return (
     <>
-      <CubeProvider cubeApi={cubeApiRef.current}>
+      <RimdianCubeProvider workspace={workspace}>
         <Outlet context={ctx} />
 
         {showUserId && showUserId !== '' && (
@@ -263,7 +262,7 @@ export const CurrentWorkspaceCtx = () => {
           accountTimezone={accountCtx.account?.account.timezone as string}
           apiGET={currentOrgCtx.apiGET}
         />
-      </CubeProvider>
+      </RimdianCubeProvider>
     </>
   )
 }

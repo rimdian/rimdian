@@ -1,9 +1,9 @@
-import { CubeContext } from '@cubejs-client/react'
 import { CurrentWorkspaceCtxValue } from './context_current_workspace'
 import dayjs from 'dayjs'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Alert, Modal } from 'antd'
 import { ResultSet } from '@cubejs-client/core'
+import { useRimdianCube } from './context_cube'
 
 interface LicenseWarningProps {
   workspaceCtx: CurrentWorkspaceCtxValue
@@ -11,7 +11,7 @@ interface LicenseWarningProps {
 
 export default function LicenseWarning(props: LicenseWarningProps) {
   const queryDone = useRef(false)
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const [dataQuotaFull, setDataQuota] = useState(false)
 
   // do a cubejs query to get the count of data_logs in the last 90 days

@@ -1,8 +1,8 @@
 import { Spin, Tooltip } from 'antd'
-import { CubeContext } from '@cubejs-client/react'
 import FormatNumber from 'utils/format_number'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import CSS from 'utils/css'
+import { useRimdianCube } from './context_cube'
 
 export type UsersOnlineProps = {
   workspaceId: string
@@ -11,7 +11,7 @@ export type UsersOnlineProps = {
 }
 
 export const UsersOnline = (props: UsersOnlineProps) => {
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const refreshAt = useRef(0)
   const [loadingOnline, setLoadingOnline] = useState<boolean>(true)
   const [usersOnline, setUsersOnline] = useState<string | undefined>(undefined)

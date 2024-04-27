@@ -1,13 +1,11 @@
-import { ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Tooltip, Table } from 'antd'
 import { Query } from '@cubejs-client/core'
-import { CubeContext } from '@cubejs-client/react'
-// import { Domain } from 'interfaces'
 import FormatCurrency from 'utils/format_currency'
-// import FormatPercent from 'utils/format_percent'
 import FormatNumber from 'utils/format_number'
 import CSS from 'utils/css'
 import Block from 'components/common/block'
+import { useRimdianCube } from './context_cube'
 
 export type TrafficSourcesProps = {
   workspaceId: string
@@ -22,7 +20,7 @@ export type TrafficSourcesProps = {
 }
 
 export const TrafficSources = (props: TrafficSourcesProps) => {
-  const { cubeApi } = useContext(CubeContext)
+  const { cubeApi } = useRimdianCube()
   const refreshAt = useRef(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])

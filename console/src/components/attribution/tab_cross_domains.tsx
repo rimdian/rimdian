@@ -42,6 +42,7 @@ const TabAttributionCrossDomains = () => {
   }, [])
   const { cubeApi } = useRimdianCube()
   const [executedSQL, setExecutedSQL] = useState<ExecutedSQL[]>([])
+  const refreshKeyRef = useRef('')
 
   const params: Params = useMemo(() => {
     return {
@@ -86,6 +87,13 @@ const TabAttributionCrossDomains = () => {
       })
     }
 
+    let renewQuery = false
+
+    if (params.refresh_key !== refreshKeyRef.current) {
+      renewQuery = true
+      refreshKeyRef.current = params.refresh_key
+    }
+
     return {
       measures: ['Order.count', 'Order.subtotal_sum', 'Order.avg_cart', 'Order.avg_ttc'],
       dimensions: ['Order.domains_funnel'],
@@ -110,9 +118,17 @@ const TabAttributionCrossDomains = () => {
       order: {
         [params.sortKey]: params.sortOrder === 'asc' ? 'asc' : 'desc'
       },
-      limit: 300
+      limit: 300,
+      renewQuery: renewQuery
     }
-  }, [params.sortKey, params.sortOrder, params.conversions_filter, dateRangeCtx, accountCtx])
+  }, [
+    params.sortKey,
+    params.sortOrder,
+    params.conversions_filter,
+    dateRangeCtx,
+    accountCtx,
+    params.refresh_key
+  ])
 
   const [tableData, setTableData] = useState<any[]>([])
 

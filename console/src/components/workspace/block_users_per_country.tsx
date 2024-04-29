@@ -25,7 +25,7 @@ export type UsersPerCountryProps = {
 
 export const UsersPerCountry = (props: UsersPerCountryProps) => {
   const { cubeApi } = useRimdianCube()
-  const refreshAt = useRef(0)
+  const refreshAtRef = useRef(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
   const [total, setTotal] = useState<number>(0)
@@ -45,16 +45,24 @@ export const UsersPerCountry = (props: UsersPerCountryProps) => {
           ]
         }
       ],
-      timezone: props.timezone
+      timezone: props.timezone,
+      renewQuery: props.refreshAt !== refreshAtRef.current
     }
-  }, [props.dateFrom, props.dateTo, props.timezone, props.dateFromPrevious, props.dateToPrevious])
+  }, [
+    props.dateFrom,
+    props.dateTo,
+    props.timezone,
+    props.dateFromPrevious,
+    props.dateToPrevious,
+    props.refreshAt
+  ])
 
   useEffect(() => {
-    if (refreshAt.current === props.refreshAt) {
+    if (props.refreshAt === refreshAtRef.current) {
       return
+    } else {
+      refreshAtRef.current = props.refreshAt
     }
-
-    refreshAt.current = props.refreshAt
 
     // console.log('query', query)
     setLoading(true)
@@ -107,7 +115,7 @@ export const UsersPerCountry = (props: UsersPerCountryProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, props.refreshAt, cubeApi])
+  }, [query, cubeApi, props.refreshAt])
 
   let title = 'Users per country'
 

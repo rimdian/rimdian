@@ -51,6 +51,7 @@ const TabAttributionCrossDevices = () => {
   // }, [])
   const { cubeApi } = useRimdianCube()
   const [executedSQL, setExecutedSQL] = useState<ExecutedSQL[]>([])
+  const refreshKeyRef = useRef('')
 
   const params: Params = useMemo(() => {
     return {
@@ -99,6 +100,13 @@ const TabAttributionCrossDevices = () => {
   }, [params])
 
   const baseQuery: Query = useMemo(() => {
+    let renewQuery = false
+
+    if (params.refresh_key !== refreshKeyRef.current) {
+      renewQuery = true
+      refreshKeyRef.current = params.refresh_key
+    }
+
     return {
       measures: ['Order.count', 'Order.subtotal_sum', 'Order.avg_cart', 'Order.avg_ttc'],
       dimensions: ['Order.devices_funnel'],
@@ -123,9 +131,10 @@ const TabAttributionCrossDevices = () => {
       order: {
         [params.sortKey]: params.sortOrder === 'asc' ? 'asc' : 'desc'
       },
-      limit: 300
+      limit: 300,
+      renewQuery: renewQuery
     }
-  }, [params.sortKey, params.sortOrder, dateRangeCtx, accountCtx, filters])
+  }, [params.sortKey, params.sortOrder, dateRangeCtx, accountCtx, filters, params.refresh_key])
 
   const [tableData, setTableData] = useState<any[]>([])
 

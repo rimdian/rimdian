@@ -32,7 +32,8 @@ export const UsersOnline = (props: UsersOnlineProps) => {
       .load({
         measures: ['Session.users_online'],
         dimensions: [],
-        timezone: props.timezone
+        timezone: props.timezone,
+        renewQuery: true
       })
       .then((resultSet) => {
         setUsersOnline(FormatNumber(resultSet?.tablePivot()[0]['Session.users_online'] as number))
@@ -49,7 +50,8 @@ export const UsersOnline = (props: UsersOnlineProps) => {
       .load({
         measures: ['Session.users_last_24h'],
         dimensions: [],
-        timezone: props.timezone
+        timezone: props.timezone,
+        renewQuery: true
       })
       .then((resultSet) => {
         setUsers24h(FormatNumber(resultSet?.tablePivot()[0]['Session.users_last_24h'] as number))

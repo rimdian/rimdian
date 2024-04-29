@@ -13,12 +13,12 @@ tunnel:
 dockerapi:
 	@echo "Build server"
 	# docker build . --file Dockerfile_api --progress=plain --tag rimdianapi --no-cache
-	docker build . --file Dockerfile_api --progress=plain --tag rimdianapi
+	docker build . --file Dockerfile_api --progress=plain --tag rimdianapi --platform linux/amd64
 
 dockercollector:
 	@echo "Build collector"
 	# docker build . --file Dockerfile_collector --progress=plain --no-cache
-	docker build . --file Dockerfile_collector --progress=plain
+	docker build . --file Dockerfile_collector --progress=plain --platform linux/amd64
 
 cleandocker:
 	docker system prune --all --force

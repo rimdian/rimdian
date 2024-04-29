@@ -21,7 +21,7 @@ export type TrafficSourcesProps = {
 
 export const TrafficSources = (props: TrafficSourcesProps) => {
   const { cubeApi } = useRimdianCube()
-  const refreshAt = useRef(0)
+  const refreshAtRef = useRef(0)
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
   const [error, setError] = useState<string | undefined>(undefined)
@@ -39,16 +39,17 @@ export const TrafficSources = (props: TrafficSourcesProps) => {
       ],
       timezone: props.timezone,
       order: { 'Session.unique_users': 'desc' },
-      limit: 100
+      limit: 100,
+      renewQuery: props.refreshAt !== refreshAtRef.current
     }
-  }, [props.dateFrom, props.dateTo, props.timezone])
+  }, [props.dateFrom, props.dateTo, props.timezone, props.refreshAt])
 
   useEffect(() => {
-    if (refreshAt.current === props.refreshAt) {
+    if (props.refreshAt === refreshAtRef.current) {
       return
+    } else {
+      refreshAtRef.current = props.refreshAt
     }
-
-    refreshAt.current = props.refreshAt
 
     setLoading(true)
 
@@ -62,17 +63,7 @@ export const TrafficSources = (props: TrafficSourcesProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, props.refreshAt, cubeApi])
-
-  // debug sql query
-  //  cubeApi
-  //     .sql(query)
-  //     .then((q: any) => {
-  //       console.log(q[0].sqlQuery.sql.sql)
-  //     })
-  //     .catch((error) => {
-  //       console.log(error)
-  //     })
+  }, [query, cubeApi, props.refreshAt])
 
   let title = 'Traffic sources'
 

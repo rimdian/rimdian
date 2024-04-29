@@ -111,6 +111,7 @@ const TabAttributionNotMapped = () => {
   const { cubeApi } = useRimdianCube()
   const [executedSQL, setExecutedSQL] = useState<ExecutedSQL[]>([])
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(['root'])
+  const refreshKeyRef = useRef('')
 
   const params: AttributionParams = useMemo(() => {
     return {
@@ -215,6 +216,13 @@ const TabAttributionNotMapped = () => {
   }, [params.measures, measuresMap])
 
   const baseQuery: Query = useMemo(() => {
+    let renewQuery = false
+
+    if (params.refresh_key !== refreshKeyRef.current) {
+      renewQuery = true
+      refreshKeyRef.current = params.refresh_key
+    }
+
     return {
       measures: measures,
       filters: [
@@ -244,9 +252,10 @@ const TabAttributionNotMapped = () => {
       order: {
         [params.sortKey]: params.sortOrder === 'asc' ? 'asc' : 'desc'
       },
-      limit: 1000
+      limit: 1000,
+      renewQuery: renewQuery
     }
-  }, [measures, params.sortKey, params.sortOrder, dateRangeCtx, accountCtx])
+  }, [measures, params.sortKey, params.sortOrder, dateRangeCtx, accountCtx, params.refresh_key])
 
   const defaultTableData: TableRow[] = useMemo(() => {
     return [

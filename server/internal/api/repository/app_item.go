@@ -387,10 +387,14 @@ func (repo *RepositoryImpl) UpdateAppItem(ctx context.Context, kind string, upse
 	}
 
 	builder := sq.Update(kind).
-		Set("user_id", upsertedAppItem.UserID).
 		Set("created_at", upsertedAppItem.CreatedAt).
 		Set("fields_timestamp", upsertedAppItem.FieldsTimestamp).
 		Where(sq.Eq{"id": upsertedAppItem.ID})
+
+		// user_id is not mandatory for app items
+	if upsertedAppItem.UserID != entity.None && upsertedAppItem.UserID != "" {
+		builder = builder.Set("user_id", upsertedAppItem.UserID)
+	}
 
 	for _, field := range upsertedAppItem.Fields {
 

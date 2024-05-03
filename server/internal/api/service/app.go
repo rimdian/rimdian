@@ -521,7 +521,7 @@ func (svc *ServiceImpl) AppInstall(ctx context.Context, accountID string, params
 	// 	params.SecretKey = &svc.Config.SECRET_KEY
 	// 	installedApp.IsNative = true
 
-	case "appx_metacapi", "appx_gclid", "appx_googleadsec", "appx_shopify", "appx_googlecm360", "appx_admo":
+	case "appx_metacapi", "appx_googleads", "appx_gclid", "appx_googleadsec", "appx_shopify", "appx_googlecm360", "appx_admo":
 		params.SecretKey = &svc.Config.SECRET_KEY
 
 	// // admo

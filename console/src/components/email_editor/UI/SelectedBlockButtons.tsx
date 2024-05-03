@@ -27,16 +27,18 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
       .then((values: any) => {
         setLoading(true)
 
-        const blocks = [...workspaceCtx.workspace.messaging_settings.email_template_blocks]
+        const clonedBlocks = [
+          ...(workspaceCtx.workspace.messaging_settings.email_template_blocks || [])
+        ]
 
         if (values.operation === 'create') {
-          blocks.push({
+          clonedBlocks.push({
             id: uuid.generate(),
             name: values.name,
             content: JSON.stringify(props.block)
           })
         } else {
-          const block = blocks.find((x: EmailTemplateBlock) => x.id === values.id)
+          const block = clonedBlocks.find((x: EmailTemplateBlock) => x.id === values.id)
           if (block) {
             block.name = values.name
             block.content = JSON.stringify(props.block)
@@ -45,7 +47,7 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
 
         const data: any = {
           id: workspaceCtx.workspace.id,
-          email_template_blocks: blocks
+          email_template_blocks: clonedBlocks
         }
 
         workspaceCtx

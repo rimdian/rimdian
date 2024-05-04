@@ -967,10 +967,10 @@ const googleAds: AppManifest = {
     {
       name: 'appx_googleads_campaign_metric',
       description: 'Google Ads campaigns daily metrics',
-      shard_key: ['campaign_external_id', 'date'],
-      unique_key: ['campaign_external_id', 'date'],
-      sort_key: ['date'],
-      timeseries_column: 'date',
+      shard_key: ['campaign_external_id', 'metrics_date'],
+      unique_key: ['campaign_external_id', 'metrics_date'],
+      sort_key: ['metrics_date'],
+      timeseries_column: 'metrics_date',
       indexes: [],
       joins: [],
       columns: [
@@ -982,11 +982,11 @@ const googleAds: AppManifest = {
           description: 'Campaign external ID'
         },
         {
-          name: 'date',
+          name: 'metrics_date',
           type: 'varchar',
           size: 32,
           is_required: true,
-          description: 'Date'
+          description: 'Date of the metrics'
         },
         {
           name: 'timezone',
@@ -1567,10 +1567,10 @@ const googleAds: AppManifest = {
     {
       name: 'appx_googleads_ad_group_ad_metric',
       description: 'Google Ads ad-group ads daily metrics',
-      shard_key: ['campaign_external_id', 'date'],
-      unique_key: ['campaign_external_id', 'ad_group_ad_external_id', 'date'],
-      sort_key: ['date'],
-      timeseries_column: 'date',
+      shard_key: ['campaign_external_id', 'metrics_date'],
+      unique_key: ['campaign_external_id', 'ad_group_ad_external_id', 'metrics_date'],
+      sort_key: ['metrics_date'],
+      timeseries_column: 'metrics_date',
       indexes: [],
       joins: [],
       columns: [
@@ -1589,11 +1589,11 @@ const googleAds: AppManifest = {
           description: 'Ad-group ad external ID'
         },
         {
-          name: 'date',
+          name: 'metrics_date',
           type: 'varchar',
           size: 32,
           is_required: true,
-          description: 'Date'
+          description: 'Date of the metrics'
         },
         {
           name: 'timezone',
@@ -2019,15 +2019,15 @@ const googleAds: AppManifest = {
     {
       name: 'appx_googleads_ad_group_keyword_metric',
       description: 'Google Ads ad-group keywords daily metrics',
-      shard_key: ['campaign_external_id', 'date'],
+      shard_key: ['campaign_external_id', 'metrics_date'],
       unique_key: [
         'campaign_external_id',
         'ad_group_external_id',
         'ad_group_keyword_external_id',
-        'date'
+        'metrics_date'
       ],
-      sort_key: ['date'],
-      timeseries_column: 'date',
+      sort_key: ['metrics_date'],
+      timeseries_column: 'metrics_date',
       indexes: [],
       joins: [],
       columns: [
@@ -2343,10 +2343,11 @@ const googleAds: AppManifest = {
           hide_in_analytics: true
         },
         {
-          name: 'date',
-          type: 'date',
+          name: 'metrics_date',
+          type: 'varchar',
+          size: 32,
           is_required: true,
-          description: 'Date'
+          description: 'Date of the metrics'
         },
         {
           name: 'created_at',

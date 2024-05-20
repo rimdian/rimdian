@@ -970,7 +970,6 @@ const googleAds: AppManifest = {
       shard_key: ['campaign_external_id', 'metrics_date'],
       unique_key: ['campaign_external_id', 'metrics_date'],
       sort_key: ['metrics_date'],
-      timeseries_column: 'metrics_date',
       indexes: [],
       joins: [],
       columns: [
@@ -1570,7 +1569,6 @@ const googleAds: AppManifest = {
       shard_key: ['campaign_external_id', 'metrics_date'],
       unique_key: ['campaign_external_id', 'ad_group_ad_external_id', 'metrics_date'],
       sort_key: ['metrics_date'],
-      timeseries_column: 'metrics_date',
       indexes: [],
       joins: [],
       columns: [
@@ -2027,7 +2025,6 @@ const googleAds: AppManifest = {
         'metrics_date'
       ],
       sort_key: ['metrics_date'],
-      timeseries_column: 'metrics_date',
       indexes: [],
       joins: [],
       columns: [

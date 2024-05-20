@@ -18,6 +18,7 @@ declare type IRimdian = {
     trackCustomEvent: (data: ICustomEvent) => void;
     trackCart: (data: ICart) => void;
     trackOrder: (data: IOrder) => void;
+    getCurrentUser: (callback: (user: IUser) => void) => void;
     setDeviceContext: (data: IDevice) => void;
     setSessionContext: (data: ISession) => void;
     setUserContext: (data: IUser) => void;
@@ -35,6 +36,9 @@ declare type IRimdian = {
     hasAdBlocker: () => boolean;
     isPageVisible: () => boolean;
     onReadyQueue: Array<Function>;
+    getCookie: (name: string) => string;
+    setCookie: (name: string, value: string, seconds: number) => void;
+    deleteCookie: (name: string) => void;
     _onReady: (cfg: IConfig) => void;
     _execWhenReady: (fn: () => void) => void;
     _initDispatchLoop: (useBeacon: boolean) => void;
@@ -51,9 +55,6 @@ declare type IRimdian = {
     _onPageActive: () => void;
     _cartHash: (data: ICart) => string;
     _localStorage: ILocalStorage;
-    _getCookie: (name: string) => string;
-    _setCookie: (name: string, value: string, seconds: number) => void;
-    _deleteCookie: (name: string) => void;
     _addEventListener: (element: any, eventType: string, eventHandler: Function, useCapture: boolean) => void;
     _decorateURL: (e: MouseEvent) => void;
     _wipeAll: () => void;

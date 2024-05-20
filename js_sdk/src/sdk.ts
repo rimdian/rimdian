@@ -48,6 +48,7 @@ type IRimdian = {
   trackCustomEvent: (data: ICustomEvent) => void
   trackCart: (data: ICart) => void
   trackOrder: (data: IOrder) => void
+  getCurrentUser: (callback: (user: IUser) => void) => void
   setDeviceContext: (data: IDevice) => void
   setSessionContext: (data: ISession) => void
   setUserContext: (data: IUser) => void
@@ -65,6 +66,9 @@ type IRimdian = {
   hasAdBlocker: () => boolean
   isPageVisible: () => boolean
   onReadyQueue: Array<Function>
+  getCookie: (name: string) => string
+  setCookie: (name: string, value: string, seconds: number) => void
+  deleteCookie: (name: string) => void
 
   // private methods
   _onReady: (cfg: IConfig) => void
@@ -83,9 +87,6 @@ type IRimdian = {
   _onPageActive: () => void
   _cartHash: (data: ICart) => string
   _localStorage: ILocalStorage
-  _getCookie: (name: string) => string
-  _setCookie: (name: string, value: string, seconds: number) => void
-  _deleteCookie: (name: string) => void
   _addEventListener: (
     element: any,
     eventType: string,
@@ -501,7 +502,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.3.0',
+    version: '2.5.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -522,7 +523,7 @@ const Rimdian: IRimdian = {
     items: [],
     add: (kind: ItemKind, data: ItemData) => {
       // if current session expired, and received an interaction event, create a new session
-      const sessionCookie = Rimdian._getCookie('session')
+      const sessionCookie = Rimdian.getCookie(Rimdian.config.namespace + 'session')
       if (
         !sessionCookie &&
         (['pageview', 'cart', 'order'].includes(kind) ||
@@ -637,7 +638,7 @@ const Rimdian: IRimdian = {
       }
     }
 
-    const logLevel = Rimdian._getCookie('debug')
+    const logLevel = Rimdian.getCookie(Rimdian.config.namespace + 'debug')
     if (logLevel) {
       Rimdian.config.log_level = 'info'
     }
@@ -646,6 +647,19 @@ const Rimdian: IRimdian = {
   setDispatchConsent: (consent: boolean) => {
     Rimdian.log('info', 'RMD dispatch consent is now', consent)
     Rimdian.dispatchConsent = consent
+  },
+
+  // return callback when the user is ready
+  getCurrentUser: (callback: (user: IUser) => void) => {
+    // return callback when the user is ready
+    if (Rimdian.currentUser) {
+      callback(Rimdian.currentUser)
+      return
+    }
+
+    Rimdian._execWhenReady(() => {
+      callback(Rimdian.currentUser)
+    })
   },
 
   // tracks the current pageview
@@ -937,7 +951,11 @@ const Rimdian: IRimdian = {
 
     Rimdian.currentDevice = newDevice
     // persist updated device
-    Rimdian._setCookie('device', JSON.stringify(Rimdian.currentDevice), OneYearInSeconds)
+    Rimdian.setCookie(
+      Rimdian.config.namespace + 'device',
+      JSON.stringify(Rimdian.currentDevice),
+      OneYearInSeconds
+    )
   },
 
   setSessionContext: (data: ISession) => {
@@ -957,8 +975,8 @@ const Rimdian: IRimdian = {
     Rimdian.log('info', 'RMD updated session is', newSession)
 
     // persist updated session
-    Rimdian._setCookie(
-      'session',
+    Rimdian.setCookie(
+      Rimdian.config.namespace + 'session',
       JSON.stringify(Rimdian.currentSession),
       Rimdian.config.session_timeout
     )
@@ -997,7 +1015,7 @@ const Rimdian: IRimdian = {
 
         // reset current session after device
         Rimdian.currentSession = undefined
-        Rimdian._deleteCookie('session')
+        Rimdian.deleteCookie(Rimdian.config.namespace + 'session')
         Rimdian._handleSession()
 
         // loop over keys and ignore empty strings
@@ -1055,7 +1073,11 @@ const Rimdian: IRimdian = {
     Rimdian.currentUser = newUser
 
     // persist updated user
-    Rimdian._setCookie('user', JSON.stringify(Rimdian.currentUser), OneYearInSeconds)
+    Rimdian.setCookie(
+      Rimdian.config.namespace + 'user',
+      JSON.stringify(Rimdian.currentUser),
+      OneYearInSeconds
+    )
   },
 
   // enqueue the current user
@@ -1317,7 +1339,7 @@ const Rimdian: IRimdian = {
     // sometimes user IDs are injected by template engines and are not parsed - ie: {{ user_id }}
     // to avoid using/merging invalid user IDs, we forbid some patterns
     const forbiddenPatterns = ['{{', '}}', '{%', '%}', '{#', '#}', '*|', '|*']
-    let userCookie = Rimdian._getCookie('user')
+    let userCookie = Rimdian.getCookie(Rimdian.config.namespace + 'user')
     let previousUser: any = {}
 
     if (userCookie && userCookie !== '') {
@@ -1396,7 +1418,11 @@ const Rimdian: IRimdian = {
         }
       }
 
-      Rimdian._setCookie('user', JSON.stringify(Rimdian.currentUser), OneYearInSeconds)
+      Rimdian.setCookie(
+        Rimdian.config.namespace + 'user',
+        JSON.stringify(Rimdian.currentUser),
+        OneYearInSeconds
+      )
       return
     }
 
@@ -1405,7 +1431,11 @@ const Rimdian: IRimdian = {
     if (userCookie && userCookie !== '') {
       Rimdian.log('info', 'found user ID in cookie', userCookie)
       Rimdian.currentUser = previousUser
-      Rimdian._setCookie('user', JSON.stringify(Rimdian.currentUser), OneYearInSeconds)
+      Rimdian.setCookie(
+        Rimdian.config.namespace + 'user',
+        JSON.stringify(Rimdian.currentUser),
+        OneYearInSeconds
+      )
       return
     }
 
@@ -1420,7 +1450,11 @@ const Rimdian: IRimdian = {
       created_at: createdAt
     }
     Rimdian.log('info', 'creating new user', { ...Rimdian.currentUser })
-    Rimdian._setCookie('user', JSON.stringify(Rimdian.currentUser), OneYearInSeconds)
+    Rimdian.setCookie(
+      Rimdian.config.namespace + 'user',
+      JSON.stringify(Rimdian.currentUser),
+      OneYearInSeconds
+    )
   },
 
   // retrieve eventual user details provided in URL
@@ -1442,7 +1476,11 @@ const Rimdian: IRimdian = {
     })
 
     // update user cookie
-    Rimdian._setCookie('user', JSON.stringify(Rimdian.currentUser), OneYearInSeconds)
+    Rimdian.setCookie(
+      Rimdian.config.namespace + 'user',
+      JSON.stringify(Rimdian.currentUser),
+      OneYearInSeconds
+    )
   },
 
   // retrieve existing device ID or create a new one
@@ -1461,12 +1499,16 @@ const Rimdian: IRimdian = {
         created_at: new Date().toISOString(),
         user_agent: navigator.userAgent
       }
-      Rimdian._setCookie('device', JSON.stringify(Rimdian.currentDevice), OneYearInSeconds)
+      Rimdian.setCookie(
+        Rimdian.config.namespace + 'device',
+        JSON.stringify(Rimdian.currentDevice),
+        OneYearInSeconds
+      )
       return
     }
 
     // 2. ID found in cookie
-    const deviceCookie = Rimdian._getCookie('device')
+    const deviceCookie = Rimdian.getCookie(Rimdian.config.namespace + 'device')
 
     if (deviceCookie && deviceCookie !== '') {
       Rimdian.log('info', 'found device ID in cookie', deviceCookie)
@@ -1474,12 +1516,12 @@ const Rimdian: IRimdian = {
 
       // check if we already had a legacy client ID in a cookie
       if (Rimdian.config.from_cm === true) {
-        const legacyClientID = Rimdian._getCookie('_cm_cid')
+        const legacyClientID = Rimdian.getCookie('_cm_cid')
 
         if (legacyClientID && legacyClientID !== '') {
           Rimdian.currentDevice.external_id = legacyClientID
           // extract its creation timestamp
-          const legacyClientTimestamp = Rimdian._getCookie('_cm_cidat')
+          const legacyClientTimestamp = Rimdian.getCookie('_cm_cidat')
           if (legacyClientTimestamp && legacyClientTimestamp !== '') {
             Rimdian.currentDevice.created_at = new Date(
               parseInt(legacyClientTimestamp, 10)
@@ -1488,7 +1530,11 @@ const Rimdian: IRimdian = {
         }
       }
 
-      Rimdian._setCookie('device', JSON.stringify(Rimdian.currentDevice), OneYearInSeconds)
+      Rimdian.setCookie(
+        Rimdian.config.namespace + 'device',
+        JSON.stringify(Rimdian.currentDevice),
+        OneYearInSeconds
+      )
       return
     }
 
@@ -1503,7 +1549,11 @@ const Rimdian: IRimdian = {
       created_at: new Date().toISOString(),
       user_agent: navigator.userAgent
     }
-    Rimdian._setCookie('device', JSON.stringify(Rimdian.currentDevice), OneYearInSeconds)
+    Rimdian.setCookie(
+      Rimdian.config.namespace + 'device',
+      JSON.stringify(Rimdian.currentDevice),
+      OneYearInSeconds
+    )
   },
 
   // polyfill
@@ -1589,10 +1639,14 @@ const Rimdian: IRimdian = {
     window.setInterval(function () {
       if (Rimdian.currentPageview && Rimdian.isPageVisible()) {
         // get current session from cookie to see if it expired
-        const cookieSession = Rimdian._getCookie('session')
+        const cookieSession = Rimdian.getCookie(Rimdian.config.namespace + 'session')
         if (cookieSession) {
           // extend lifetime of session
-          Rimdian._setCookie('session', cookieSession, Rimdian.config.session_timeout)
+          Rimdian.setCookie(
+            Rimdian.config.namespace + 'session',
+            cookieSession,
+            Rimdian.config.session_timeout
+          )
         } else {
           // don't start new session here, the user might want to close the tab or navigate away
           // that's why we have to check if the session is expired on .pageview() / .customEvent() calls
@@ -1755,7 +1809,7 @@ const Rimdian: IRimdian = {
     Rimdian.log('info', 'RMD utm_id_from is:', utm_id_from)
 
     // read session cookie
-    const sessionCookie = Rimdian._getCookie('session')
+    const sessionCookie = Rimdian.getCookie(Rimdian.config.namespace + 'session')
 
     // 1. no existing session -> create new session
     if (!sessionCookie || sessionCookie === '') {
@@ -1826,8 +1880,8 @@ const Rimdian: IRimdian = {
           ')'
       )
       Rimdian.currentSession = existingSession
-      Rimdian._setCookie(
-        'session',
+      Rimdian.setCookie(
+        Rimdian.config.namespace + 'session',
         JSON.stringify(Rimdian.currentSession),
         Rimdian.config.session_timeout
       )
@@ -2003,15 +2057,14 @@ const Rimdian: IRimdian = {
     Rimdian.log('info', 'RMD new session is:', Rimdian.currentSession)
 
     // persist session to cookie
-    Rimdian._setCookie(
-      'session',
+    Rimdian.setCookie(
+      Rimdian.config.namespace + 'session',
       JSON.stringify(Rimdian.currentSession),
       Rimdian.config.session_timeout
     )
   },
 
-  _getCookie: (name: string) => {
-    name = Rimdian.config.namespace + name
+  getCookie: (name: string) => {
     return (
       decodeURIComponent(
         document.cookie.replace(
@@ -2027,9 +2080,7 @@ const Rimdian: IRimdian = {
   },
 
   // cookies are secured and cross-domain by default
-  _setCookie: (name: string, value: string, seconds: number) => {
-    name = Rimdian.config.namespace + name
-
+  setCookie: (name: string, value: string, seconds: number) => {
     // cross_domain
     const matches = window.location.hostname.match(/[a-z0-9][a-z0-9\-]+\.[a-z\.]{2,6}$/i)
     const domain = matches ? matches[0] : ''
@@ -2045,8 +2096,8 @@ const Rimdian: IRimdian = {
     return
   },
 
-  _deleteCookie: (name: string) => {
-    Rimdian._setCookie(name, '', -1)
+  deleteCookie: (name: string) => {
+    Rimdian.setCookie(name, '', -1)
   },
 
   _localStorage: {
@@ -2113,9 +2164,9 @@ const Rimdian: IRimdian = {
     // create an alert and clear cookies and localtorage on confirmation
     if (window.confirm('Do you know what you are doing?')) {
       // clear cookies
-      Rimdian._deleteCookie('device')
-      Rimdian._deleteCookie('user')
-      Rimdian._deleteCookie('session')
+      Rimdian.deleteCookie(Rimdian.config.namespace + 'device')
+      Rimdian.deleteCookie(Rimdian.config.namespace + 'user')
+      Rimdian.deleteCookie(Rimdian.config.namespace + 'session')
       // clear localstorage
       Rimdian._localStorage.remove('items')
       Rimdian._localStorage.remove('dispatchQueue')

@@ -2081,6 +2081,6 @@ const wooCommerce: AppManifest = {
   ]
 }
 
-const apps: AppManifest[] = [googleAds, metaCapi, wooCommerce, googleCM360]
+const apps: AppManifest[] = [googleAds, metaCapi, shopify, wooCommerce, googleCM360]
 
 export default apps

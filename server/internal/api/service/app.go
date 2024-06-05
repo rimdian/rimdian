@@ -523,31 +523,9 @@ func (svc *ServiceImpl) AppInstall(ctx context.Context, accountID string, params
 
 	// native apps use the secret key from the config
 	switch params.Manifest.ID {
-	// observability
-	// case entity.AppManifestObservability.ID:
-	// 	params.SecretKey = &svc.Config.SECRET_KEY
-	// 	installedApp.IsNative = true
 
-	case "appx_metacapi", "appx_googleads", "appx_gclid", "appx_googleadsec", "appx_shopify", "appx_googlecm360", "appx_admo":
+	case "appx_metacapi", "appx_meta", "appx_googleads", "appx_woocommerce", "appx_shopify", "appx_googlecm360", "appx_admo", "appx_affilae":
 		params.SecretKey = &svc.Config.SECRET_KEY
-
-	// // admo
-	// case entity.AppManifestAdmo.ID:
-	// 	params.SecretKey = &svc.Config.SECRET_KEY
-	// 	installedApp.IsNative = true
-
-	// // google display video 360
-	// case entity.AppManifestGoogleCM360.ID:
-	// 	params.SecretKey = &svc.Config.SECRET_KEY
-	// 	installedApp.IsNative = true
-	// 	// state used by the frontend for doing oauth
-	// 	installedApp.State["google_oauth_client_id"] = svc.Config.APP_GOOGLE_OAUTH_CLIENT_ID
-
-	// case entity.AppManifestGoogleAds.ID:
-	// 	params.SecretKey = &svc.Config.SECRET_KEY
-	// 	installedApp.IsNative = true
-	// 	// state used by the frontend for doing oauth
-	// 	installedApp.State["google_oauth_client_id"] = svc.Config.APP_GOOGLE_OAUTH_CLIENT_ID
 
 	// test
 	case entity.AppManifestTest.ID:

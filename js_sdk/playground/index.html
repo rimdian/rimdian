@@ -14,7 +14,7 @@
             workspace_id: 'acme_test',
             host: 'https://localcollector.rimdian.com:8888',
             // namespace: '_test_',
-            from_legacy: true,
+            // from_legacy: true,
             dispatch_consent: false,
             cross_domains: ['test.com'],
             ignored_origins: [{
@@ -30,21 +30,33 @@
 
         // test migration from legacy cookies:
 
-        Rimdian._setCookie("user", '{"id":"6614af96-3e72-4f88-902a-37cbf3991d53","authenticated":false}');
-        Rimdian._setCookie("session", '{"id":"7ea84c8c-547a-4064-9dad-323ea2bccb8b","from":{"source":"direct","medium":"none","campaign":null,"creative":null,"keyword":null,"referrer":"","gclid":null}}');
-        Rimdian._setCookie("sessionExpiresAt", "2022-10-23T18%3A45%3A55.678Z");
-        Rimdian._setCookie("cidat", "1666548955679");
-        Rimdian._setCookie("cid", "f306a3a9-11c4-4550-947f-aca1a399b7c4");
+        // Rimdian.SetCookie("user", '{"id":"6614af96-3e72-4f88-902a-37cbf3991d53","authenticated":false}');
+        // Rimdian.SetCookie("session", '{"id":"7ea84c8c-547a-4064-9dad-323ea2bccb8b","from":{"source":"direct","medium":"none","campaign":null,"creative":null,"keyword":null,"referrer":"","gclid":null}}');
+        // Rimdian.SetCookie("sessionExpiresAt", "2022-10-23T18%3A45%3A55.678Z");
+        // Rimdian.SetCookie("cidat", "1666548955679");
+        // Rimdian.SetCookie("cid", "f306a3a9-11c4-4550-947f-aca1a399b7c4");
 
-        Rimdian.setDispatchConsent(true);
+        Rimdian.onReady(function () {
+            Rimdian.setDispatchConsent(true);
 
-        Rimdian.trackPageview()
-        Rimdian.dispatch()
+            Rimdian.trackPageview()
+            Rimdian.dispatch()
+        })
         // Rimdian.setDispatchConsent(true)
         // Rimdian.setUserContext({
         //     external_id: 'test'
         // });
+
+        var trackAnotherPageview = function () {
+            Rimdian.trackPageview({
+                page_id: 'test_page_id',
+                title: 'test_page_title',
+            })
+            Rimdian.dispatch()
+        }
     </script>
+    <!-- create a button that sends a pageview -->
+    <button onclick="trackAnotherPageview()">another trackPageview()</button>
 </body>
 
 </html>

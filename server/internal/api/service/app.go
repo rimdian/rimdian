@@ -17,7 +17,7 @@ import (
 
 func (svc *ServiceImpl) AppGet(ctx context.Context, accountID string, params *dto.AppGetParams) (app *entity.App, code int, err error) {
 
-	_, code, err = svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
 
 	if err != nil {
 		return nil, code, eris.Wrap(err, "AppGet")
@@ -40,7 +40,7 @@ func (svc *ServiceImpl) AppGet(ctx context.Context, accountID string, params *dt
 		return nil, 500, eris.Wrap(err, "AppGet")
 	}
 
-	if err = app.EnrichMetadatas(svc.Config, params.WorkspaceID, account.ID, account.Timezone, true); err != nil {
+	if err = app.EnrichMetadatas(svc.Config, workspace.Currency, params.WorkspaceID, account.ID, account.Timezone, true); err != nil {
 		return nil, 500, eris.Wrap(err, "AppList")
 	}
 
@@ -90,7 +90,14 @@ func (svc *ServiceImpl) AppFromToken(ctx context.Context, params *dto.AppFromTok
 			return nil, eris.Wrap(err, "AppFromToken")
 		}
 
-		if err = result.App.EnrichMetadatas(svc.Config, workspaceID, accountID, timezone, false); err != nil {
+		// fetch workspace
+		workspace, err := svc.Repo.GetWorkspace(ctx, workspaceID)
+
+		if err != nil {
+			return nil, eris.Wrap(err, "AppFromToken")
+		}
+
+		if err = result.App.EnrichMetadatas(svc.Config, workspace.Currency, workspaceID, accountID, timezone, false); err != nil {
 			return nil, eris.Wrap(err, "AppFromToken")
 		}
 
@@ -728,7 +735,7 @@ func (svc *ServiceImpl) AppList(ctx context.Context, accountID string, params *d
 			continue
 		}
 
-		if err = app.EnrichMetadatas(svc.Config, params.WorkspaceID, account.ID, account.Timezone, true); err != nil {
+		if err = app.EnrichMetadatas(svc.Config, workspace.Currency, params.WorkspaceID, account.ID, account.Timezone, true); err != nil {
 			return nil, 500, eris.Wrap(err, "AppList")
 		}
 	}

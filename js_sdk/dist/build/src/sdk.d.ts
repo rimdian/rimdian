@@ -35,6 +35,7 @@ declare type IRimdian = {
     updateURLParam: (url: string, name: string, value: string) => string;
     hasAdBlocker: () => boolean;
     isPageVisible: () => boolean;
+    onReady: (fn: () => void) => void;
     onReadyQueue: Array<Function>;
     getCookie: (name: string) => string;
     setCookie: (name: string, value: string, seconds: number) => void;

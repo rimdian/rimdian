@@ -133,6 +133,7 @@ export const CurrentWorkspaceCtx = () => {
                 console.error(e)
               }
             })
+            // console.log('schemasMap', schemasMap)
             setCubeSchemasMap(schemasMap)
             resolve(data as CubeSchemaList)
           })

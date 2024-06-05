@@ -513,7 +513,7 @@ const googleAds: AppManifest = {
         {
           external_table: 'session',
           relationship: 'one_to_many',
-          local_column: 'name',
+          local_column: 'campaign_name',
           external_column: 'utm_campaign'
         },
         {
@@ -2059,6 +2059,28 @@ const googleAds: AppManifest = {
   ]
 }
 
-const apps: AppManifest[] = [googleAds, metaCapi, shopify, googleCM360]
+const wooCommerce: AppManifest = {
+  id: 'appx_woocommerce',
+  name: 'WooCommerce',
+  homepage: 'https://www.rimdian.com/',
+  author: 'Rimdian',
+  icon_url: 'https://eu.rimdian.com/images/apps/woocommerce.png',
+  short_description: 'Sync WooCommerce customers & orders',
+  description:
+    'Import your existing WooCommerce customers & orders. Keep your data up to date with webhooks.',
+  version: '1.0.0',
+  ui_endpoint: 'https://nativeapps.rimdian.com',
+  webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
+  tasks: [
+    {
+      id: 'appx_woocommerce_sync',
+      name: 'Import your WooCommerce customers & orders',
+      is_cron: false,
+      on_multiple_exec: 'discard_new'
+    }
+  ]
+}
+
+const apps: AppManifest[] = [googleAds, metaCapi, wooCommerce, googleCM360]
 
 export default apps

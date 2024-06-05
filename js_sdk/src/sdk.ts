@@ -65,6 +65,7 @@ type IRimdian = {
   updateURLParam: (url: string, name: string, value: string) => string
   hasAdBlocker: () => boolean
   isPageVisible: () => boolean
+  onReady: (fn: () => void) => void
   onReadyQueue: Array<Function>
   getCookie: (name: string) => string
   setCookie: (name: string, value: string, seconds: number) => void
@@ -502,7 +503,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.5.0',
+    version: '2.6.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -660,6 +661,14 @@ const Rimdian: IRimdian = {
     Rimdian._execWhenReady(() => {
       callback(Rimdian.currentUser)
     })
+  },
+
+  onReady: (fn: () => void) => {
+    if (Rimdian.isReady) {
+      fn()
+    } else {
+      Rimdian.onReadyQueue.push(fn)
+    }
   },
 
   // tracks the current pageview

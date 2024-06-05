@@ -18,6 +18,7 @@ declare type IRimdian = {
     trackCustomEvent: (data: ICustomEvent) => void;
     trackCart: (data: ICart) => void;
     trackOrder: (data: IOrder) => void;
+    getCurrentUser: (callback: (user: IUser) => void) => void;
     setDeviceContext: (data: IDevice) => void;
     setSessionContext: (data: ISession) => void;
     setUserContext: (data: IUser) => void;
@@ -34,7 +35,11 @@ declare type IRimdian = {
     updateURLParam: (url: string, name: string, value: string) => string;
     hasAdBlocker: () => boolean;
     isPageVisible: () => boolean;
+    onReady: (fn: () => void) => void;
     onReadyQueue: Array<Function>;
+    getCookie: (name: string) => string;
+    setCookie: (name: string, value: string, seconds: number) => void;
+    deleteCookie: (name: string) => void;
     _onReady: (cfg: IConfig) => void;
     _execWhenReady: (fn: () => void) => void;
     _initDispatchLoop: (useBeacon: boolean) => void;
@@ -51,9 +56,6 @@ declare type IRimdian = {
     _onPageActive: () => void;
     _cartHash: (data: ICart) => string;
     _localStorage: ILocalStorage;
-    _getCookie: (name: string) => string;
-    _setCookie: (name: string, value: string, seconds: number) => void;
-    _deleteCookie: (name: string) => void;
     _addEventListener: (element: any, eventType: string, eventHandler: Function, useCapture: boolean) => void;
     _decorateURL: (e: MouseEvent) => void;
     _wipeAll: () => void;
@@ -76,8 +78,8 @@ declare type IOrigin = {
     utm_campaign?: string;
 };
 declare type ISessionDTO = {
-    utm_source: string;
-    utm_medium: string;
+    utm_source?: string;
+    utm_medium?: string;
     utm_campaign?: string;
     utm_content?: string;
     utm_term?: string;
@@ -96,6 +98,9 @@ declare type IUser = {
     updated_at?: string;
     last_interaction_at?: string;
     user_centric_consent?: boolean;
+    consent_all?: boolean;
+    consent_personalization?: boolean;
+    consent_marketing?: boolean;
     signed_up_at?: string;
     hmac?: string;
     [key: string]: any;

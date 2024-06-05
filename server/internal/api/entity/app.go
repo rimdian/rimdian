@@ -44,6 +44,7 @@ type App struct {
 	// enriched server-side for apps
 	SecretKey         string `db:"-" json:"-"`
 	WorkspaceID       string `db:"-" json:"workspace_id,omitempty"`
+	WorkspaceCurrency string `db:"-" json:"workspace_currency,omitempty"`
 	APIEndpoint       string `db:"-" json:"api_endpoint,omitempty"`
 	CollectorEndpoint string `db:"-" json:"collector_endpoint,omitempty"`
 	CubeJSEndpoint    string `db:"-" json:"cubejs_endpoint,omitempty"`
@@ -52,9 +53,10 @@ type App struct {
 	AccountTimezone   string `db:"-" json:"account_timezone,omitempty"`
 }
 
-func (app *App) EnrichMetadatas(cfg *Config, workspaceID string, accountID string, timezone string, withUIToken bool) (err error) {
+func (app *App) EnrichMetadatas(cfg *Config, workspaceCurrency string, workspaceID string, accountID string, timezone string, withUIToken bool) (err error) {
 
 	app.WorkspaceID = workspaceID
+	app.WorkspaceCurrency = workspaceCurrency
 	app.CollectorEndpoint = cfg.COLLECTOR_ENDPOINT
 	app.APIEndpoint = cfg.API_ENDPOINT
 	app.CubeJSEndpoint = cfg.CUBEJS_ENDPOINT

@@ -72,13 +72,6 @@ export const SessionsMeasuresMapDefinition: Record<string, MeasureDefinition> = 
     type: 'number',
     measures: ['Session.orders_contributions']
   },
-  'Session.contributions_count': {
-    key: 'Session.contributions_count',
-    title: 'Contributions',
-    category: 'orders',
-    type: 'number',
-    measures: ['Session.contributions_count']
-  },
   'Session.unique_conversions': {
     key: 'Session.unique_conversions',
     title: 'Conversions',

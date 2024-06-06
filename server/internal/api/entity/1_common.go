@@ -100,6 +100,9 @@ func (n *NullableString) SetValue(value *string) {
 }
 
 func (ns NullableString) Value() (driver.Value, error) {
+	if ns.IsNull {
+		return nil, nil
+	}
 	return ns.String, nil
 }
 
@@ -170,6 +173,9 @@ func (n *NullableInt64) SetValue(value *int64) {
 }
 
 func (n NullableInt64) Value() (driver.Value, error) {
+	if n.IsNull {
+		return nil, nil
+	}
 	return n.Int64, nil
 }
 
@@ -258,6 +264,9 @@ func (n *NullableFloat64) SetValue(value *float64) {
 }
 
 func (n NullableFloat64) Value() (driver.Value, error) {
+	if n.IsNull {
+		return nil, nil
+	}
 	return n.Float64, nil
 }
 
@@ -346,6 +355,9 @@ func (n *NullableBool) SetValue(value *bool) {
 }
 
 func (n NullableBool) Value() (driver.Value, error) {
+	if n.IsNull {
+		return nil, nil
+	}
 	return n.Bool, nil
 }
 
@@ -417,6 +429,9 @@ func (n *NullableTime) SetValue(value *time.Time) {
 }
 
 func (n NullableTime) Value() (driver.Value, error) {
+	if n.IsNull {
+		return nil, nil
+	}
 	return n.Time, nil
 }
 
@@ -487,7 +502,9 @@ func (n *NullableJSON) SetValue(value *[]byte) {
 }
 
 func (n NullableJSON) Value() (driver.Value, error) {
-
+	if n.IsNull {
+		return nil, nil
+	}
 	return n.JSON, nil
 }
 

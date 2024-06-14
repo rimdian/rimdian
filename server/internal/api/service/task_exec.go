@@ -286,6 +286,7 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 			entity.TaskKindReattributeConversions,
 			entity.TaskKindRecomputeSegment,
 			entity.TaskKindImportUsersToSubscriptionList,
+			entity.TaskKindUpgradeApp,
 			entity.TaskKindLaunchBroadcastCampaign:
 
 			job.TaskExecID = taskExec.ID

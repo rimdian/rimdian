@@ -1,0 +1,94 @@
+package migration
+
+import (
+	"context"
+	"database/sql"
+	"log"
+
+	"github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/v2/sqlscan"
+	"github.com/rimdian/rimdian/internal/api/entity"
+)
+
+type Migration40 struct {
+}
+
+func (m *Migration40) GetMajorVersion() float64 {
+	return 40.0
+}
+
+func (m *Migration40) HasSystemUpdate() bool {
+	log.Printf("running migration %v: HasSystemUpdate()", m.GetMajorVersion())
+	return true
+}
+
+func (m *Migration40) HasWorkspaceUpdate() bool {
+	log.Printf("running migration %v: HasWorkspaceUpdate()", m.GetMajorVersion())
+	return false
+}
+
+func (m *Migration40) UpdateSystem(ctx context.Context, cfg *entity.Config, systemConnection *sql.Conn) (err error) {
+	log.Printf("running migration %v: UpdateSystem()", m.GetMajorVersion())
+
+	// insert new system task "system_import_users_to_subscription_list" for each workspace
+
+	// fetch workspace ids
+	ids := []string{}
+
+	err = sqlscan.Select(ctx, systemConnection, &ids, `SELECT id FROM workspace`)
+	if err != nil {
+		log.Printf("error fetching workspace ids: %v", err)
+		return err
+	}
+
+	for _, workspaceID := range ids {
+		log.Printf("inserting task for workspace: %s", workspaceID)
+
+		sql, args, err := squirrel.Insert("task").
+			Columns(
+				"id",
+				"workspace_id",
+				"name",
+				"on_multiple_exec",
+				"app_id",
+				"is_active",
+				"is_cron",
+				"minutes_interval",
+			).
+			Values(
+				entity.TaskKindUpgradeApp,
+				workspaceID,
+				"Upgrade app",
+				entity.OnMultipleExecDiscardNew,
+				"system",
+				true,
+				false,
+				0,
+			).
+			ToSql()
+
+		if err != nil {
+			log.Printf("error building insert query: %v",
+				err)
+			return err
+		}
+
+		_, err = systemConnection.ExecContext(ctx, sql, args...)
+
+		// silently ignore errors in case of retried migrations
+		if err != nil {
+			log.Printf("error inserting task: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (m *Migration40) UpdateWorkspace(ctx context.Context, cfg *entity.Config, workspace *entity.Workspace, workspaceConnection *sql.Conn) (err error) {
+	log.Printf("running migration %v: UpdateWorkspace()", m.GetMajorVersion())
+	return nil
+}
+
+func NewMigration40() entity.MajorMigrationInterface {
+	return &Migration40{}
+}

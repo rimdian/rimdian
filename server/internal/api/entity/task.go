@@ -26,6 +26,7 @@ var (
 	TaskKindDataLogReprocessUntil         string = "system_data_log_reprocess_until"
 	TaskKindReattributeConversions        string = "system_reattribute_conversions"
 	TaskKindImportUsersToSubscriptionList string = "system_import_users_to_subscription_list"
+	TaskKindUpgradeApp                    string = "system_upgrade_app"
 
 	SystemTasks = []TaskManifest{
 		{
@@ -50,6 +51,12 @@ var (
 		{
 			ID:             TaskKindImportUsersToSubscriptionList,
 			Name:           "Import users to subscription list",
+			IsCron:         false,
+			OnMultipleExec: OnMultipleExecDiscardNew,
+		},
+		{
+			ID:             TaskKindUpgradeApp,
+			Name:           "Upgrade app",
 			IsCron:         false,
 			OnMultipleExec: OnMultipleExecDiscardNew,
 		},

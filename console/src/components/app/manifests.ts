@@ -190,6 +190,53 @@ const metaCapi: AppManifest = {
   ]
 }
 
+const meta: AppManifest = {
+  id: 'appx_meta',
+  name: 'Meta',
+  homepage: 'https://www.rimdian.com/',
+  author: 'Rimdian',
+  icon_url: 'https://eu.rimdian.com/images/apps/meta.png',
+  short_description: 'Meta Conversions API & campaigns ROAS.',
+  description:
+    'Send your conversions to the Meta API and sync your campaigns stats to compute your ROAS.',
+  version: '1.0.0',
+  ui_endpoint: 'https://nativeapps.rimdian.com',
+  webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
+  data_hooks: [
+    {
+      id: 'appx_meta_hook',
+      name: 'Meta server-side conversions API',
+      on: 'on_success',
+      for: [
+        {
+          kind: 'order',
+          action: 'create'
+        },
+        {
+          kind: 'pageview',
+          action: 'create'
+        },
+        {
+          kind: 'cart_item',
+          action: 'create'
+        }
+      ]
+    }
+  ],
+  tasks: [
+    {
+      id: 'appx_meta_import_metrics',
+      name: 'Import Meta metrics',
+      is_cron: true,
+      on_multiple_exec: 'discard_new',
+      minutes_interval: 720
+    }
+  ],
+  app_tables: [
+    // TODO
+  ]
+}
+
 const googleAds: AppManifest = {
   id: 'appx_googleads',
   name: 'Google Ads',
@@ -2081,6 +2128,6 @@ const wooCommerce: AppManifest = {
   ]
 }
 
-const apps: AppManifest[] = [googleAds, metaCapi, shopify, wooCommerce, googleCM360]
+const apps: AppManifest[] = [googleAds, metaCapi, shopify, wooCommerce, meta, googleCM360]
 
 export default apps

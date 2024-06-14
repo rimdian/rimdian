@@ -324,6 +324,10 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 			pipe.TaskExecResult = TaskExecImportUsersToSubscriptionList(spanCtx, pipe)
 			pipe.ProcessNextStep(spanCtx)
 			return
+		case entity.TaskKindUpgradeApp:
+			pipe.TaskExecResult = TaskExecUpgradeApp(spanCtx, pipe)
+			pipe.ProcessNextStep(spanCtx)
+			return
 		case entity.TaskKindLaunchBroadcastCampaign:
 			pipe.TaskExecResult = TaskExecLaunchBroadcastCampaign(spanCtx, pipe)
 			pipe.ProcessNextStep(spanCtx)

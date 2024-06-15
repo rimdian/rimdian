@@ -64,6 +64,28 @@ func (x ExtraColumnManifest) GetTable() string {
 	return x.Kind
 }
 
+type ExtraColumnsManifestDiff struct {
+	ToAdd    []*ExtraColumnsManifestOperation `json:"to_add"`
+	ToRemove []*ExtraColumnsManifestOperation `json:"to_remove"`
+}
+
+type ExtraColumnsManifestOperation struct {
+	Table  string       `json:"table"`
+	Column *TableColumn `json:"column"`
+	IsDone bool         `json:"is_done"`
+}
+
+type AppTableManifestOperation struct {
+	IsDone           bool              `json:"is_done"`
+	AppTableManifest *AppTableManifest `json:"app_table_manifest"`
+}
+
+type AppTablesManifestDiff struct {
+	ToAdd     []*AppTableManifestOperation `json:"to_add"`
+	ToMigrate []*AppTableManifestOperation `json:"to_migrate"`
+	ToRemove  []*AppTableManifestOperation `json:"to_remove"`
+}
+
 type TableColumns []*TableColumn
 
 func (x *TableColumns) HasColumn(name string) bool {
@@ -96,6 +118,68 @@ type TableColumn struct {
 	CreatedAt time.Time  `json:"created_at,omitempty"`
 	UpdatedAt time.Time  `json:"updated_at,omitempty"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (a TableColumn) HasSameDefinition(b TableColumn) bool {
+	// compare type, size, isRequired, default
+	if a.Type != b.Type {
+		return false
+	}
+
+	if a.Size != nil && b.Size != nil && *a.Size != *b.Size {
+		return false
+	}
+
+	if a.IsRequired != b.IsRequired {
+		return false
+	}
+
+	if a.DefaultBoolean != nil && b.DefaultBoolean != nil && *a.DefaultBoolean != *b.DefaultBoolean {
+		return false
+	}
+
+	if a.DefaultNumber != nil && b.DefaultNumber != nil && *a.DefaultNumber != *b.DefaultNumber {
+		return false
+	}
+
+	if a.DefaultDate != nil && b.DefaultDate != nil && *a.DefaultDate != *b.DefaultDate {
+		return false
+	}
+
+	if a.DefaultDateTime != nil && b.DefaultDateTime != nil && *a.DefaultDateTime != *b.DefaultDateTime {
+		return false
+	}
+
+	if a.DefaultTimestamp != nil && b.DefaultTimestamp != nil && *a.DefaultTimestamp != *b.DefaultTimestamp {
+		return false
+	}
+
+	if a.DefaultText != nil && b.DefaultText != nil && *a.DefaultText != *b.DefaultText {
+		return false
+	}
+
+	if a.DefaultJSON != nil && b.DefaultJSON != nil {
+		// marshal both and compare
+		aJSON, err := json.Marshal(a.DefaultJSON)
+		if err != nil {
+			return false
+		}
+
+		bJSON, err := json.Marshal(b.DefaultJSON)
+		if err != nil {
+			return false
+		}
+
+		if string(aJSON) != string(bJSON) {
+			return false
+		}
+	}
+
+	if a.ExtraDefinition != nil && b.ExtraDefinition != nil && *a.ExtraDefinition != *b.ExtraDefinition {
+		return false
+	}
+
+	return true
 }
 
 func (col *TableColumn) Validate() error {

@@ -206,6 +206,74 @@ type AppTableManifest struct {
 	Indexes          TableIndexes `json:"indexes"`
 }
 
+func (from *AppTableManifest) HasSameDefinition(to *AppTableManifest) bool {
+	if from.Name != to.Name {
+		return false
+	}
+
+	if from.StorageType != to.StorageType {
+		return false
+	}
+
+	if len(from.Columns) != len(to.Columns) {
+		return false
+	}
+
+	for i, col := range from.Columns {
+		if !col.HasSameDefinition(*to.Columns[i]) {
+			return false
+		}
+	}
+
+	if len(from.ShardKey) != len(to.ShardKey) {
+		return false
+	}
+
+	for i, key := range from.ShardKey {
+		if key != to.ShardKey[i] {
+			return false
+		}
+	}
+
+	if len(from.UniqueKey) != len(to.UniqueKey) {
+		return false
+	}
+
+	for i, key := range from.UniqueKey {
+		if key != to.UniqueKey[i] {
+			return false
+		}
+	}
+
+	if len(from.SortKey) != len(to.SortKey) {
+		return false
+	}
+
+	for i, key := range from.SortKey {
+		if key != to.SortKey[i] {
+			return false
+		}
+	}
+
+	if from.TimeSeriesColumn != nil && to.TimeSeriesColumn != nil {
+		if *from.TimeSeriesColumn != *to.TimeSeriesColumn {
+			return false
+		}
+	}
+
+	if len(from.Indexes) != len(to.Indexes) {
+		return false
+	}
+
+	for i, index := range from.Indexes {
+		if !index.HasSameDefinition(*to.Indexes[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (t *AppTableManifest) HasUserColumn() bool {
 
 	for _, col := range t.Columns {
@@ -418,6 +486,24 @@ func (t TableIndexes) ToDDL() string {
 type TableIndex struct {
 	Name    string   `json:"name"`
 	Columns []string `json:"columns"`
+}
+
+func (from *TableIndex) HasSameDefinition(to TableIndex) bool {
+	if from.Name != to.Name {
+		return false
+	}
+
+	if len(from.Columns) != len(to.Columns) {
+		return false
+	}
+
+	for i, col := range from.Columns {
+		if col != to.Columns[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (t *TableIndex) ToDDL() string {

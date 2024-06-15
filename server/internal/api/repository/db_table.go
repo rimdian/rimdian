@@ -101,6 +101,25 @@ func tableColumnDDL(column *entity.TableColumn) (ddl string, err error) {
 	return ddl, nil
 }
 
+func (repo *RepositoryImpl) RenameTable(ctx context.Context, workspaceID string, tableName string, newName string) (err error) {
+
+	conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
+
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+
+	_, err = conn.ExecContext(ctx, fmt.Sprintf("ALTER TABLE %v RENAME TO %v", tableName, newName))
+
+	if err != nil {
+		return eris.Wrapf(err, "failed to rename table %v", tableName)
+	}
+
+	return nil
+}
+
 func (repo *RepositoryImpl) DeleteTable(ctx context.Context, workspaceID string, tableName string) (err error) {
 
 	conn, err := repo.GetWorkspaceConnection(ctx, workspaceID)
@@ -212,6 +231,27 @@ func (repo *RepositoryImpl) CreateTable(ctx context.Context, workspace *entity.W
 	if err := tx.Commit(); err != nil {
 		return eris.Wrap(err, "CreateAppTable")
 	}
+
+	return nil
+}
+
+func (repo *RepositoryImpl) MigrateTable(ctx context.Context, workspace *entity.Workspace, table *entity.AppTableManifest, suffix string) error {
+
+	conn, err := repo.GetWorkspaceConnection(ctx, workspace.ID)
+
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+
+	// rename old table to _migrated_YYYYMMDD_HHMMSS
+
+	// create new table
+	// TODO
+
+	// copy data from old table to new table
+	// remove suffix from new table
 
 	return nil
 }

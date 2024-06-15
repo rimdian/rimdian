@@ -102,12 +102,14 @@ type Repository interface {
 
 	// app table
 	CreateTable(ctx context.Context, workspace *entity.Workspace, table *entity.AppTableManifest) error
+	MigrateTable(ctx context.Context, workspace *entity.Workspace, table *entity.AppTableManifest, suffix string) error
 	DeleteTable(ctx context.Context, workspaceID string, tableName string) (err error)
+	RenameTable(ctx context.Context, workspaceID string, tableName string, newName string) (err error)
 	IsExistingTableTheSame(ctx context.Context, workspaceID string, table *entity.AppTableManifest) (err error)
 
 	// extra column
 	AddColumn(ctx context.Context, workspace *entity.Workspace, tableName string, column *entity.TableColumn) error
-	DeleteColumn(ctx context.Context, workspace *entity.Workspace, tableName string, column *entity.TableColumn) error
+	DeleteColumn(ctx context.Context, workspace *entity.Workspace, tableName string, columnName string) error
 	IsExistingColumnTheSame(ctx context.Context, workspaceID string, tableName string, column *entity.TableColumn) error
 
 	// app item

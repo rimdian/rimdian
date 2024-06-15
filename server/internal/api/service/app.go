@@ -405,7 +405,7 @@ func (svc *ServiceImpl) AppDelete(ctx context.Context, accountID string, params 
 		// delete augmented tables columns from app manifest
 		for _, augTable := range app.Manifest.ExtraColumns {
 			for _, col := range augTable.Columns {
-				if err := svc.Repo.DeleteColumn(ctx, workspace, augTable.Kind, col); err != nil {
+				if err := svc.Repo.DeleteColumn(ctx, workspace, augTable.Kind, col.Name); err != nil {
 					return 500, eris.Wrap(err, "AppDelete")
 				}
 			}

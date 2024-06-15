@@ -101,7 +101,7 @@ var _ Repository = &RepositoryMock{}
 //			DeleteChannelFunc: func(ctx context.Context, workspace *entity.Workspace, deletedChannelID string) error {
 //				panic("mock out the DeleteChannel method")
 //			},
-//			DeleteColumnFunc: func(ctx context.Context, workspace *entity.Workspace, tableName string, column *entity.TableColumn) error {
+//			DeleteColumnFunc: func(ctx context.Context, workspace *entity.Workspace, tableName string, columnName string) error {
 //				panic("mock out the DeleteColumn method")
 //			},
 //			DeleteDomainFunc: func(ctx context.Context, workspace *entity.Workspace, deletedDomainID string, migrateToDomainID string) error {
@@ -470,11 +470,17 @@ var _ Repository = &RepositoryMock{}
 //			MergeUserSessionsFunc: func(ctx context.Context, workspace *entity.Workspace, fromUserID string, toUserID string, tx *sql.Tx) error {
 //				panic("mock out the MergeUserSessions method")
 //			},
+//			MigrateTableFunc: func(ctx context.Context, workspace *entity.Workspace, table *entity.AppTableManifest, suffix string) error {
+//				panic("mock out the MigrateTable method")
+//			},
 //			PreviewSegmentFunc: func(ctx context.Context, workspaceID string, parentSegmentID *string, filter *entity.SegmentTreeNode, timezone string) (int64, string, []interface{}, error) {
 //				panic("mock out the PreviewSegment method")
 //			},
 //			ReleaseUsersLockFunc: func(workspaceID string, lock *entity.UsersLock) error {
 //				panic("mock out the ReleaseUsersLock method")
+//			},
+//			RenameTableFunc: func(ctx context.Context, workspaceID string, tableName string, newName string) error {
+//				panic("mock out the RenameTable method")
 //			},
 //			ResetAccountPasswordFunc: func(ctx context.Context, accountID string, newPassword string) error {
 //				panic("mock out the ResetAccountPassword method")
@@ -673,7 +679,7 @@ type RepositoryMock struct {
 	DeleteChannelFunc func(ctx context.Context, workspace *entity.Workspace, deletedChannelID string) error
 
 	// DeleteColumnFunc mocks the DeleteColumn method.
-	DeleteColumnFunc func(ctx context.Context, workspace *entity.Workspace, tableName string, column *entity.TableColumn) error
+	DeleteColumnFunc func(ctx context.Context, workspace *entity.Workspace, tableName string, columnName string) error
 
 	// DeleteDomainFunc mocks the DeleteDomain method.
 	DeleteDomainFunc func(ctx context.Context, workspace *entity.Workspace, deletedDomainID string, migrateToDomainID string) error
@@ -1041,11 +1047,17 @@ type RepositoryMock struct {
 	// MergeUserSessionsFunc mocks the MergeUserSessions method.
 	MergeUserSessionsFunc func(ctx context.Context, workspace *entity.Workspace, fromUserID string, toUserID string, tx *sql.Tx) error
 
+	// MigrateTableFunc mocks the MigrateTable method.
+	MigrateTableFunc func(ctx context.Context, workspace *entity.Workspace, table *entity.AppTableManifest, suffix string) error
+
 	// PreviewSegmentFunc mocks the PreviewSegment method.
 	PreviewSegmentFunc func(ctx context.Context, workspaceID string, parentSegmentID *string, filter *entity.SegmentTreeNode, timezone string) (int64, string, []interface{}, error)
 
 	// ReleaseUsersLockFunc mocks the ReleaseUsersLock method.
 	ReleaseUsersLockFunc func(workspaceID string, lock *entity.UsersLock) error
+
+	// RenameTableFunc mocks the RenameTable method.
+	RenameTableFunc func(ctx context.Context, workspaceID string, tableName string, newName string) error
 
 	// ResetAccountPasswordFunc mocks the ResetAccountPassword method.
 	ResetAccountPasswordFunc func(ctx context.Context, accountID string, newPassword string) error
@@ -1444,8 +1456,8 @@ type RepositoryMock struct {
 			Workspace *entity.Workspace
 			// TableName is the tableName argument value.
 			TableName string
-			// Column is the column argument value.
-			Column *entity.TableColumn
+			// ColumnName is the columnName argument value.
+			ColumnName string
 		}
 		// DeleteDomain holds details about calls to the DeleteDomain method.
 		DeleteDomain []struct {
@@ -2723,6 +2735,17 @@ type RepositoryMock struct {
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
+		// MigrateTable holds details about calls to the MigrateTable method.
+		MigrateTable []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Workspace is the workspace argument value.
+			Workspace *entity.Workspace
+			// Table is the table argument value.
+			Table *entity.AppTableManifest
+			// Suffix is the suffix argument value.
+			Suffix string
+		}
 		// PreviewSegment holds details about calls to the PreviewSegment method.
 		PreviewSegment []struct {
 			// Ctx is the ctx argument value.
@@ -2742,6 +2765,17 @@ type RepositoryMock struct {
 			WorkspaceID string
 			// Lock is the lock argument value.
 			Lock *entity.UsersLock
+		}
+		// RenameTable holds details about calls to the RenameTable method.
+		RenameTable []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// TableName is the tableName argument value.
+			TableName string
+			// NewName is the newName argument value.
+			NewName string
 		}
 		// ResetAccountPassword holds details about calls to the ResetAccountPassword method.
 		ResetAccountPassword []struct {
@@ -3238,8 +3272,10 @@ type RepositoryMock struct {
 	lockMergeUserPageviews                    sync.RWMutex
 	lockMergeUserPostviews                    sync.RWMutex
 	lockMergeUserSessions                     sync.RWMutex
+	lockMigrateTable                          sync.RWMutex
 	lockPreviewSegment                        sync.RWMutex
 	lockReleaseUsersLock                      sync.RWMutex
+	lockRenameTable                           sync.RWMutex
 	lockResetAccountPassword                  sync.RWMutex
 	lockResetPostviewsAttributedForConversion sync.RWMutex
 	lockResetSessionsAttributedForConversion  sync.RWMutex
@@ -4404,25 +4440,25 @@ func (mock *RepositoryMock) DeleteChannelCalls() []struct {
 }
 
 // DeleteColumn calls DeleteColumnFunc.
-func (mock *RepositoryMock) DeleteColumn(ctx context.Context, workspace *entity.Workspace, tableName string, column *entity.TableColumn) error {
+func (mock *RepositoryMock) DeleteColumn(ctx context.Context, workspace *entity.Workspace, tableName string, columnName string) error {
 	if mock.DeleteColumnFunc == nil {
 		panic("RepositoryMock.DeleteColumnFunc: method is nil but Repository.DeleteColumn was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
-		Workspace *entity.Workspace
-		TableName string
-		Column    *entity.TableColumn
+		Ctx        context.Context
+		Workspace  *entity.Workspace
+		TableName  string
+		ColumnName string
 	}{
-		Ctx:       ctx,
-		Workspace: workspace,
-		TableName: tableName,
-		Column:    column,
+		Ctx:        ctx,
+		Workspace:  workspace,
+		TableName:  tableName,
+		ColumnName: columnName,
 	}
 	mock.lockDeleteColumn.Lock()
 	mock.calls.DeleteColumn = append(mock.calls.DeleteColumn, callInfo)
 	mock.lockDeleteColumn.Unlock()
-	return mock.DeleteColumnFunc(ctx, workspace, tableName, column)
+	return mock.DeleteColumnFunc(ctx, workspace, tableName, columnName)
 }
 
 // DeleteColumnCalls gets all the calls that were made to DeleteColumn.
@@ -4430,16 +4466,16 @@ func (mock *RepositoryMock) DeleteColumn(ctx context.Context, workspace *entity.
 //
 //	len(mockedRepository.DeleteColumnCalls())
 func (mock *RepositoryMock) DeleteColumnCalls() []struct {
-	Ctx       context.Context
-	Workspace *entity.Workspace
-	TableName string
-	Column    *entity.TableColumn
+	Ctx        context.Context
+	Workspace  *entity.Workspace
+	TableName  string
+	ColumnName string
 } {
 	var calls []struct {
-		Ctx       context.Context
-		Workspace *entity.Workspace
-		TableName string
-		Column    *entity.TableColumn
+		Ctx        context.Context
+		Workspace  *entity.Workspace
+		TableName  string
+		ColumnName string
 	}
 	mock.lockDeleteColumn.RLock()
 	calls = mock.calls.DeleteColumn
@@ -9683,6 +9719,50 @@ func (mock *RepositoryMock) MergeUserSessionsCalls() []struct {
 	return calls
 }
 
+// MigrateTable calls MigrateTableFunc.
+func (mock *RepositoryMock) MigrateTable(ctx context.Context, workspace *entity.Workspace, table *entity.AppTableManifest, suffix string) error {
+	if mock.MigrateTableFunc == nil {
+		panic("RepositoryMock.MigrateTableFunc: method is nil but Repository.MigrateTable was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		Workspace *entity.Workspace
+		Table     *entity.AppTableManifest
+		Suffix    string
+	}{
+		Ctx:       ctx,
+		Workspace: workspace,
+		Table:     table,
+		Suffix:    suffix,
+	}
+	mock.lockMigrateTable.Lock()
+	mock.calls.MigrateTable = append(mock.calls.MigrateTable, callInfo)
+	mock.lockMigrateTable.Unlock()
+	return mock.MigrateTableFunc(ctx, workspace, table, suffix)
+}
+
+// MigrateTableCalls gets all the calls that were made to MigrateTable.
+// Check the length with:
+//
+//	len(mockedRepository.MigrateTableCalls())
+func (mock *RepositoryMock) MigrateTableCalls() []struct {
+	Ctx       context.Context
+	Workspace *entity.Workspace
+	Table     *entity.AppTableManifest
+	Suffix    string
+} {
+	var calls []struct {
+		Ctx       context.Context
+		Workspace *entity.Workspace
+		Table     *entity.AppTableManifest
+		Suffix    string
+	}
+	mock.lockMigrateTable.RLock()
+	calls = mock.calls.MigrateTable
+	mock.lockMigrateTable.RUnlock()
+	return calls
+}
+
 // PreviewSegment calls PreviewSegmentFunc.
 func (mock *RepositoryMock) PreviewSegment(ctx context.Context, workspaceID string, parentSegmentID *string, filter *entity.SegmentTreeNode, timezone string) (int64, string, []interface{}, error) {
 	if mock.PreviewSegmentFunc == nil {
@@ -9764,6 +9844,50 @@ func (mock *RepositoryMock) ReleaseUsersLockCalls() []struct {
 	mock.lockReleaseUsersLock.RLock()
 	calls = mock.calls.ReleaseUsersLock
 	mock.lockReleaseUsersLock.RUnlock()
+	return calls
+}
+
+// RenameTable calls RenameTableFunc.
+func (mock *RepositoryMock) RenameTable(ctx context.Context, workspaceID string, tableName string, newName string) error {
+	if mock.RenameTableFunc == nil {
+		panic("RepositoryMock.RenameTableFunc: method is nil but Repository.RenameTable was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		TableName   string
+		NewName     string
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		TableName:   tableName,
+		NewName:     newName,
+	}
+	mock.lockRenameTable.Lock()
+	mock.calls.RenameTable = append(mock.calls.RenameTable, callInfo)
+	mock.lockRenameTable.Unlock()
+	return mock.RenameTableFunc(ctx, workspaceID, tableName, newName)
+}
+
+// RenameTableCalls gets all the calls that were made to RenameTable.
+// Check the length with:
+//
+//	len(mockedRepository.RenameTableCalls())
+func (mock *RepositoryMock) RenameTableCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	TableName   string
+	NewName     string
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		TableName   string
+		NewName     string
+	}
+	mock.lockRenameTable.RLock()
+	calls = mock.calls.RenameTable
+	mock.lockRenameTable.RUnlock()
 	return calls
 }
 

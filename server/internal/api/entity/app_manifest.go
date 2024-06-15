@@ -373,6 +373,194 @@ func (x AppManifest) Value() (driver.Value, error) {
 	return json.Marshal(x)
 }
 
+func DiffExtraColumns(from ExtraColumnsManifest, to ExtraColumnsManifest) (diff *ExtraColumnsManifestDiff, err error) {
+	diff = &ExtraColumnsManifestDiff{}
+
+	// if a is empty, all columns in b are new
+	if len(from) == 0 {
+		for _, tableB := range to {
+			for _, colB := range tableB.Columns {
+				diff.ToAdd = append(diff.ToAdd, &ExtraColumnsManifestOperation{
+					Table:  tableB.Kind,
+					Column: colB,
+				})
+			}
+		}
+		return diff, nil
+	}
+
+	// if b is empty, all columns in a are removed
+	if len(to) == 0 {
+		for _, tableA := range from {
+			for _, colA := range tableA.Columns {
+				diff.ToRemove = append(diff.ToRemove, &ExtraColumnsManifestOperation{
+					Table:  tableA.Kind,
+					Column: colA,
+				})
+			}
+		}
+		return diff, nil
+	}
+
+	// to add
+	for _, currentTableB := range to {
+		tableFound := false
+
+		// check if extra column already exists in a
+		for _, tableA := range from {
+			if tableA.Kind == currentTableB.Kind {
+				tableFound = true
+
+				// check if column already exists
+				for _, colB := range currentTableB.Columns {
+					foundCol := false
+					for _, colA := range tableA.Columns {
+						if colA.Name == colB.Name {
+							foundCol = true
+
+							// abort if column type is different
+							if !colA.HasSameDefinition(*colB) {
+								return diff, eris.Errorf("extra column %v type is different", colB.Name)
+							}
+
+							break
+						}
+					}
+
+					// add new column
+					if !foundCol {
+						diff.ToAdd = append(diff.ToAdd, &ExtraColumnsManifestOperation{
+							Table:  currentTableB.Kind,
+							Column: colB,
+						})
+					}
+				}
+				break
+			}
+		}
+		if !tableFound {
+			// add all columns
+			for _, colB := range currentTableB.Columns {
+				diff.ToAdd = append(diff.ToAdd, &ExtraColumnsManifestOperation{
+					Table:  currentTableB.Kind,
+					Column: colB,
+				})
+			}
+		}
+	}
+
+	// to remove
+	for _, currentTableA := range from {
+		tableFound := false
+
+		// check if extra column already exists in b
+		for _, tableB := range to {
+			if tableB.Kind == currentTableA.Kind {
+				tableFound = true
+
+				// check if column already exists
+				for _, colA := range currentTableA.Columns {
+					foundCol := false
+					for _, colB := range tableB.Columns {
+						if colA.Name == colB.Name {
+							foundCol = true
+							break
+						}
+					}
+
+					// remove column
+					if !foundCol {
+						diff.ToRemove = append(diff.ToRemove, &ExtraColumnsManifestOperation{
+							Table:  currentTableA.Kind,
+							Column: colA,
+						})
+					}
+				}
+				break
+			}
+		}
+		if !tableFound {
+			// remove all columns
+			for _, colA := range currentTableA.Columns {
+				diff.ToRemove = append(diff.ToRemove, &ExtraColumnsManifestOperation{
+					Table:  currentTableA.Kind,
+					Column: colA,
+				})
+			}
+		}
+	}
+
+	return diff, nil
+}
+
+func DiffAppTables(from AppTablesManifest, to AppTablesManifest) (diff *AppTablesManifestDiff, err error) {
+	diff = &AppTablesManifestDiff{}
+
+	// if a is empty, all tables in b are new
+	if len(from) == 0 {
+		for _, tableB := range to {
+			diff.ToAdd = append(diff.ToAdd, &AppTableManifestOperation{
+				AppTableManifest: tableB,
+			})
+		}
+
+		return diff, nil
+	}
+
+	// if b is empty, all tables in a are removed
+	if len(to) == 0 {
+		for _, tableA := range from {
+			diff.ToRemove = append(diff.ToRemove, &AppTableManifestOperation{
+				AppTableManifest: tableA,
+			})
+		}
+
+		return diff, nil
+	}
+
+	// check if table exists in a
+	for _, tableB := range to {
+		found := false
+		for _, tableA := range from {
+			if tableA.Name == tableB.Name {
+				found = true
+
+				// check if table definition is different
+				if !tableA.HasSameDefinition(tableB) {
+					diff.ToMigrate = append(diff.ToMigrate, &AppTableManifestOperation{
+						AppTableManifest: tableB,
+					})
+				}
+
+				break
+			}
+		}
+		if !found {
+			diff.ToAdd = append(diff.ToAdd, &AppTableManifestOperation{
+				AppTableManifest: tableB,
+			})
+		}
+	}
+
+	// check if table exists in b
+	for _, tableA := range from {
+		found := false
+		for _, tableB := range to {
+			if tableB.Name == tableA.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			diff.ToRemove = append(diff.ToRemove, &AppTableManifestOperation{
+				AppTableManifest: tableA,
+			})
+		}
+	}
+
+	return diff, nil
+}
+
 type DataHooksManifest []*DataHookManifest
 
 type DataHookManifest struct {

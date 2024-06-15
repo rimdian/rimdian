@@ -78,7 +78,7 @@ func (repo *RepositoryImpl) AddColumn(ctx context.Context, workspace *entity.Wor
 	return nil
 }
 
-func (repo *RepositoryImpl) DeleteColumn(ctx context.Context, workspace *entity.Workspace, tableName string, column *entity.TableColumn) error {
+func (repo *RepositoryImpl) DeleteColumn(ctx context.Context, workspace *entity.Workspace, tableName string, columnName string) error {
 
 	conn, err := repo.GetWorkspaceConnection(ctx, workspace.ID)
 
@@ -93,7 +93,7 @@ func (repo *RepositoryImpl) DeleteColumn(ctx context.Context, workspace *entity.
 		return eris.Wrap(err, "DeleteColumn")
 	}
 
-	query := fmt.Sprintf("ALTER TABLE `%v` DROP COLUMN %v", tableName, column.Name)
+	query := fmt.Sprintf("ALTER TABLE `%v` DROP COLUMN %v", tableName, columnName)
 
 	_, err = tx.ExecContext(ctx, query)
 

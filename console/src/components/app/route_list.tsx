@@ -95,13 +95,14 @@ const RouteApps = () => {
                               ghost={false}
                               workspaceCtx={workspaceCtx}
                               manifest={app}
+                              action="Install"
                             />
                           )}
                           {existingApp && existingApp.status === 'stopped' && (
                             <InstallAppButton
                               workspaceCtx={workspaceCtx}
                               manifest={app}
-                              reinstall={true}
+                              action="Reinstall"
                               size="middle"
                             />
                           )}

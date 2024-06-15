@@ -2,7 +2,7 @@ import { Button, Badge, Popconfirm, message, Space } from 'antd'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import Layout from 'components/common/layout'
 import { useParams } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import DeleteAppButton from './button_delete'
 import AboutAppButton from './button_about'
 import TasksAppButton from './button_tasks'
@@ -12,6 +12,7 @@ import AppTest from './app_test'
 import InstallAppButton from './button_install'
 import { App } from 'interfaces'
 import { QueryObserverResult } from '@tanstack/react-query'
+import manifests from './manifests'
 
 const RouteApp = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -53,6 +54,10 @@ const RouteApp = () => {
         message.error(e.message)
       })
   }
+
+  const recentManifest = useMemo(() => {
+    return manifests.find((x) => x.id === params.appId)
+  }, [params.appId])
 
   return (
     <Layout
@@ -135,14 +140,24 @@ const RouteApp = () => {
                         </Button>
                       </Popconfirm>
                     )}
+
                     {['stopped', 'initializing'].includes(currentApp.status) && (
                       <DeleteAppButton workspaceCtx={workspaceCtx} manifest={currentApp.manifest} />
                     )}
+                    {recentManifest &&
+                      recentManifest.version !== currentApp.manifest.version &&
+                      currentApp.status !== 'stopped' && (
+                        <InstallAppButton
+                          workspaceCtx={workspaceCtx}
+                          manifest={recentManifest}
+                          action={'Upgrade'}
+                        />
+                      )}
                     {currentApp.status === 'stopped' && (
                       <InstallAppButton
                         workspaceCtx={workspaceCtx}
                         manifest={currentApp.manifest}
-                        reinstall={true}
+                        action={'Reinstall'}
                       />
                     )}
                     {/* {['stopped'].includes(currentApp.status) && (

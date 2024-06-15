@@ -164,7 +164,7 @@ const metaCapi: AppManifest = {
   icon_url: 'https://eu.rimdian.com/images/apps/meta.png',
   short_description: 'Send your conversions to the Meta API.',
   description: 'Send your conversions to the Meta API.',
-  version: '1.0.0',
+  version: '1.1.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
   data_hooks: [

@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
+	"github.com/rotisserie/eris"
 	"go.opencensus.io/trace"
 )
 
@@ -304,7 +306,110 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 		result.Message = entity.StringPtr("app_tables step successful")
 
 	case "finalize":
-		// replace tasks, hooks, queries and manifest
+		code, err := pipe.Repository.RunInTransactionForSystem(ctx, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
+
+			// replace tasks
+			if err := pipe.Repository.DeleteAppTasks(bgCtx, pipe.Workspace.ID, appID, tx); err != nil {
+				return 500, err
+			}
+
+			if newManifest.DataHooks != nil && len(newManifest.DataHooks) > 0 {
+				for _, stDefinition := range newManifest.Tasks {
+
+					task := &entity.Task{
+						TaskManifest: *stDefinition,
+						WorkspaceID:  pipe.Workspace.ID,
+						AppID:        newManifest.ID,
+						IsActive:     true,
+						IsCron:       stDefinition.IsCron,
+					}
+
+					if app.Status == entity.AppStatusInit {
+						task.IsActive = false
+					}
+
+					task.ComputeNextRun()
+
+					if err := pipe.Repository.InsertTask(ctx, task, tx); err != nil {
+						return 500, eris.Wrap(err, "TaskUpgradeApp")
+					}
+				}
+			}
+
+			// replace hooks
+			if newManifest.DataHooks != nil && len(newManifest.DataHooks) > 0 {
+				for _, dataHook := range newManifest.DataHooks {
+
+					hook := &entity.DataHook{
+						ID:      dataHook.ID,
+						AppID:   newManifest.ID,
+						Name:    dataHook.Name,
+						On:      dataHook.On,
+						For:     dataHook.For,
+						Enabled: false, // will be enabled when the app is activated
+					}
+
+					if err := hook.Validate(pipe.Workspace.InstalledApps); err != nil {
+						return 400, eris.Wrap(err, "TaskUpgradeApp")
+					}
+
+					dataHookExists := false
+
+					// replace eventually existing hook
+					for _, existingHook := range pipe.Workspace.DataHooks {
+						if existingHook.ID == hook.ID {
+							dataHookExists = true
+							existingHook = hook
+							break
+						}
+					}
+
+					if !dataHookExists {
+						pipe.Workspace.DataHooks = append(pipe.Workspace.DataHooks, hook)
+					}
+				}
+			}
+
+			// update manifest in workspace
+			for i, currentApp := range pipe.Workspace.InstalledApps {
+				if currentApp.ID == newManifest.ID {
+					pipe.Workspace.InstalledApps[i] = newManifest
+					break
+				}
+			}
+
+			if err := pipe.Repository.UpdateWorkspace(ctx, pipe.Workspace, tx); err != nil {
+				return 500, eris.Wrap(err, "TaskUpgradeApp")
+			}
+
+			return 200, nil
+		})
+
+		if err != nil {
+			if code == 500 {
+				result.SetError(err.Error(), false)
+				return
+			}
+			result.SetError(err.Error(), true)
+			return
+		}
+
+		// update app manifest
+		_, err = pipe.Repository.RunInTransactionForWorkspace(ctx, pipe.Workspace.ID, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
+			app.Manifest = *newManifest
+
+			if err := pipe.Repository.UpdateApp(ctx, app, nil); err != nil {
+				return 500, eris.Wrap(err, "TaskUpgradeApp")
+			}
+
+			return 200, nil
+		})
+
+		if err != nil {
+			result.SetError(err.Error(), true)
+			return
+		}
+
 		result.Message = entity.StringPtr("Upgrade successful")
 		result.IsDone = true
 	default:

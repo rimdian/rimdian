@@ -245,13 +245,56 @@ func (repo *RepositoryImpl) MigrateTable(ctx context.Context, workspace *entity.
 
 	defer conn.Close()
 
+	// list columns from old table
+	rows, err := conn.QueryContext(ctx, "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", table.Name)
+	if err != nil {
+		return eris.Wrap(err, "MigrateTable")
+	}
+	defer rows.Close()
+
+	var oldColumns []string
+	for rows.Next() {
+		var columnName string
+		// read the column name from the result set
+		if err := rows.Scan(&columnName); err != nil {
+			return eris.Wrap(err, "MigrateTable")
+		}
+		oldColumns = append(oldColumns, columnName)
+	}
+
+	if err := rows.Err(); err != nil {
+		return eris.Wrap(err, "MigrateTable")
+	}
+
+	// select common columns from old table
+	commonColumns := []string{}
+
+	for _, col := range table.Columns {
+		for _, oldCol := range oldColumns {
+			if col.Name == oldCol {
+				commonColumns = append(commonColumns, col.Name)
+			}
+		}
+	}
+
+	oldTableName := table.Name + "_migrated" + suffix
+
 	// rename old table to _migrated_YYYYMMDD_HHMMSS
+	if err := repo.RenameTable(ctx, workspace.ID, table.Name, oldTableName); err != nil {
+		return eris.Wrap(err, "MigrateTable")
+	}
 
 	// create new table
-	// TODO
+	if err := repo.CreateTable(ctx, workspace, table); err != nil {
+		return eris.Wrap(err, "MigrateTable")
+	}
 
-	// copy data from old table to new table
-	// remove suffix from new table
+	// try to copy data from old table to new table
+	query := fmt.Sprintf("INSERT IGNORE INTO %v (%v) SELECT %v FROM %v", table.Name, strings.Join(commonColumns, ", "), strings.Join(commonColumns, ", "), oldTableName)
+
+	if _, err := conn.ExecContext(ctx, query); err != nil {
+		return eris.Wrapf(err, "MigrateTable, query: %v", query)
+	}
 
 	return nil
 }

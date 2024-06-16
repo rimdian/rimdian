@@ -26,7 +26,7 @@ import {
   DimensionDefinition
 } from './postviews_definitions'
 import { useDateRangeCtx } from 'components/common/context_date_range'
-import { capitalize, cloneDeep, map, set, upperFirst } from 'lodash'
+import { capitalize, cloneDeep, forEach, map, set, upperFirst } from 'lodash'
 import FormatNumber from 'utils/format_number'
 import FormatPercent from 'utils/format_percent'
 import FormatCurrency from 'utils/format_currency'
@@ -143,10 +143,10 @@ const TabAttributionPostviews = () => {
         g.addVertex(table.name, true)
       })
       // add edges
-      app.app_tables?.forEach((table) => {
-        if (table.joins && table.joins.length > 0) {
-          table.joins.forEach((join) => {
-            g.addEdge(table.name, join.external_table)
+      forEach(app.cube_schemas, (schema, cubeName) => {
+        if (schema.joins) {
+          forEach(schema.joins, (_join, tableName) => {
+            g.addEdge(cubeName, tableName)
           })
         }
       })

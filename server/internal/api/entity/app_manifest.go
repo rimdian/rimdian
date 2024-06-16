@@ -246,6 +246,7 @@ type AppManifest struct {
 	Tasks            TasksManifest        `json:"tasks,omitempty"`
 	DataHooks        DataHooksManifest    `json:"data_hooks,omitempty"`
 	SQLQueries       SQLQueriesManifest   `json:"sql_queries,omitempty"`
+	CubeSchemas      CubeSchemasManifest  `json:"cube_schemas,omitempty"`
 }
 
 func (x *AppManifest) Validate(installedApps InstalledApps, isReinstall bool) error {

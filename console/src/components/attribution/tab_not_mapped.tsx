@@ -26,7 +26,7 @@ import {
   DimensionDefinition
 } from './sessions_definitions'
 import { useDateRangeCtx } from 'components/common/context_date_range'
-import { cloneDeep, map, set, upperFirst } from 'lodash'
+import { cloneDeep, forEach, map, set, upperFirst } from 'lodash'
 import FormatNumber from 'utils/format_number'
 import FormatPercent from 'utils/format_percent'
 import FormatCurrency from 'utils/format_currency'
@@ -1000,10 +1000,10 @@ const GenerateTablesLinks = (apps: AppManifest[]) => {
   }
 
   apps.forEach((app) => {
-    app.app_tables?.forEach((table) => {
-      if (table.joins && table.joins.length > 0) {
-        links[table.name] = table.joins.map((join) => join.external_table)
-      }
+    forEach(app.cube_schemas, (schema, cubeName) => {
+      forEach(schema.joins, (join, tableName) => {
+        links[cubeName] = tableName
+      })
     })
   })
   // has link ? traverse the children until we reach the target table

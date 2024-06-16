@@ -284,12 +284,12 @@ export interface TableColumn {
   // deleted_at?: Date
 }
 
-export interface TableJoin {
-  external_table: string
-  external_column: string
-  local_column: string
-  relationship: 'one_to_one' | 'one_to_many' | 'many_to_one'
-}
+// export interface TableJoin {
+//   external_table: string
+//   external_column: string
+//   local_column: string
+//   relationship: 'one_to_one' | 'one_to_many' | 'many_to_one'
+// }
 
 export interface TableIndex {
   name: string
@@ -306,7 +306,7 @@ export interface AppTable {
   storage_type?: 'columnstore' | 'rowstore'
   description?: string
   columns: TableColumn[]
-  joins: TableJoin[]
+  // joins: TableJoin[]
   indexes?: TableIndex[]
   shard_key: string[]
   unique_key: string[]
@@ -646,7 +646,7 @@ export interface CubeSchema {
 }
 
 export interface CubeSchemaJoin {
-  relationship: string
+  relationship: 'one_to_one' | 'one_to_many' | 'many_to_one'
   sql: string
 }
 
@@ -657,9 +657,9 @@ export interface CubeSchemaSegment {
 export interface CubeSchemaMeasure {
   title: string
   description: string
-  type: 'time' | 'string' | 'number' | 'boolean' | 'geo'
+  type: 'count' | 'count_distinct' | 'sum' | 'avg' | 'min' | 'max' | 'string' | 'number' | 'boolean'
   sql: string
-  drillMembers: string[]
+  drillMembers?: string[]
   filters?: CubeSchemaMeasureFilter[]
   format?: string
   rollingWindow?: CubeSchemaRollingWindow
@@ -680,7 +680,7 @@ export interface CubeSchemaRollingWindow {
 export interface CubeSchemaDimension {
   title: string
   description: string
-  type: string
+  type: 'time' | 'number' | 'string' | 'boolean' | 'geo'
   sql: string
   primaryKey?: boolean
   shown?: boolean
@@ -975,7 +975,22 @@ export interface AppManifest {
   data_hooks?: DataHookManifest[]
   extra_columns?: ExtraColumnsManifest[]
   sql_queries?: SqlQuery[]
+  cube_schemas?: {
+    [key: string]: CubeSchema
+  }
   is_native?: boolean
+}
+
+export interface CubeSchema {
+  sql: string
+  title: string
+  description: string
+  rewriteQueries?: boolean
+  shown?: boolean
+  joins?: { [key: string]: CubeSchemaJoin }
+  segments?: { [key: string]: CubeSchemaSegment }
+  measures: { [key: string]: CubeSchemaMeasure }
+  dimensions: { [key: string]: CubeSchemaDimension }
 }
 
 export interface SqlQuery {

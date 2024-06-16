@@ -1,4 +1,7 @@
-import { AppManifest } from 'interfaces'
+// disable no-template-curly-in-string
+/* eslint-disable no-template-curly-in-string */
+
+import { AppManifest, AppTable, CubeSchema } from 'interfaces'
 
 const googleCM360: AppManifest = {
   id: 'appx_googlecm360',
@@ -247,7 +250,7 @@ const googleAds: AppManifest = {
     'Import your Google Ads clicks & metrics (campaigns, ad groups, keywords...) to enrich your web sessions & compute your ROAS. Improve your Google Ads measurement with Enhanced Conversions.',
   description:
     'The Google Ads app automatically imports your ads clicks metadata (campaign, term, ad, cost...) to properly attribute the web sessions, and imports your campaigns, ad groups and keywords to analyze your ROAS. It also sends your conversions to the Google Ads API to improve the accuracy of your Google Ads conversions by sending first-party customer data in a privacy-safe way.',
-  version: '1.0.0',
+  version: '2.0.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
   sql_queries: [
@@ -399,14 +402,6 @@ const googleAds: AppManifest = {
       shard_key: ['external_id'],
       unique_key: ['external_id'],
       sort_key: ['created_at'],
-      joins: [
-        {
-          external_table: 'session',
-          relationship: 'one_to_one',
-          local_column: 'external_id',
-          external_column: 'utm_id'
-        }
-      ],
       columns: [
         {
           name: 'campaign_external_id',
@@ -556,38 +551,6 @@ const googleAds: AppManifest = {
       shard_key: ['external_id'],
       unique_key: ['external_id'],
       sort_key: ['created_at'],
-      joins: [
-        {
-          external_table: 'session',
-          relationship: 'one_to_many',
-          local_column: 'campaign_name',
-          external_column: 'utm_campaign'
-        },
-        {
-          external_table: 'appx_googleads_campaign_metric',
-          relationship: 'one_to_many',
-          local_column: 'external_id',
-          external_column: 'campaign_external_id'
-        },
-        {
-          external_table: 'appx_googleads_ad_group_ad',
-          relationship: 'one_to_many',
-          local_column: 'external_id',
-          external_column: 'campaign_external_id'
-        },
-        {
-          external_table: 'appx_googleads_ad_group_ad_metric',
-          relationship: 'one_to_many',
-          local_column: 'external_id',
-          external_column: 'campaign_external_id'
-        },
-        {
-          external_table: 'appx_googleads_ad_group_keyword',
-          relationship: 'one_to_many',
-          local_column: 'external_id',
-          external_column: 'campaign_external_id'
-        }
-      ],
       columns: [
         {
           name: 'campaign_name',
@@ -696,7 +659,6 @@ const googleAds: AppManifest = {
       unique_key: ['campaign_external_id', 'metrics_date'],
       sort_key: ['metrics_date'],
       indexes: [],
-      joins: [],
       columns: [
         {
           name: 'campaign_external_id',
@@ -1147,20 +1109,6 @@ const googleAds: AppManifest = {
       sort_key: ['created_at'],
       timeseries_column: 'created_at',
       indexes: [],
-      joins: [
-        {
-          external_table: 'session',
-          relationship: 'one_to_many',
-          local_column: 'resource_name',
-          external_column: 'utm_content'
-        },
-        {
-          external_table: 'appx_googleads_ad_group_ad_metric',
-          relationship: 'one_to_many',
-          local_column: 'external_id',
-          external_column: 'ad_group_ad_external_id'
-        }
-      ],
       columns: [
         {
           name: 'resource_name',
@@ -1295,7 +1243,6 @@ const googleAds: AppManifest = {
       unique_key: ['campaign_external_id', 'ad_group_ad_external_id', 'metrics_date'],
       sort_key: ['metrics_date'],
       indexes: [],
-      joins: [],
       columns: [
         {
           name: 'campaign_external_id',
@@ -1593,20 +1540,6 @@ const googleAds: AppManifest = {
       sort_key: ['created_at'],
       timeseries_column: 'created_at',
       indexes: [],
-      joins: [
-        {
-          external_table: 'session',
-          relationship: 'one_to_many',
-          local_column: 'display_name',
-          external_column: 'utm_term'
-        },
-        {
-          external_table: 'appx_googleads_ad_group_keyword_metric',
-          relationship: 'one_to_many',
-          local_column: 'external_id',
-          external_column: 'ad_group_keyword_external_id'
-        }
-      ],
       columns: [
         {
           name: 'resource_name',
@@ -1751,7 +1684,6 @@ const googleAds: AppManifest = {
       ],
       sort_key: ['metrics_date'],
       indexes: [],
-      joins: [],
       columns: [
         {
           name: 'ad_group_external_id',
@@ -2103,8 +2035,199 @@ const googleAds: AppManifest = {
         }
       ]
     }
-  ]
+  ],
+  cube_schemas: {
+    Appx_googleads_click: {
+      sql: `SELECT * FROM appx_googleads_click`,
+      title: 'Google Ads clicks',
+      description: 'Google Ads clicks',
+      joins: {
+        Session: {
+          relationship: 'one_to_one',
+          sql: '${CUBE}.external_id = ${Session}.utm_id'
+        }
+      },
+      measures: {
+        count: {
+          title: 'Count',
+          type: 'count',
+          sql: 'id',
+          description: 'The number of clicks'
+        }
+      },
+      dimensions: {}
+    },
+    Appx_googleads_campaign: {
+      sql: `SELECT * FROM appx_googleads_campaign`,
+      title: 'Google Ads campaigns',
+      description: 'Google Ads campaigns',
+      joins: {
+        Session: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.campaign_name = ${Session}.utm_campaign'
+        },
+        Appx_googleads_campaign_metric: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.external_id = ${Appx_googleads_campaign_metric}.campaign_external_id'
+        },
+        Appx_googleads_ad_group_ad: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.external_id = ${Appx_googleads_ad_group_ad}.campaign_external_id'
+        },
+        Appx_googleads_ad_group_ad_metric: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.external_id = ${Appx_googleads_ad_group_ad_metric}.campaign_external_id'
+        },
+        Appx_googleads_ad_group_keyword: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.external_id = ${Appx_googleads_ad_group_keyword}.campaign_external_id'
+        }
+      },
+      measures: {
+        count: {
+          title: 'Count',
+          type: 'count',
+          sql: 'id',
+          description: 'The number of campaigns'
+        }
+      },
+      dimensions: {}
+    },
+    Appx_googleads_campaign_metric: {
+      title: 'Google Ads campaigns daily metrics',
+      sql: `SELECT * FROM appx_googleads_campaign_metric`,
+      description: 'Google Ads campaigns daily metrics',
+      measures: {
+        count: {
+          title: 'Count',
+          type: 'count',
+          sql: 'id',
+          description: 'The number of campaigns'
+        }
+      },
+      dimensions: {}
+    },
+    Appx_googleads_ad_group_ad: {
+      title: 'Google Ads ad group ads',
+      sql: `SELECT * FROM appx_googleads_ad_group_ad`,
+      description: 'Google Ads ad group ads',
+      joins: {
+        Session: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.resource_name = ${Session}.utm_content'
+        },
+        Appx_googleads_ad_group_ad_metric: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.external_id = ${Appx_googleads_ad_group_ad_metric}.ad_group_ad_external_id'
+        }
+      },
+      measures: {
+        count: {
+          title: 'Count',
+          type: 'count',
+          sql: 'id',
+          description: 'The number of ad group ads'
+        }
+      },
+      dimensions: {}
+    },
+    Appx_googleads_ad_group_ad_metric: {
+      title: 'Google Ads ad group ads daily metrics',
+      sql: `SELECT * FROM appx_googleads_ad_group_ad_metric`,
+      description: 'Google Ads ad group ads daily metrics',
+      measures: {
+        count: {
+          title: 'Count',
+          type: 'count',
+          sql: 'id',
+          description: 'The number of ad group ads'
+        }
+      },
+      dimensions: {}
+    },
+    Appx_googleads_ad_group_keyword: {
+      title: 'Google Ads keywords view',
+      sql: `SELECT * FROM appx_googleads_ad_group_keyword`,
+      description: 'Google Ads keywords view',
+      joins: {
+        Session: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.display_name = ${Session}.utm_term'
+        },
+        Appx_googleads_ad_group_keyword_metric: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.external_id = ${Appx_googleads_ad_group_keyword_metric}.ad_group_keyword_external_id'
+        }
+      },
+      measures: {
+        count: {
+          title: 'Count',
+          type: 'count',
+          sql: 'id',
+          description: 'The number of keywords'
+        }
+      },
+      dimensions: {}
+    },
+    Appx_googleads_ad_group_keyword_metric: {
+      title: 'Google Ads ad group keywords daily metrics',
+      sql: `SELECT * FROM appx_googleads_ad_group_keyword_metric`,
+      description: 'Google Ads ad group keywords daily metrics',
+      measures: {
+        count: {
+          title: 'Count',
+          type: 'count',
+          sql: 'id',
+          description: 'The number of keywords'
+        }
+      },
+      dimensions: {}
+    }
+  }
 }
+
+// generate cube dimensions and measures (sum / avg)
+const generateDimensionsAndMeasures = (table: AppTable, cubeSchema: CubeSchema) => {
+  table.columns.forEach((column) => {
+    if (column.type === 'number') {
+      cubeSchema.measures = {
+        ...cubeSchema.measures,
+        [`${column.name}_sum`]: {
+          title: `${column.name} sum`,
+          type: 'sum',
+          sql: column.name,
+          description: `The sum of ${column.name}`
+        },
+        [`${column.name}_avg`]: {
+          title: `${column.name} avg`,
+          type: 'avg',
+          sql: column.name,
+          description: `The average of ${column.name}`
+        }
+      }
+    }
+
+    cubeSchema.dimensions[column.name] = {
+      title: column.name,
+      sql: column.name,
+      type: 'string',
+      description: column.description || column.name
+    }
+
+    if (column.name === 'id') {
+      cubeSchema.dimensions[column.name].primaryKey = true
+      cubeSchema.dimensions[column.name].shown = false
+    }
+  })
+}
+
+googleAds.app_tables?.forEach((table) => {
+  if (!googleAds.cube_schemas) return
+  const cubeName = table.name.charAt(0).toUpperCase() + table.name.slice(1)
+  const cubeSchema = googleAds.cube_schemas[cubeName]
+  if (!cubeSchema) return
+  generateDimensionsAndMeasures(table, cubeSchema)
+})
 
 const wooCommerce: AppManifest = {
   id: 'appx_woocommerce',

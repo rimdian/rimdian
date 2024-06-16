@@ -148,27 +148,6 @@ var (
 	ErrTableColumnDefaultValueNotValid = eris.New("table column default value is not valid")
 )
 
-// type TableColumns []*TableColumn
-
-// func (x *TableColumns) Scan(val interface{}) error {
-
-// 	var data []byte
-
-// 	if b, ok := val.([]byte); ok {
-// 		data = b
-// 	} else if s, ok := val.(string); ok {
-// 		data = []byte(s)
-// 	} else if val == nil {
-// 		return nil
-// 	}
-
-// 	return json.Unmarshal(data, x)
-// }
-
-// func (x TableColumns) Value() (driver.Value, error) {
-// 	return json.Marshal(x)
-// }
-
 type AppTablesManifest []*AppTableManifest
 
 func (x *AppTablesManifest) Scan(val interface{}) error {
@@ -202,8 +181,8 @@ type AppTableManifest struct {
 	UniqueKey        []string     `json:"unique_key"`
 	SortKey          []string     `json:"sort_key"`
 	TimeSeriesColumn *string      `json:"timeseries_column"`
-	Joins            TableJoins   `json:"joins"`
-	Indexes          TableIndexes `json:"indexes"`
+	// Joins            TableJoins   `json:"joins"`
+	Indexes TableIndexes `json:"indexes"`
 }
 
 func (from *AppTableManifest) HasSameDefinition(to *AppTableManifest) bool {
@@ -405,21 +384,21 @@ func (t *AppTableManifest) Validate(appID string, installedApps InstalledApps) e
 		return ErrAppTableTimeSeriesColumnNotFound
 	}
 
-	// TODO: verify joins with external tables/columns exist
+	// // TODO: verify joins with external tables/columns exist
 
-	if t.Joins == nil {
-		t.Joins = []*TableJoin{}
-	}
+	// if t.Joins == nil {
+	// 	t.Joins = []*TableJoin{}
+	// }
 
-	// add user_id join
-	if hasUserID {
-		t.Joins = append(t.Joins, &TableJoin{
-			ExternalTable:  "user",
-			Relationship:   "many_to_one",
-			LocalColumn:    "user_id",
-			ExternalColumn: "id",
-		})
-	}
+	// // add user_id join
+	// if hasUserID {
+	// 	t.Joins = append(t.Joins, &TableJoin{
+	// 		ExternalTable:  "user",
+	// 		Relationship:   "many_to_one",
+	// 		LocalColumn:    "user_id",
+	// 		ExternalColumn: "id",
+	// 	})
+	// }
 
 	// validate indexes
 	if t.Indexes == nil {

@@ -4,10 +4,10 @@ import {
   App,
   AppTable,
   ExtraColumnsManifest,
-  TableJoin,
   DataHook,
   SqlQuery,
-  DataHookFor
+  DataHookFor,
+  CubeSchema
 } from 'interfaces'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
@@ -17,6 +17,7 @@ import CSS from 'utils/css'
 import { css } from '@emotion/css'
 import { useMemo } from 'react'
 import TableTag from 'components/common/partial_table_tag'
+import { map, size } from 'lodash'
 
 type BlockAboutAppProps = {
   manifest: AppManifest
@@ -139,10 +140,6 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
                           title: 'Column',
                           key: 'name',
                           render: (row: any) => {
-                            const joinedTo = table.joins
-                              ? table.joins.find((j: TableJoin) => j.local_column === row.name)
-                              : null
-
                             return (
                               <>
                                 <b>{row.name}</b>
@@ -151,16 +148,6 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
                                     <span className={CSS.padding_l_s}>
                                       <Tag color="lime">Required</Tag>
                                     </span>
-                                    {joinedTo && (
-                                      <i className={CSS.font_size_xs}>
-                                        {joinedTo.relationship === 'one_to_one' && 'one to one'}
-                                        {joinedTo.relationship === 'one_to_many' && 'one to many'}
-                                        {joinedTo.relationship === 'many_to_one' && 'many to one'}
-                                        <Tag color="blue" className={CSS.margin_l_s}>
-                                          {joinedTo.external_table}.{joinedTo.external_column}
-                                        </Tag>
-                                      </i>
-                                    )}
                                   </>
                                 )}
                               </>
@@ -185,6 +172,77 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
                         }
                       ]}
                     />
+                  </Collapse.Panel>
+                ))}
+              </Collapse>
+            </>
+          )}
+        </>
+      )
+    }
+
+    const cubeSchemasTab = {
+      key: 'cubeSchemas',
+      label: (
+        <span>
+          Cube schemas ({props.manifest.cube_schemas ? size(props.manifest.cube_schemas) : 0})
+        </span>
+      ),
+      children: (
+        <>
+          {!props.manifest.cube_schemas || !size(props.manifest.cube_schemas) ? (
+            <div className={CSS.margin_v_l}>
+              <i>No cube schemas</i>
+            </div>
+          ) : (
+            <>
+              <Collapse className={CSS.margin_t_l} bordered={false} accordion defaultActiveKey="">
+                {map(props.manifest.cube_schemas, (schema: CubeSchema, cubeName: string) => (
+                  <Collapse.Panel header={cubeName} key={cubeName}>
+                    TODO
+                    {/* <Table
+                      dataSource={schema.columns}
+                      size="small"
+                      pagination={false}
+                      showHeader={false}
+                      rowKey="name"
+                      columns={[
+                        {
+                          title: 'Column',
+                          key: 'name',
+                          render: (row: any) => {
+                            return (
+                              <>
+                                <b>{row.name}</b>
+                                {row.is_required && (
+                                  <>
+                                    <span className={CSS.padding_l_s}>
+                                      <Tag color="lime">Required</Tag>
+                                    </span>
+                                  </>
+                                )}
+                              </>
+                            )
+                          }
+                        },
+                        {
+                          title: 'Desc',
+                          key: 'desc',
+                          render: (row: any) => row.description
+                        },
+                        {
+                          title: 'Type',
+                          key: 'type',
+                          render: (row: any) => (
+                            <span>
+                              {row.type}
+                              {row.size ? '(' + row.size + ')' : ''}
+                              {row.extra_definition ? ' ' + row.extra_definition : ''}
+                            </span>
+                          )
+                        }
+                      ]}
+                    /> */}
                   </Collapse.Panel>
                 ))}
               </Collapse>
@@ -351,6 +409,7 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
 
     if (extraColumnsCount > 0) items.push(extraColumnsTab)
     if (props.manifest.app_tables?.length) items.push(customTablesTab)
+    if (size(props.manifest.cube_schemas) > 0) items.push(cubeSchemasTab)
     if (props.manifest.data_hooks?.length) items.push(dataHooksTab)
     if (props.manifest.sql_queries?.length) items.push(sqlQueriesTab)
     if (props.manifest.tasks?.length) items.push(tasksTab)

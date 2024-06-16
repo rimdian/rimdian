@@ -20,7 +20,7 @@ import { TreeNodeInput, HasLeaf } from './input'
 import { Segment } from './interfaces'
 import { Timezones } from 'utils/countries_timezones'
 import CSS from 'utils/css'
-import { size } from 'lodash'
+import { forEach, size } from 'lodash'
 
 const ButtonUpsertSegment = (props: { segment?: Segment }) => {
   const [drawserVisible, setDrawserVisible] = useState(false)
@@ -173,22 +173,14 @@ const DrawerSegment = (props: { segment?: Segment; setDrawserVisible: any }) => 
     } as any
 
     // console.log('results', results)
-    // add tables connect to user
+    // add cube schemas that join with user
     workspaceCtx.workspace.installed_apps.forEach((app) => {
-      app.app_tables?.forEach((table) => {
-        if (table.joins && table.joins.length > 0) {
-          table.joins.forEach((join) => {
-            // console.log('join', join)
-            if (join.external_table === 'user') {
-              const capitalName = table.name.charAt(0).toUpperCase() + table.name.slice(1)
-              if (workspaceCtx.cubeSchemasMap[capitalName]) {
-                results[table.name] = workspaceCtx.cubeSchemasMap[capitalName]
-              } else {
-                console.log('not found', table.name)
-              }
-            }
-          })
-        }
+      forEach(app.cube_schemas, (schema, cubeName) => {
+        forEach(schema.joins, (_join, joinTable) => {
+          if (joinTable === 'User') {
+            results[cubeName] = schema
+          }
+        })
       })
     })
 

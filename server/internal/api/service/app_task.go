@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/rimdian/rimdian/internal/api/entity"
@@ -80,7 +79,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 	}
 
 	if newManifestString != "" {
-		if err := json.Unmarshal([]byte(newManifestString), newManifest); err != nil {
+		if err := json.Unmarshal([]byte(newManifestString), &newManifest); err != nil {
 			result.SetError(err.Error(), true)
 			return
 		}
@@ -157,69 +156,8 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 		mainState["app_tables_diff"] = string(appTablesDiffString)
 
 		// go to next stage
-		mainState["stage"] = "extra_columns"
-		result.Message = entity.StringPtr("validation step successful")
-
-	case "extra_columns":
-
-		// unmarshal extra columns diff
-		if _, ok := mainState["extra_columns_diff"]; ok {
-			if err := json.Unmarshal([]byte(mainState["extra_columns_diff"].(string)), extraColumnsDiff); err != nil {
-				result.SetError(err.Error(), true)
-				return
-			}
-		}
-
-		log.Printf("extra_columns diff: %+v\n", extraColumnsDiff)
-
-		// remove columns
-		if extraColumnsDiff.ToRemove != nil {
-			for _, operation := range extraColumnsDiff.ToRemove {
-				if !operation.IsDone {
-					if err := pipe.Repository.DeleteColumn(bgCtx, pipe.Workspace, operation.Table, operation.Column.Name); err != nil {
-						result.SetError(err.Error(), true)
-						return
-					}
-
-					// is done
-					// update state in case of future failure
-					operation.IsDone = true
-
-					extraColumnsDiffString, err := json.Marshal(extraColumnsDiff)
-					if err != nil {
-						result.SetError(err.Error(), true)
-						return
-					}
-					mainState["extra_columns_diff"] = string(extraColumnsDiffString)
-				}
-			}
-		}
-
-		// add columns
-		if extraColumnsDiff.ToAdd != nil {
-			for _, operation := range extraColumnsDiff.ToAdd {
-				if !operation.IsDone {
-					if err := pipe.Repository.AddColumn(bgCtx, pipe.Workspace, operation.Table, operation.Column); err != nil {
-						result.SetError(err.Error(), true)
-						return
-					}
-
-					// is done
-					// update state in case of future failure
-					operation.IsDone = true
-
-					extraColumnsDiffString, err := json.Marshal(extraColumnsDiff)
-					if err != nil {
-						result.SetError(err.Error(), true)
-						return
-					}
-					mainState["extra_columns_diff"] = string(extraColumnsDiffString)
-				}
-			}
-		}
-
 		mainState["stage"] = "app_tables"
-		result.Message = entity.StringPtr("extra_columns step successful")
+		result.Message = entity.StringPtr("validation step successful")
 
 	case "app_tables":
 
@@ -232,7 +170,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 			}
 		}
 
-		log.Printf("app_tables diff: %+v\n", appTablesDiff)
+		// log.Printf("app_tables diff: %+v\n", appTablesDiff)
 
 		// remove tables
 		if appTablesDiff.ToRemove != nil {
@@ -302,8 +240,69 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 			}
 		}
 
-		mainState["app_tables"] = "finalize"
+		mainState["stage"] = "extra_columns"
 		result.Message = entity.StringPtr("app_tables step successful")
+
+	case "extra_columns":
+
+		// unmarshal extra columns diff
+		if _, ok := mainState["extra_columns_diff"]; ok {
+			if err := json.Unmarshal([]byte(mainState["extra_columns_diff"].(string)), &extraColumnsDiff); err != nil {
+				result.SetError(err.Error(), true)
+				return
+			}
+		}
+
+		// log.Printf("extra_columns diff: %+v\n", extraColumnsDiff)
+
+		// remove columns
+		if extraColumnsDiff.ToRemove != nil {
+			for _, operation := range extraColumnsDiff.ToRemove {
+				if !operation.IsDone {
+					if err := pipe.Repository.DeleteColumn(bgCtx, pipe.Workspace, operation.Table, operation.Column.Name); err != nil {
+						result.SetError(err.Error(), true)
+						return
+					}
+
+					// is done
+					// update state in case of future failure
+					operation.IsDone = true
+
+					extraColumnsDiffString, err := json.Marshal(extraColumnsDiff)
+					if err != nil {
+						result.SetError(err.Error(), true)
+						return
+					}
+					mainState["extra_columns_diff"] = string(extraColumnsDiffString)
+				}
+			}
+		}
+
+		// add columns
+		if extraColumnsDiff.ToAdd != nil {
+			for _, operation := range extraColumnsDiff.ToAdd {
+				if !operation.IsDone {
+					if err := pipe.Repository.AddColumn(bgCtx, pipe.Workspace, operation.Table, operation.Column); err != nil {
+						result.SetError(err.Error(), true)
+						return
+					}
+
+					// is done
+					// update state in case of future failure
+					operation.IsDone = true
+
+					extraColumnsDiffString, err := json.Marshal(extraColumnsDiff)
+					if err != nil {
+						result.SetError(err.Error(), true)
+						return
+					}
+					mainState["extra_columns_diff"] = string(extraColumnsDiffString)
+				}
+			}
+		}
+
+		mainState["stage"] = "finalize"
+		result.Message = entity.StringPtr("extra_columns step successful")
 
 	case "finalize":
 		code, err := pipe.Repository.RunInTransactionForSystem(ctx, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
@@ -398,7 +397,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 		_, err = pipe.Repository.RunInTransactionForWorkspace(ctx, pipe.Workspace.ID, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
 			app.Manifest = *newManifest
 
-			if err := pipe.Repository.UpdateApp(ctx, app, nil); err != nil {
+			if err := pipe.Repository.UpdateApp(ctx, app, tx); err != nil {
 				return 500, eris.Wrap(err, "TaskUpgradeApp")
 			}
 

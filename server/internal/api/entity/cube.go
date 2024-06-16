@@ -1,12 +1,10 @@
 package entity
 
 import (
+	"bytes"
+	"database/sql/driver"
 	"encoding/json"
-	"fmt"
 	"log"
-	"strings"
-
-	"github.com/asaskevich/govalidator"
 )
 
 // type CubeJSQueryResponse struct {
@@ -113,127 +111,151 @@ func (schema *CubeJSSchema) BuildContent(cubeName string) (content string) {
 	// return "cube('" + cubeName + "', " + string(b) + ");"
 }
 
-// create a ne CubeJS schema for a table
-func NewTableCube(table *AppTableManifest) (schema *CubeJSSchema) {
-	schema = &CubeJSSchema{
-		Title: table.Name,
-		SQL:   "SELECT * FROM " + table.Name,
-		Joins: map[string]CubeJSSchemaJoin{},
-		Measures: map[string]CubeJSSchemaMeasure{
-			// count *
-			"count": {
-				Title:       "Count",
-				Description: "Count",
-				Type:        "count",
-			},
-		},
-		Dimensions: map[string]CubeJSSchemaDimension{
-			// reserved dimensions
-			"id": {
-				Title:       AppReservedTableColumns[0].Name,
-				Description: *AppReservedTableColumns[0].Description,
-				Type:        "string",
-				PrimaryKey:  true,
-				Shown:       false,
-				SQL:         "id",
-			},
-			"external_id": {
-				Title:       AppReservedTableColumns[1].Name,
-				Description: *AppReservedTableColumns[1].Description,
-				Type:        "string",
-				SQL:         "external_id",
-			},
-			"created_at": {
-				Title:       AppReservedTableColumns[2].Name,
-				Description: *AppReservedTableColumns[2].Description,
-				Type:        "time",
-				SQL:         "created_at",
-			},
-			// Don't add user_id yet, should be added when we implement JOINs between apps and users
-			// "user_id": {
-			// 	Title:       AppReservedTableColumns[4].Name,
-			// 	Description: *AppReservedTableColumns[4].Description,
-			// 	Type:        "string",
-			// 	SQL:         "user_id",
-			// },
-		},
+type CubeSchemasManifest map[string]*CubeJSSchema
+
+func (x *CubeSchemasManifest) Scan(val interface{}) error {
+
+	var data []byte
+
+	if b, ok := val.([]byte); ok {
+		// VERY IMPORTANT: we need to clone the bytes here
+		// The sql driver will reuse the same bytes RAM slots for future queries
+		// Thank you St Antoine De Padoue for helping me find this bug
+		data = bytes.Clone(b)
+	} else if s, ok := val.(string); ok {
+		data = []byte(s)
+	} else if val == nil {
+		return nil
 	}
 
-	if table.Description != nil {
-		schema.Description = *table.Description
-	}
-
-	// joins
-	if table.Joins != nil && len(table.Joins) > 0 {
-		for _, join := range table.Joins {
-			cubeName := strings.ToUpper(string(join.ExternalTable[0])) + join.ExternalTable[1:]
-			// relationship := "belongsTo"
-			// if join.Relationship == "has_one" {
-			// 	relationship = "hasOne"
-			// }
-			// if join.Relationship == "has_many" {
-			// 	relationship = "hasMany"
-			// }
-			schema.Joins[cubeName] = CubeJSSchemaJoin{
-				Relationship: join.Relationship,
-				SQL:          fmt.Sprintf("${CUBE}.%v = ${%v}.%v", join.LocalColumn, cubeName, join.ExternalColumn),
-			}
-		}
-	}
-
-	// dimensions + measures
-	if table.Columns != nil && len(table.Columns) > 0 {
-		for _, column := range table.Columns {
-
-			// ignore reserved columns and JSON columns
-			if govalidator.IsIn(column.Name, ReservedColumns...) || column.Type == ColumnTypeJSON {
-				continue
-			}
-
-			dimensionType := "string"
-
-			// https://cube.dev/docs/schema/reference/types-and-formats#dimensions-types
-			switch column.Type {
-			case ColumnTypeVarchar, ColumnTypeLongText:
-				dimensionType = "string"
-			case ColumnTypeNumber:
-				dimensionType = "number"
-			case ColumnTypeDate, ColumnTypeTimestamp, ColumnTypeDatetime:
-				dimensionType = "time"
-			case ColumnTypeBoolean:
-				// boolean should be considered as number
-				dimensionType = "number"
-			default:
-			}
-
-			schema.Dimensions[column.Name] = CubeJSSchemaDimension{
-				Title:       column.Name,
-				Description: *column.Description,
-				Type:        dimensionType,
-				SQL:         column.Name,
-			}
-
-			// Number columns can be used as measures, we add the SUM and AVG measures
-			if column.Type == ColumnTypeNumber {
-				schema.Measures[column.Name+"_sum"] = CubeJSSchemaMeasure{
-					Title:       "SUM of " + column.Name,
-					Description: "(SUM of) " + *column.Description,
-					Type:        "sum",
-					SQL:         column.Name,
-				}
-
-				schema.Measures[column.Name+"_avg"] = CubeJSSchemaMeasure{
-					Title:       "AVG of " + column.Name,
-					Description: "(Average of) " + *column.Description,
-					Type:        "avg",
-					SQL:         column.Name,
-				}
-			}
-		}
-	}
-
-	return
+	return json.Unmarshal(data, x)
 }
+
+func (x CubeSchemasManifest) Value() (driver.Value, error) {
+	return json.Marshal(x)
+}
+
+// create a ne CubeJS schema for a table
+// func NewTableCube(table *AppTableManifest) (schema *CubeJSSchema) {
+// 	schema = &CubeJSSchema{
+// 		Title: table.Name,
+// 		SQL:   "SELECT * FROM " + table.Name,
+// 		Joins: map[string]CubeJSSchemaJoin{},
+// 		Measures: map[string]CubeJSSchemaMeasure{
+// 			// count *
+// 			"count": {
+// 				Title:       "Count",
+// 				Description: "Count",
+// 				Type:        "count",
+// 			},
+// 		},
+// 		Dimensions: map[string]CubeJSSchemaDimension{
+// 			// reserved dimensions
+// 			"id": {
+// 				Title:       AppReservedTableColumns[0].Name,
+// 				Description: *AppReservedTableColumns[0].Description,
+// 				Type:        "string",
+// 				PrimaryKey:  true,
+// 				Shown:       false,
+// 				SQL:         "id",
+// 			},
+// 			"external_id": {
+// 				Title:       AppReservedTableColumns[1].Name,
+// 				Description: *AppReservedTableColumns[1].Description,
+// 				Type:        "string",
+// 				SQL:         "external_id",
+// 			},
+// 			"created_at": {
+// 				Title:       AppReservedTableColumns[2].Name,
+// 				Description: *AppReservedTableColumns[2].Description,
+// 				Type:        "time",
+// 				SQL:         "created_at",
+// 			},
+// 			// Don't add user_id yet, should be added when we implement JOINs between apps and users
+// 			// "user_id": {
+// 			// 	Title:       AppReservedTableColumns[4].Name,
+// 			// 	Description: *AppReservedTableColumns[4].Description,
+// 			// 	Type:        "string",
+// 			// 	SQL:         "user_id",
+// 			// },
+// 		},
+// 	}
+
+// 	if table.Description != nil {
+// 		schema.Description = *table.Description
+// 	}
+
+// 	// joins
+// 	if table.Joins != nil && len(table.Joins) > 0 {
+// 		for _, join := range table.Joins {
+// 			cubeName := strings.ToUpper(string(join.ExternalTable[0])) + join.ExternalTable[1:]
+// 			// relationship := "belongsTo"
+// 			// if join.Relationship == "has_one" {
+// 			// 	relationship = "hasOne"
+// 			// }
+// 			// if join.Relationship == "has_many" {
+// 			// 	relationship = "hasMany"
+// 			// }
+// 			schema.Joins[cubeName] = CubeJSSchemaJoin{
+// 				Relationship: join.Relationship,
+// 				SQL:          fmt.Sprintf("${CUBE}.%v = ${%v}.%v", join.LocalColumn, cubeName, join.ExternalColumn),
+// 			}
+// 		}
+// 	}
+
+// 	// dimensions + measures
+// 	if table.Columns != nil && len(table.Columns) > 0 {
+// 		for _, column := range table.Columns {
+
+// 			// ignore reserved columns and JSON columns
+// 			if govalidator.IsIn(column.Name, ReservedColumns...) || column.Type == ColumnTypeJSON {
+// 				continue
+// 			}
+
+// 			dimensionType := "string"
+
+// 			// https://cube.dev/docs/schema/reference/types-and-formats#dimensions-types
+// 			switch column.Type {
+// 			case ColumnTypeVarchar, ColumnTypeLongText:
+// 				dimensionType = "string"
+// 			case ColumnTypeNumber:
+// 				dimensionType = "number"
+// 			case ColumnTypeDate, ColumnTypeTimestamp, ColumnTypeDatetime:
+// 				dimensionType = "time"
+// 			case ColumnTypeBoolean:
+// 				// boolean should be considered as number
+// 				dimensionType = "number"
+// 			default:
+// 			}
+
+// 			schema.Dimensions[column.Name] = CubeJSSchemaDimension{
+// 				Title:       column.Name,
+// 				Description: *column.Description,
+// 				Type:        dimensionType,
+// 				SQL:         column.Name,
+// 			}
+
+// 			// Number columns can be used as measures, we add the SUM and AVG measures
+// 			if column.Type == ColumnTypeNumber {
+// 				schema.Measures[column.Name+"_sum"] = CubeJSSchemaMeasure{
+// 					Title:       "SUM of " + column.Name,
+// 					Description: "(SUM of) " + *column.Description,
+// 					Type:        "sum",
+// 					SQL:         column.Name,
+// 				}
+
+// 				schema.Measures[column.Name+"_avg"] = CubeJSSchemaMeasure{
+// 					Title:       "AVG of " + column.Name,
+// 					Description: "(Average of) " + *column.Description,
+// 					Type:        "avg",
+// 					SQL:         column.Name,
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	return
+// }
 
 type CubeJSSchemaJoin struct {
 	Relationship string `json:"relationship"` // one_to_one` || `one_to_many` || `many_to_one`
@@ -319,13 +341,18 @@ func GenerateSchemas(installedApps InstalledApps) (schemas map[string]*CubeJSSch
 
 	// loop over installed apps in workspace and enrich schemas
 	for _, app := range installedApps {
-		if app.AppTables != nil {
-			// loop over tables
-			for _, table := range app.AppTables {
-				// generate schema for each table
-				// convert first letter to uppercase
-				cubeName := strings.ToUpper(string(table.Name[0])) + table.Name[1:]
-				schemas[cubeName] = NewTableCube(table)
+		// if app.AppTables != nil {
+		// 	// loop over tables
+		// 	for _, table := range app.AppTables {
+		// 		// generate schema for each table
+		// 		// convert first letter to uppercase
+		// 		cubeName := strings.ToUpper(string(table.Name[0])) + table.Name[1:]
+		// 		schemas[cubeName] = NewTableCube(table)
+		// 	}
+		// }
+		if app.CubeSchemas != nil {
+			for cubeName, schema := range app.CubeSchemas {
+				schemas[cubeName] = schema
 			}
 		}
 

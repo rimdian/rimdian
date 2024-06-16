@@ -37,11 +37,14 @@ const InstallAppButton = (props: InstallAppButtonProps) => {
         .apiPOST('/task.run', {
           id: 'system_upgrade_app',
           workspace_id: props.workspaceCtx.workspace.id,
-          app_id: props.manifest.id,
-          new_manifest: props.manifest
+          main_worker_state: {
+            app_id: props.manifest.id,
+            new_manifest: JSON.stringify(props.manifest)
+          }
         })
         .then(() => {
           setIsLoading(false)
+          setDrawerVisible(false)
           message.success('The upgrade task has been launched!')
         })
         .catch((_) => {

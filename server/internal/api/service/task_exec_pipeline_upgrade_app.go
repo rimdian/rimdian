@@ -396,6 +396,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 		// update app manifest
 		_, err = pipe.Repository.RunInTransactionForWorkspace(ctx, pipe.Workspace.ID, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
 			app.Manifest = *newManifest
+			app.Status = entity.AppStatusInit
 
 			if err := pipe.Repository.UpdateApp(ctx, app, tx); err != nil {
 				return 500, eris.Wrap(err, "TaskUpgradeApp")

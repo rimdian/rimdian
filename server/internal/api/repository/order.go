@@ -121,6 +121,7 @@ func (repo *RepositoryImpl) InsertOrder(ctx context.Context, order *entity.Order
 		"fx_rate",
 		"cancelled_at",
 		"cancel_reason",
+		"ip",
 		// "items",
 		// attribution fields are only set by attribution algorithm
 		// "is_first_conversion",
@@ -150,6 +151,7 @@ func (repo *RepositoryImpl) InsertOrder(ctx context.Context, order *entity.Order
 		order.FxRate,
 		order.CancelledAt,
 		order.CancelReason,
+		order.IP,
 		// order.Items,
 		// attribution fields
 		// order.IsFirstConversion,
@@ -226,7 +228,8 @@ func (repo *RepositoryImpl) UpdateOrder(ctx context.Context, order *entity.Order
 		Set("currency", order.Currency).
 		Set("fx_rate", order.FxRate).
 		Set("cancelled_at", order.CancelledAt).
-		Set("cancel_reason", order.CancelReason)
+		Set("cancel_reason", order.CancelReason).
+		Set("ip", order.IP)
 		// Set("items", order.Items)
 		// attribution fields are only set by attribution algorithm
 		// Set("is_first_conversion", order.IsFirstConversion).
@@ -326,10 +329,10 @@ func (repo *RepositoryImpl) ListOrdersForUser(ctx context.Context, workspace *en
 
 	if tx == nil {
 
-		conn, err := repo.GetWorkspaceConnection(ctx, workspace.ID)
+		conn, errConn := repo.GetWorkspaceConnection(ctx, workspace.ID)
 
-		if err != nil {
-			return nil, eris.Wrap(err, "ListOrdersForUser")
+		if errConn != nil {
+			return nil, eris.Wrap(errConn, "ListOrdersForUser")
 		}
 
 		defer conn.Close()
@@ -454,6 +457,8 @@ func scanOrderRow(cols []string, row RowScanner, order *entity.Order, installedA
 			values[i] = &order.CancelledAt
 		case "cancel_reason":
 			values[i] = &order.CancelReason
+		case "ip":
+			values[i] = &order.IP
 		// case "items":
 		// 	values[i] = &order.Items
 		case "is_first_conversion":

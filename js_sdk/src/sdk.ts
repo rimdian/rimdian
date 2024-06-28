@@ -503,7 +503,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.6.0',
+    version: '2.7.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -1143,13 +1143,13 @@ const Rimdian: IRimdian = {
           : window.screen.width + 'x' + window.screen.height
         : undefined
 
-    // create dataImport batches of 10 items maximum
+    // create dataImport batches of 20 items maximum
     const batches = []
     let itemsBatch: IItem[] = []
 
     while (Rimdian.itemsQueue.items.length > 0) {
       itemsBatch.push(Rimdian.itemsQueue.items.shift())
-      if (itemsBatch.length >= 10) {
+      if (itemsBatch.length >= 20) {
         batches.push(itemsBatch)
         itemsBatch = []
       }
@@ -1791,7 +1791,7 @@ const Rimdian: IRimdian = {
     }
 
     // extract gclid+fbclid+MSCLKID from url into utm_id + utm_id_from
-    const ids = ['gclid', 'fbclid', 'msclkid']
+    const ids = ['gclid', 'fbclid', 'msclkid', 'aeclid']
     ids.forEach((param) => {
       const value =
         Rimdian.getQueryParam(document.URL, param) ||

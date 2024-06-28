@@ -193,6 +193,56 @@ const metaCapi: AppManifest = {
   ]
 }
 
+const affilae: AppManifest = {
+  id: 'appx_affilae',
+  name: 'Affilae',
+  homepage: 'https://www.rimdian.com/',
+  author: 'Rimdian',
+  icon_url: 'https://eu.rimdian.com/images/apps/affilae.png',
+  short_description: 'Affilae server-to-server tracking.',
+  description:
+    'Send your conversions to Affilae servers with their corresponding Affilae Click ID.',
+  version: '1.3.0',
+  ui_endpoint: 'https://nativeapps.rimdian.com',
+  webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
+  tasks: [
+    {
+      id: 'appx_affilae_send',
+      name: 'Send Affilae conversions',
+      is_cron: true,
+      on_multiple_exec: 'discard_new',
+      minutes_interval: 720
+    }
+  ],
+  sql_queries: [
+    {
+      id: 'appx_affilae_conversions',
+      type: 'select',
+      name: 'Fetch conversions with Affilae click IDs',
+      description:
+        'Retrieve conversions with their corresponding Affilae sessions. Deduplicated by aecid (utm_id).',
+      query: `SELECT 
+          s.utm_id as aeclid, 
+          o.external_id as order_external_id, 
+          o.subtotal_price as order_subtotal_price, 
+          o.currency as order_currency, 
+          o.created_at as order_created_at,
+          o.discount_codes as order_discount_codes,
+          o.ip as order_ip
+      FROM \`session\` as s 
+      JOIN \`order\` as o ON s.user_id = o.user_id AND s.conversion_id = o.id 
+      WHERE s.utm_id_from = 'aeclid' 
+      AND s.conversion_id IS NOT NULL
+      AND o.created_at >= ?
+      AND o.created_at < ?
+      AND o.cancelled_at IS NULL
+      GROUP BY s.utm_id
+      OFFSET ? LIMIT ?`,
+      test_args: ['2024-06-26T17:18:56.664Z', '2024-07-03T17:18:56.664Z', 0, 100]
+    }
+  ]
+}
+
 const meta: AppManifest = {
   id: 'appx_meta',
   name: 'Meta',
@@ -236,7 +286,150 @@ const meta: AppManifest = {
     }
   ],
   app_tables: [
-    // TODO
+    {
+      name: 'appx_meta_campaign',
+      description: 'Meta campaigns',
+      shard_key: ['external_id'],
+      unique_key: ['external_id'],
+      sort_key: ['created_at'],
+      columns: [
+        {
+          name: 'id',
+          type: 'varchar',
+          size: 64,
+          is_required: true,
+          description: 'ID (sha1 of external_id)'
+        },
+        {
+          name: 'external_id',
+          type: 'varchar',
+          size: 256,
+          is_required: true,
+          description: 'External ID'
+        },
+        {
+          name: 'created_at',
+          type: 'datetime',
+          is_required: true,
+          description: 'Created at'
+        },
+        {
+          name: 'fields_timestamp',
+          type: 'json',
+          is_required: true,
+          description: 'Fields timestamp'
+        },
+        {
+          name: 'db_created_at',
+          type: 'timestamp',
+          size: 6,
+          is_required: true,
+          description: 'DB created at',
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
+        },
+        {
+          name: 'db_updated_at',
+          type: 'timestamp',
+          is_required: true,
+          description: 'DB updated at',
+          default_timestamp: 'CURRENT_TIMESTAMP',
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
+        },
+        {
+          name: 'campaign_id',
+          type: 'varchar',
+          size: 256,
+          is_required: true,
+          description: 'Campaign ID'
+        },
+        {
+          name: 'account_id',
+          type: 'varchar',
+          size: 256,
+          is_required: true,
+          description: 'Account ID'
+        },
+        {
+          name: 'name',
+          type: 'varchar',
+          size: 256,
+          is_required: true,
+          description: 'Campaign name'
+        }
+      ]
+    },
+    // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/insights
+    {
+      name: 'appx_meta_campaign_metric',
+      description: 'Meta campaigns daily metrics',
+      shard_key: ['campaign_external_id', 'metrics_date'],
+      unique_key: ['campaign_external_id', 'metrics_date'],
+      sort_key: ['metrics_date'],
+      indexes: [],
+      columns: [
+        {
+          name: 'id',
+          type: 'varchar',
+          size: 64,
+          is_required: true,
+          description: 'ID (sha1 of external_id)'
+        },
+        {
+          name: 'external_id',
+          type: 'varchar',
+          size: 256,
+          is_required: true,
+          description: 'External ID'
+        },
+        {
+          name: 'created_at',
+          type: 'datetime',
+          is_required: true,
+          description: 'Created at'
+        },
+        {
+          name: 'fields_timestamp',
+          type: 'json',
+          is_required: true,
+          description: 'Fields timestamp'
+        },
+        {
+          name: 'db_created_at',
+          type: 'timestamp',
+          size: 6,
+          is_required: true,
+          description: 'DB created at',
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
+        },
+        {
+          name: 'db_updated_at',
+          type: 'timestamp',
+          is_required: true,
+          description: 'DB updated at',
+          default_timestamp: 'CURRENT_TIMESTAMP',
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
+        },
+        {
+          name: 'campaign_external_id',
+          type: 'varchar',
+          size: 256,
+          is_required: true,
+          description: 'Campaign external ID'
+        },
+        {
+          name: 'clicks',
+          type: 'number',
+          is_required: false,
+          description: 'Clicks'
+        },
+        {
+          name: 'spend',
+          type: 'number',
+          is_required: false,
+          description: `The estimated total amount of money you've spent on your campaign, ad set or ad during its schedule. This metric is estimated.`
+        }
+      ]
+    }
   ]
 }
 
@@ -380,6 +573,13 @@ const googleAds: AppManifest = {
       is_cron: true,
       on_multiple_exec: 'discard_new',
       minutes_interval: 720
+    },
+    {
+      id: 'appx_googleads_sync_customer_lists',
+      name: 'Sync user segments with Google Ads customer lists',
+      is_cron: true,
+      on_multiple_exec: 'discard_new',
+      minutes_interval: 720
     }
   ],
   data_hooks: [
@@ -499,16 +699,14 @@ const googleAds: AppManifest = {
           type: 'varchar',
           size: 64,
           is_required: true,
-          description: 'ID (sha1 of external_id)',
-          hide_in_analytics: true
+          description: 'ID (sha1 of external_id)'
         },
         {
           name: 'external_id',
           type: 'varchar',
           size: 256,
           is_required: true,
-          description: 'External ID',
-          hide_in_analytics: true
+          description: 'External ID'
         },
         {
           name: 'created_at',
@@ -520,8 +718,7 @@ const googleAds: AppManifest = {
           name: 'fields_timestamp',
           type: 'json',
           is_required: true,
-          description: 'Fields timestamp',
-          hide_in_analytics: true
+          description: 'Fields timestamp'
         },
         {
           name: 'db_created_at',
@@ -529,8 +726,7 @@ const googleAds: AppManifest = {
           size: 6,
           is_required: true,
           description: 'DB created at',
-          default_timestamp: 'CURRENT_TIMESTAMP(6)',
-          hide_in_analytics: true
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
         },
         {
           name: 'db_updated_at',
@@ -538,8 +734,7 @@ const googleAds: AppManifest = {
           is_required: true,
           description: 'DB updated at',
           default_timestamp: 'CURRENT_TIMESTAMP',
-          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP',
-          hide_in_analytics: true
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
         }
       ],
       timeseries_column: 'created_at',
@@ -606,16 +801,14 @@ const googleAds: AppManifest = {
           type: 'varchar',
           size: 64,
           is_required: true,
-          description: 'ID (sha1 of external_id)',
-          hide_in_analytics: true
+          description: 'ID (sha1 of external_id)'
         },
         {
           name: 'external_id',
           type: 'varchar',
           size: 256,
           is_required: true,
-          description: 'External ID',
-          hide_in_analytics: true
+          description: 'External ID'
         },
         {
           name: 'created_at',
@@ -627,8 +820,7 @@ const googleAds: AppManifest = {
           name: 'fields_timestamp',
           type: 'json',
           is_required: true,
-          description: 'Fields timestamp',
-          hide_in_analytics: true
+          description: 'Fields timestamp'
         },
         {
           name: 'db_created_at',
@@ -636,8 +828,7 @@ const googleAds: AppManifest = {
           size: 6,
           is_required: true,
           description: 'DB created at',
-          default_timestamp: 'CURRENT_TIMESTAMP(6)',
-          hide_in_analytics: true
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
         },
         {
           name: 'db_updated_at',
@@ -645,8 +836,7 @@ const googleAds: AppManifest = {
           is_required: true,
           description: 'DB updated at',
           default_timestamp: 'CURRENT_TIMESTAMP',
-          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP',
-          hide_in_analytics: true
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
         }
       ],
       timeseries_column: 'created_at',
@@ -1057,16 +1247,14 @@ const googleAds: AppManifest = {
           type: 'varchar',
           size: 64,
           is_required: true,
-          description: 'ID (sha1 of external_id)',
-          hide_in_analytics: true
+          description: 'ID (sha1 of external_id)'
         },
         {
           name: 'external_id',
           type: 'varchar',
           size: 256,
           is_required: true,
-          description: 'External ID',
-          hide_in_analytics: true
+          description: 'External ID'
         },
         {
           name: 'created_at',
@@ -1078,8 +1266,7 @@ const googleAds: AppManifest = {
           name: 'fields_timestamp',
           type: 'json',
           is_required: true,
-          description: 'Fields timestamp',
-          hide_in_analytics: true
+          description: 'Fields timestamp'
         },
         {
           name: 'db_created_at',
@@ -1087,8 +1274,7 @@ const googleAds: AppManifest = {
           size: 6,
           is_required: true,
           description: 'DB created at',
-          default_timestamp: 'CURRENT_TIMESTAMP(6)',
-          hide_in_analytics: true
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
         },
         {
           name: 'db_updated_at',
@@ -1096,8 +1282,7 @@ const googleAds: AppManifest = {
           is_required: true,
           description: 'DB updated at',
           default_timestamp: 'CURRENT_TIMESTAMP',
-          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP',
-          hide_in_analytics: true
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
         }
       ]
     },
@@ -1192,16 +1377,14 @@ const googleAds: AppManifest = {
           type: 'varchar',
           size: 64,
           is_required: true,
-          description: 'ID (sha1 of external_id)',
-          hide_in_analytics: true
+          description: 'ID (sha1 of external_id)'
         },
         {
           name: 'external_id',
           type: 'varchar',
           size: 256,
           is_required: true,
-          description: 'External ID',
-          hide_in_analytics: true
+          description: 'External ID'
         },
         {
           name: 'created_at',
@@ -1213,8 +1396,7 @@ const googleAds: AppManifest = {
           name: 'fields_timestamp',
           type: 'json',
           is_required: true,
-          description: 'Fields timestamp',
-          hide_in_analytics: true
+          description: 'Fields timestamp'
         },
         {
           name: 'db_created_at',
@@ -1222,8 +1404,7 @@ const googleAds: AppManifest = {
           size: 6,
           is_required: true,
           description: 'DB created at',
-          default_timestamp: 'CURRENT_TIMESTAMP(6)',
-          hide_in_analytics: true
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
         },
         {
           name: 'db_updated_at',
@@ -1231,8 +1412,7 @@ const googleAds: AppManifest = {
           is_required: true,
           description: 'DB updated at',
           default_timestamp: 'CURRENT_TIMESTAMP',
-          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP',
-          hide_in_analytics: true
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
         }
       ]
     },
@@ -1489,16 +1669,14 @@ const googleAds: AppManifest = {
           type: 'varchar',
           size: 64,
           is_required: true,
-          description: 'ID (sha1 of external_id)',
-          hide_in_analytics: true
+          description: 'ID (sha1 of external_id)'
         },
         {
           name: 'external_id',
           type: 'varchar',
           size: 256,
           is_required: true,
-          description: 'External ID',
-          hide_in_analytics: true
+          description: 'External ID'
         },
         {
           name: 'created_at',
@@ -1510,16 +1688,14 @@ const googleAds: AppManifest = {
           name: 'fields_timestamp',
           type: 'json',
           is_required: true,
-          description: 'Fields timestamp',
-          hide_in_analytics: true
+          description: 'Fields timestamp'
         },
         {
           name: 'db_created_at',
           type: 'timestamp',
           is_required: true,
           description: 'DB created at',
-          default_timestamp: 'CURRENT_TIMESTAMP(6)',
-          hide_in_analytics: true
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
         },
         {
           name: 'db_updated_at',
@@ -1527,8 +1703,7 @@ const googleAds: AppManifest = {
           is_required: true,
           description: 'DB updated at',
           default_timestamp: 'CURRENT_TIMESTAMP',
-          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP',
-          hide_in_analytics: true
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
         }
       ]
     },
@@ -1628,16 +1803,14 @@ const googleAds: AppManifest = {
           type: 'varchar',
           size: 64,
           is_required: true,
-          description: 'ID (sha1 of external_id)',
-          hide_in_analytics: true
+          description: 'ID (sha1 of external_id)'
         },
         {
           name: 'external_id',
           type: 'varchar',
           size: 256,
           is_required: true,
-          description: 'External ID',
-          hide_in_analytics: true
+          description: 'External ID'
         },
         {
           name: 'created_at',
@@ -1649,8 +1822,7 @@ const googleAds: AppManifest = {
           name: 'fields_timestamp',
           type: 'json',
           is_required: true,
-          description: 'Fields timestamp',
-          hide_in_analytics: true
+          description: 'Fields timestamp'
         },
         {
           name: 'db_created_at',
@@ -1658,8 +1830,7 @@ const googleAds: AppManifest = {
           size: 6,
           is_required: true,
           description: 'DB created at',
-          default_timestamp: 'CURRENT_TIMESTAMP(6)',
-          hide_in_analytics: true
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
         },
         {
           name: 'db_updated_at',
@@ -1667,8 +1838,7 @@ const googleAds: AppManifest = {
           is_required: true,
           description: 'DB updated at',
           default_timestamp: 'CURRENT_TIMESTAMP',
-          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP',
-          hide_in_analytics: true
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
         }
       ]
     },
@@ -1985,16 +2155,14 @@ const googleAds: AppManifest = {
           type: 'varchar',
           size: 64,
           is_required: true,
-          description: 'ID (sha1 of external_id)',
-          hide_in_analytics: true
+          description: 'ID (sha1 of external_id)'
         },
         {
           name: 'external_id',
           type: 'varchar',
           size: 256,
           is_required: true,
-          description: 'External ID',
-          hide_in_analytics: true
+          description: 'External ID'
         },
         {
           name: 'metrics_date',
@@ -2013,16 +2181,14 @@ const googleAds: AppManifest = {
           name: 'fields_timestamp',
           type: 'json',
           is_required: true,
-          description: 'Fields timestamp',
-          hide_in_analytics: true
+          description: 'Fields timestamp'
         },
         {
           name: 'db_created_at',
           type: 'timestamp',
           is_required: true,
           description: 'DB created at',
-          default_timestamp: 'CURRENT_TIMESTAMP(6)',
-          hide_in_analytics: true
+          default_timestamp: 'CURRENT_TIMESTAMP(6)'
         },
         {
           name: 'db_updated_at',
@@ -2030,8 +2196,7 @@ const googleAds: AppManifest = {
           is_required: true,
           description: 'DB updated at',
           default_timestamp: 'CURRENT_TIMESTAMP',
-          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP',
-          hide_in_analytics: true
+          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
         }
       ]
     }
@@ -2251,6 +2416,6 @@ const wooCommerce: AppManifest = {
   ]
 }
 
-const apps: AppManifest[] = [googleAds, metaCapi, shopify, wooCommerce, meta, googleCM360]
+const apps: AppManifest[] = [googleAds, metaCapi, shopify, wooCommerce, meta, affilae, googleCM360]
 
 export default apps

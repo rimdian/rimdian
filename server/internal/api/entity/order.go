@@ -11,6 +11,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/rimdian/rimdian/internal/api/common"
+	"github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rotisserie/eris"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -86,6 +87,7 @@ type Order struct {
 	// ConversionRateError *string         `db:"conversion_rate_error" json:"conversion_rate_error,omitempty"` // eventual error while converting local price into workspace price
 	CancelledAt  *NullableTime   `db:"cancelled_at" json:"cancelled_at,omitempty"`
 	CancelReason *NullableString `db:"cancel_reason" json:"cancel_reason,omitempty"`
+	IP           *NullableString `db:"ip" json:"ip,omitempty"`
 
 	// attribution fields
 	IsFirstConversion    bool             `db:"is_first_conversion" json:"is_first_conversion"`         // used to separate acquisition stats from retention stats
@@ -375,6 +377,37 @@ func (o *Order) SetCancelReason(value *NullableString, timestamp time.Time) (upd
 	return
 }
 
+func (o *Order) SetIP(value *NullableString, timestamp time.Time) (update *UpdatedField) {
+	key := "ip"
+	// ignore if value is not provided
+	if value == nil {
+		return nil
+	}
+	// abort if values are equal
+	if value != nil && o.IP != nil && o.IP.IsNull == value.IsNull && o.IP.String == value.String {
+		return nil
+	}
+	existingValueTimestamp := o.GetFieldDate(key)
+	// abort if existing value is newer
+	if existingValueTimestamp.After(timestamp) {
+		return nil
+	}
+	// the value might be set for the first time
+	// so we set the value without producing a field update
+	if existingValueTimestamp.Equal(timestamp) {
+		o.IP = value
+		return
+	}
+	update = &UpdatedField{
+		Field:     key,
+		PrevValue: NullableStringToInterface(o.IP),
+		NewValue:  NullableStringToInterface(value),
+	}
+	o.IP = value
+	o.FieldsTimestamp[key] = timestamp
+	return
+}
+
 // func (o *Order) SetItems(value OrderItems, timestamp time.Time) (update *UpdatedField) {
 // 	key := "items"
 // 	// abort if values are equal
@@ -514,6 +547,9 @@ func (fromOrder *Order) MergeInto(toOrder *Order) (updatedFields []*UpdatedField
 		updatedFields = append(updatedFields, fieldUpdate)
 	}
 	if fieldUpdate := toOrder.SetCancelReason(fromOrder.CancelReason, fromOrder.GetFieldDate("cancel_reason")); fieldUpdate != nil {
+		updatedFields = append(updatedFields, fieldUpdate)
+	}
+	if fieldUpdate := toOrder.SetIP(fromOrder.IP, fromOrder.GetFieldDate("ip")); fieldUpdate != nil {
 		updatedFields = append(updatedFields, fieldUpdate)
 	}
 
@@ -729,6 +765,13 @@ func NewOrderFromDataLog(dataLog *DataLog, clockDifference time.Duration, worksp
 				order.CancelReason = NewNullableString(StringPtr(value.String()))
 			}
 
+		case "ip":
+			if value.Type == gjson.Null {
+				order.IP = NewNullableString(nil)
+			} else {
+				order.IP = NewNullableString(StringPtr(value.String()))
+			}
+
 		case "items":
 
 			if value.Type != gjson.JSON {
@@ -934,6 +977,11 @@ func NewOrderFromDataLog(dataLog *DataLog, clockDifference time.Duration, worksp
 		if order.DomainID == "" {
 			order.DomainID = dataLog.UpsertedSession.DomainID
 		}
+	}
+
+	// set ip field for Client origins
+	if dataLog.Origin == dto.DataLogOriginClient && dataLog.Context.IP != "" {
+		order.IP = NewNullableString(StringPtr(dataLog.Context.IP))
 	}
 
 	// set order_items fields

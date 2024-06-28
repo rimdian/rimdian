@@ -999,7 +999,7 @@ export interface SqlQuery {
   name: string
   description: string
   query: string
-  test_args: string[]
+  test_args: any[]
 }
 
 export interface ExtraColumnsManifest {

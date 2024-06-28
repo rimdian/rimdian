@@ -237,8 +237,8 @@ const affilae: AppManifest = {
       AND o.created_at < ?
       AND o.cancelled_at IS NULL
       GROUP BY s.utm_id
-      OFFSET ? LIMIT ?`,
-      test_args: ['2024-06-26T17:18:56.664Z', '2024-07-03T17:18:56.664Z', 0, 100]
+      LIMIT ? OFFSET ?`,
+      test_args: ['2024-06-26T17:18:56.664Z', '2024-07-03T17:18:56.664Z', 20, 0]
     }
   ]
 }

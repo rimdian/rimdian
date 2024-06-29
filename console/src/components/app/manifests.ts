@@ -2354,6 +2354,11 @@ const googleAds: AppManifest = {
 // generate cube dimensions and measures (sum / avg)
 const generateDimensionsAndMeasures = (table: AppTable, cubeSchema: CubeSchema) => {
   table.columns.forEach((column) => {
+    // skip fields_timestamp
+    if (column.name === 'fields_timestamp') {
+      return
+    }
+
     if (column.type === 'number') {
       cubeSchema.measures = {
         ...cubeSchema.measures,

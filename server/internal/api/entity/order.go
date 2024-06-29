@@ -1062,6 +1062,7 @@ var OrderSchema string = `CREATE TABLE IF NOT EXISTS ` + "`order`" + ` (
   	converted_total_price AS FLOOR(total_price*fx_rate) PERSISTED INT,
 	cancelled_at DATETIME,
 	cancel_reason VARCHAR(2083),
+	ip VARCHAR(255),
 
 	is_first_conversion BOOLEAN DEFAULT FALSE,
 	time_to_conversion INT DEFAULT 0,
@@ -1107,6 +1108,7 @@ var OrderSchemaMYSQL string = `CREATE TABLE IF NOT EXISTS ` + "`order`" + ` (
   	converted_total_price INT GENERATED ALWAYS AS (FLOOR(total_price*fx_rate)) STORED,
 	cancelled_at DATETIME,
 	cancel_reason VARCHAR(2083),
+	ip VARCHAR(255),
 
 	is_first_conversion BOOLEAN DEFAULT FALSE,
 	time_to_conversion INT DEFAULT 0,

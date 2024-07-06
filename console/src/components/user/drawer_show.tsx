@@ -567,22 +567,22 @@ const DrawerShowUser = (props: DrawerShowUserProps) => {
             {!isLoading &&
               user?.segments &&
               user?.segments
-                .filter((us: UserSegment) => !us.exit_at)
+                // .filter((us: UserSegment) => !us.exit_at)
                 .map((us: UserSegment) => {
                   const segment = props.workspaceCtx.segmentsMap[us.segment_id]
                   if (!segment) {
                     return null
                   }
                   return (
-                    <Tooltip
-                      title={dayjs(us.enter_at).fromNow()}
-                      placement="bottom"
-                      key={us.segment_id}
-                    >
-                      <Tag color={props.workspaceCtx.segmentsMap[us.segment_id].color}>
-                        {props.workspaceCtx.segmentsMap[us.segment_id].name}
-                      </Tag>
-                    </Tooltip>
+                    // <Tooltip
+                    //   title={dayjs(us.enter_at).fromNow()}
+                    //   placement="bottom"
+                    //   key={us.segment_id}
+                    // >
+                    <Tag color={props.workspaceCtx.segmentsMap[us.segment_id].color}>
+                      {props.workspaceCtx.segmentsMap[us.segment_id].name}
+                    </Tag>
+                    // </Tooltip>
                   )
                 })}
           </div>

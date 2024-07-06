@@ -706,12 +706,7 @@ export interface CubeSchemaCaseElse {
 export interface UserSegment {
   user_id: string
   segment_id: string
-  enter_at: Date
-  enter_at_trunc: Date
-  exit_at?: Date
-  outdated_at?: Date
   db_created_at: string
-  db_updated_at: string
 }
 
 export interface UserAlias {

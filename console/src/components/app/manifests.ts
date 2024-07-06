@@ -443,7 +443,7 @@ const googleAds: AppManifest = {
     'Import your Google Ads clicks & metrics (campaigns, ad groups, keywords...) to enrich your web sessions & compute your ROAS. Improve your Google Ads measurement with Enhanced Conversions.',
   description:
     'The Google Ads app automatically imports your ads clicks metadata (campaign, term, ad, cost...) to properly attribute the web sessions, and imports your campaigns, ad groups and keywords to analyze your ROAS. It also sends your conversions to the Google Ads API to improve the accuracy of your Google Ads conversions by sending first-party customer data in a privacy-safe way.',
-  version: '2.0.0',
+  version: '2.1.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
   sql_queries: [
@@ -557,6 +557,27 @@ const googleAds: AppManifest = {
         'a',
         'a'
       ]
+    },
+    {
+      id: 'appx_googleads_sync_user_lists',
+      type: 'select',
+      name: 'Fetch users for Customer Match sync',
+      description: 'Retrieve users that should be synced to the Customer Match user lists.',
+      query: `SELECT u.email, u.telephone FROM user u
+        JOIN user_segment us ON u.id = us.user_id
+        WHERE
+          us.segment_id = ?
+        AND (u.consent_all = 1 OR u.consent_marketing = 1)
+        AND
+          (
+            (u.email IS NOT NULL AND u.email != '')
+            OR
+            (u.telephone IS NOT NULL AND u.telephone != '')
+        )
+        AND us.db_created_at > ?
+        LIMIT ? OFFSET ?
+      `,
+      test_args: ['authenticated', '2024-06-26T17:18:56.664Z', 5000, 0]
     }
   ],
   tasks: [

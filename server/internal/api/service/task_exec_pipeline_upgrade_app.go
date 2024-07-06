@@ -395,6 +395,13 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 
 		// update app manifest
 		_, err = pipe.Repository.RunInTransactionForWorkspace(ctx, pipe.Workspace.ID, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
+
+			// in dev/test env we keep the same endpoints
+			if pipe.Config.ENV != entity.ENV_PROD {
+				newManifest.UIEndpoint = app.Manifest.UIEndpoint
+				newManifest.WebhookEndpoint = app.Manifest.WebhookEndpoint
+			}
+
 			app.Manifest = *newManifest
 			app.Status = entity.AppStatusInit
 

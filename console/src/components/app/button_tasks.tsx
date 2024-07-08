@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Drawer, Tooltip, Tag, Table, Spin, message, Space, Modal } from 'antd'
+import { Button, Drawer, Tooltip, Tag, Table, Spin, message, Space, Modal, Alert } from 'antd'
 import { App, Task, TaskExec, TaskExecList, TaskList } from 'interfaces'
 import { CurrentWorkspaceCtxValue } from 'components/workspace/context_current_workspace'
 import { useQuery } from '@tanstack/react-query'
@@ -82,6 +82,21 @@ const TasksAppButton = (props: TasksAppButtonProps) => {
   )
 
   // console.log('initialValues', initialValues);
+  const alertTypeFromStatus = (status: number) => {
+    if (status === -2) {
+      return 'error'
+    }
+    if (status === -1) {
+      return 'warning'
+    }
+    if (status === 0) {
+      return 'info'
+    }
+    if (status === 1) {
+      return 'success'
+    }
+    return 'info'
+  }
 
   return (
     <>
@@ -298,11 +313,17 @@ const TasksAppButton = (props: TasksAppButtonProps) => {
                 {
                   title: 'Task name',
                   key: 'kind',
-                  width: 200,
                   render: (x) => (
                     <div>
                       {/* {x.kind === 'webhook' && <Tag color="blue">Webhook</Tag>} */}
                       <Tooltip title={x.id + ' - ' + x.kind}>{x.name}</Tooltip>
+                      {x.message && (
+                        <Alert
+                          message={<small style={{ wordBreak: 'break-all' }}>{x.message}</small>}
+                          type={alertTypeFromStatus(x.status)}
+                          className={CSS.margin_v_m}
+                        />
+                      )}
                     </div>
                   )
                 },
@@ -325,11 +346,7 @@ const TasksAppButton = (props: TasksAppButtonProps) => {
                         tag = <Tag color="green">Done</Tag>
                       }
                     }
-                    return (
-                      <>
-                        {tag} <small>{x.message}</small>
-                      </>
-                    )
+                    return tag
                   }
                 },
                 {

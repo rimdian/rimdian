@@ -172,6 +172,7 @@ const AddFilterButton = (props: {
             >
               <Select
                 // style={{ width: 200 }}
+                listHeight={500}
                 showSearch
                 dropdownMatchSelectWidth={false}
                 placeholder="Select a dimension"
@@ -185,7 +186,7 @@ const AddFilterButton = (props: {
                       icon = <span className={typeIcon}>Abc</span>
                       break
                     case 'number':
-                      if (field.indexOf('is_') !== -1) {
+                      if (field.indexOf('is_') !== -1 || field.indexOf('consent_') !== -1) {
                         icon = <span className={typeIcon}>0/1</span>
                       }
                       break

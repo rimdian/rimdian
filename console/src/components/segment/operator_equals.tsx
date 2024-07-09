@@ -145,7 +145,7 @@ export class OperatorEquals implements IOperator {
         input = <InputNumber placeholder="Enter a value" style={{ width: '100%' }} />
         rule.type = 'number'
 
-        if (fieldName.indexOf('is_') > -1) {
+        if (fieldName.indexOf('is_') > -1 || fieldName.indexOf('consent_') > -1) {
           input = (
             <Select
               // size="small"

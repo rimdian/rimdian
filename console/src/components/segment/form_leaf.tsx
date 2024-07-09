@@ -49,7 +49,7 @@ export const LeafUserForm = (props: LeafFormProps) => {
       .catch((_e) => {})
   }
 
-  console.log('props', props)
+  // console.log('props', props)
 
   return (
     <Form component="div" layout="inline" form={form} initialValues={props.editingNodeLeaf.leaf}>
@@ -95,7 +95,7 @@ export const LeafActionForm = (props: LeafFormProps) => {
     form
       .validateFields()
       .then((values) => {
-        console.log('values', values)
+        // console.log('values', values)
         if (!props.value) return
 
         // convert dayjs values into strings

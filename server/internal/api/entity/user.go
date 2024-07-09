@@ -2338,6 +2338,24 @@ func NewUserCube() *CubeJSSchema {
 				Title:       "Language",
 				Description: "field: language",
 			},
+			"consent_all": {
+				SQL:         "consent_all",
+				Type:        "number",
+				Title:       "Consent to all (personalization & marketing)",
+				Description: "field: consent_all",
+			},
+			"consent_personalization": {
+				SQL:         "consent_personalization",
+				Type:        "number",
+				Title:       "Consent to personalization",
+				Description: "field: consent_personalization",
+			},
+			"consent_marketing": {
+				SQL:         "consent_marketing",
+				Type:        "number",
+				Title:       "Consent to marketing",
+				Description: "field: consent_marketing",
+			},
 			"gender": {
 				SQL:         "gender",
 				Type:        "string",
@@ -2379,6 +2397,18 @@ func NewUserCube() *CubeJSSchema {
 				Type:        "string",
 				Title:       "Country",
 				Description: "field: country",
+			},
+			"email": {
+				SQL:         "email",
+				Type:        "string",
+				Title:       "Email",
+				Description: "field: email",
+			},
+			"telephone": {
+				SQL:         "telephone",
+				Type:        "string",
+				Title:       "Telephone",
+				Description: "field: telephone",
 			},
 			"orders_count": {
 				SQL:         "orders_count",

@@ -49,7 +49,10 @@ try {
 
         conn.end(() => {
             console.log(JSON.stringify(rows));
-            process.exit();
+            // wait a bit before exiting to ensure the client receives the output
+            setTimeout(() => {
+                process.exit();
+            }, 250); // 250ms
         });
     });
 

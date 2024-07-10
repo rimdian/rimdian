@@ -182,6 +182,7 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 		r.Post("/api/app.install", api.AppInstall)
 		r.Post("/api/app.activate", api.AppActivate)
 		r.Post("/api/app.stop", api.AppStop)
+		r.Post("/api/app.upgrade", api.AppUpgrade)
 		r.Post("/api/app.delete", api.AppDelete)
 		r.Post("/api/app.mutateState", api.AppMutateState)
 		r.Post("/api/app.execQuery", api.AppExecQuery)

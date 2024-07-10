@@ -49,7 +49,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 	app, err := pipe.Repository.GetApp(bgCtx, pipe.Workspace.ID, appID)
 
 	if err != nil {
-		result.SetError(err.Error(), true)
+		abortWithError(ctx, pipe, app, result, err)
 		return
 	}
 
@@ -80,14 +80,9 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 
 	if newManifestString != "" {
 		if err := json.Unmarshal([]byte(newManifestString), &newManifest); err != nil {
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
-	}
-
-	if newManifest == nil {
-		result.SetError("new_nmanifest is required", true)
-		return
 	}
 
 	if stage == "" {
@@ -101,53 +96,53 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 	case "validate":
 		// validate new manifest
 		if err := newManifest.Validate(nil, false); err != nil {
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
 
 		// app name should be the same
 		if newManifest.Name != app.Manifest.Name {
-			result.SetError("new manifest name should be the same as current manifest name", true)
+			abortWithError(ctx, pipe, app, result, eris.New("new manifest name should be the same as current manifest name"))
 			return
 		}
 
 		// new manifest version should be greater than current version
 		if newManifest.Version <= app.Manifest.Version {
-			result.SetError("new manifest version should be greater than current version", true)
+			abortWithError(ctx, pipe, app, result, eris.New("new manifest version should be greater than current version"))
 			return
 		}
 
 		// verify extra columns don't get errors
 		if _, err := entity.DiffExtraColumns(app.Manifest.ExtraColumns, newManifest.ExtraColumns); err != nil {
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
 
 		extraColumnsDiff, err = entity.DiffExtraColumns(app.Manifest.ExtraColumns, newManifest.ExtraColumns)
 
 		if err != nil {
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
 
 		appTablesDiff, err = entity.DiffAppTables(app.Manifest.AppTables, newManifest.AppTables)
 
 		if err != nil {
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
 
 		// extraColumnsDiff to json
 		extraColumnsDiffString, err := json.Marshal(extraColumnsDiff)
 		if err != nil {
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
 
 		// appTablesDiff to json
 		appTablesDiffString, err := json.Marshal(appTablesDiff)
 		if err != nil {
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
 
@@ -165,7 +160,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 		appTablesDiff := &entity.AppTablesManifestDiff{}
 		if _, ok := mainState["app_tables_diff"]; ok {
 			if err := json.Unmarshal([]byte(mainState["app_tables_diff"].(string)), appTablesDiff); err != nil {
-				result.SetError(err.Error(), true)
+				abortWithError(ctx, pipe, app, result, err)
 				return
 			}
 		}
@@ -178,7 +173,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 				if !operation.IsDone {
 					// rename table with suffix _removed_YYYYMMDD_HHMMSS
 					if err := pipe.Repository.DeleteTable(bgCtx, pipe.Workspace.ID, operation.AppTableManifest.Name+"_removed"+migratedTableSuffix); err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 
@@ -188,7 +183,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 
 					appTablesDiffString, err := json.Marshal(appTablesDiff)
 					if err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 					mainState["app_tables_diff"] = string(appTablesDiffString)
@@ -201,7 +196,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 			for _, operation := range appTablesDiff.ToAdd {
 				if !operation.IsDone {
 					if err := pipe.Repository.CreateTable(bgCtx, pipe.Workspace, operation.AppTableManifest); err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 					// is done
@@ -210,7 +205,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 
 					appTablesDiffString, err := json.Marshal(appTablesDiff)
 					if err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 					mainState["app_tables_diff"] = string(appTablesDiffString)
@@ -223,7 +218,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 			for _, operation := range appTablesDiff.ToMigrate {
 				if !operation.IsDone {
 					if err := pipe.Repository.MigrateTable(bgCtx, pipe.Workspace, operation.AppTableManifest, migratedTableSuffix); err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 					// is done
@@ -232,7 +227,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 
 					appTablesDiffString, err := json.Marshal(appTablesDiff)
 					if err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 					mainState["app_tables_diff"] = string(appTablesDiffString)
@@ -248,7 +243,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 		// unmarshal extra columns diff
 		if _, ok := mainState["extra_columns_diff"]; ok {
 			if err := json.Unmarshal([]byte(mainState["extra_columns_diff"].(string)), &extraColumnsDiff); err != nil {
-				result.SetError(err.Error(), true)
+				abortWithError(ctx, pipe, app, result, err)
 				return
 			}
 		}
@@ -260,7 +255,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 			for _, operation := range extraColumnsDiff.ToRemove {
 				if !operation.IsDone {
 					if err := pipe.Repository.DeleteColumn(bgCtx, pipe.Workspace, operation.Table, operation.Column.Name); err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 
@@ -270,7 +265,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 
 					extraColumnsDiffString, err := json.Marshal(extraColumnsDiff)
 					if err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 					mainState["extra_columns_diff"] = string(extraColumnsDiffString)
@@ -283,7 +278,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 			for _, operation := range extraColumnsDiff.ToAdd {
 				if !operation.IsDone {
 					if err := pipe.Repository.AddColumn(bgCtx, pipe.Workspace, operation.Table, operation.Column); err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 
@@ -293,7 +288,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 
 					extraColumnsDiffString, err := json.Marshal(extraColumnsDiff)
 					if err != nil {
-						result.SetError(err.Error(), true)
+						abortWithError(ctx, pipe, app, result, err)
 						return
 					}
 					mainState["extra_columns_diff"] = string(extraColumnsDiffString)
@@ -389,7 +384,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 				result.SetError(err.Error(), false)
 				return
 			}
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
 
@@ -413,14 +408,14 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 		})
 
 		if err != nil {
-			result.SetError(err.Error(), true)
+			abortWithError(ctx, pipe, app, result, err)
 			return
 		}
 
 		result.Message = entity.StringPtr("Upgrade successful")
 		result.IsDone = true
 	default:
-		result.SetError("invalid stage", true)
+		abortWithError(ctx, pipe, app, result, eris.New("invalid stage"))
 		return
 	}
 
@@ -428,4 +423,26 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 	result.UpdatedWorkerState = mainState
 
 	return result
+}
+
+func abortWithError(ctx context.Context, pipe *TaskExecPipeline, app *entity.App, result *entity.TaskExecResult, err error) {
+
+	// revert app status to stopped
+	code, errUpdate := pipe.Repository.RunInTransactionForWorkspace(ctx, pipe.Workspace.ID, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
+
+		app.Status = entity.AppStatusStopped
+
+		if err := pipe.Repository.UpdateApp(ctx, app, tx); err != nil {
+			return 500, eris.Wrap(err, "TaskUpgradeApp")
+		}
+
+		return 200, nil
+	})
+
+	if code == 500 {
+		result.SetError(errUpdate.Error(), false)
+		return
+	}
+
+	result.SetError(err.Error(), true)
 }

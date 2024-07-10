@@ -147,6 +147,7 @@ type Service interface {
 	AppInstall(ctx context.Context, accountID string, params *dto.AppInstall) (installedApp *entity.App, code int, err error)
 	AppActivate(ctx context.Context, accountID string, params *dto.AppActivate) (code int, err error)
 	AppStop(ctx context.Context, accountID string, params *dto.AppDelete) (app *entity.App, code int, err error)
+	AppUpgrade(ctx context.Context, accountID string, params *dto.AppUpgrade) (code int, err error)
 	AppDelete(ctx context.Context, accountID string, params *dto.AppDelete) (code int, err error)
 	AppMutateState(ctx context.Context, accountID string, params *dto.AppMutateState) (code int, err error)
 	AppFromToken(ctx context.Context, params *dto.AppFromTokenParams) (result *dto.AppFromToken, code int, err error)

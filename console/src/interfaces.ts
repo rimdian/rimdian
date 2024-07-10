@@ -944,7 +944,7 @@ export interface TaskList {
 export interface App {
   id: string
   name: string
-  status: 'initializing' | 'active' | 'stopped'
+  status: 'initializing' | 'active' | 'stopped' | 'upgrading'
   state: any
   manifest: AppManifest
   is_native: boolean

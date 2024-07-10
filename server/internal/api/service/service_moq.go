@@ -67,6 +67,9 @@ var _ Service = &ServiceMock{}
 //			AppStopFunc: func(ctx context.Context, accountID string, params *dto.AppDelete) (*entity.App, int, error) {
 //				panic("mock out the AppStop method")
 //			},
+//			AppUpgradeFunc: func(ctx context.Context, accountID string, params *dto.AppUpgrade) (int, error) {
+//				panic("mock out the AppUpgrade method")
+//			},
 //			BroadcastCampaignLaunchFunc: func(ctx context.Context, accountID string, data *dto.BroadcastCampaignLaunchParams) (int, error) {
 //				panic("mock out the BroadcastCampaignLaunch method")
 //			},
@@ -343,6 +346,9 @@ type ServiceMock struct {
 
 	// AppStopFunc mocks the AppStop method.
 	AppStopFunc func(ctx context.Context, accountID string, params *dto.AppDelete) (*entity.App, int, error)
+
+	// AppUpgradeFunc mocks the AppUpgrade method.
+	AppUpgradeFunc func(ctx context.Context, accountID string, params *dto.AppUpgrade) (int, error)
 
 	// BroadcastCampaignLaunchFunc mocks the BroadcastCampaignLaunch method.
 	BroadcastCampaignLaunchFunc func(ctx context.Context, accountID string, data *dto.BroadcastCampaignLaunchParams) (int, error)
@@ -697,6 +703,15 @@ type ServiceMock struct {
 			AccountID string
 			// Params is the params argument value.
 			Params *dto.AppDelete
+		}
+		// AppUpgrade holds details about calls to the AppUpgrade method.
+		AppUpgrade []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// AccountID is the accountID argument value.
+			AccountID string
+			// Params is the params argument value.
+			Params *dto.AppUpgrade
 		}
 		// BroadcastCampaignLaunch holds details about calls to the BroadcastCampaignLaunch method.
 		BroadcastCampaignLaunch []struct {
@@ -1337,6 +1352,7 @@ type ServiceMock struct {
 	lockAppList                                 sync.RWMutex
 	lockAppMutateState                          sync.RWMutex
 	lockAppStop                                 sync.RWMutex
+	lockAppUpgrade                              sync.RWMutex
 	lockBroadcastCampaignLaunch                 sync.RWMutex
 	lockBroadcastCampaignList                   sync.RWMutex
 	lockBroadcastCampaignUpsert                 sync.RWMutex
@@ -1995,6 +2011,46 @@ func (mock *ServiceMock) AppStopCalls() []struct {
 	mock.lockAppStop.RLock()
 	calls = mock.calls.AppStop
 	mock.lockAppStop.RUnlock()
+	return calls
+}
+
+// AppUpgrade calls AppUpgradeFunc.
+func (mock *ServiceMock) AppUpgrade(ctx context.Context, accountID string, params *dto.AppUpgrade) (int, error) {
+	if mock.AppUpgradeFunc == nil {
+		panic("ServiceMock.AppUpgradeFunc: method is nil but Service.AppUpgrade was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.AppUpgrade
+	}{
+		Ctx:       ctx,
+		AccountID: accountID,
+		Params:    params,
+	}
+	mock.lockAppUpgrade.Lock()
+	mock.calls.AppUpgrade = append(mock.calls.AppUpgrade, callInfo)
+	mock.lockAppUpgrade.Unlock()
+	return mock.AppUpgradeFunc(ctx, accountID, params)
+}
+
+// AppUpgradeCalls gets all the calls that were made to AppUpgrade.
+// Check the length with:
+//
+//	len(mockedService.AppUpgradeCalls())
+func (mock *ServiceMock) AppUpgradeCalls() []struct {
+	Ctx       context.Context
+	AccountID string
+	Params    *dto.AppUpgrade
+} {
+	var calls []struct {
+		Ctx       context.Context
+		AccountID string
+		Params    *dto.AppUpgrade
+	}
+	mock.lockAppUpgrade.RLock()
+	calls = mock.calls.AppUpgrade
+	mock.lockAppUpgrade.RUnlock()
 	return calls
 }
 

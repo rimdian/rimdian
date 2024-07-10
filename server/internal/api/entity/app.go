@@ -10,10 +10,11 @@ import (
 )
 
 var (
-	AppStatusActive  string = "active"
-	AppStatusInit    string = "initializing"
-	AppStatusStopped string = "stopped"
-	AppStatusDeleted string = "deleted"
+	AppStatusActive    string = "active"
+	AppStatusInit      string = "initializing"
+	AppStatusStopped   string = "stopped"
+	AppStatusUpgrading string = "upgrading"
+	AppStatusDeleted   string = "deleted"
 
 	ErrAppAlreadyExists = eris.New("app already exists")
 	ErrAppNotActive     = eris.New("app is not active")

@@ -13,6 +13,7 @@ import InstallAppButton from './button_install'
 import { App } from 'interfaces'
 import { QueryObserverResult } from '@tanstack/react-query'
 import manifests from './manifests'
+import BlockAppUpgrading from './block_upgrading'
 
 const RouteApp = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -102,6 +103,14 @@ const RouteApp = () => {
                         text="Stopped"
                       />
                     )}
+                    {currentApp.status === 'upgrading' && (
+                      <Badge
+                        className={CSS.margin_l_s}
+                        style={{ fontWeight: 400 }}
+                        status="warning"
+                        text="Upgrading"
+                      />
+                    )}
                   </span>
                 </>
               )}
@@ -146,7 +155,8 @@ const RouteApp = () => {
                     )}
                     {recentManifest &&
                       recentManifest.version !== currentApp.manifest.version &&
-                      currentApp.status !== 'stopped' && (
+                      currentApp.status !== 'stopped' &&
+                      currentApp.status !== 'upgrading' && (
                         <InstallAppButton
                           workspaceCtx={workspaceCtx}
                           manifest={recentManifest}
@@ -180,7 +190,8 @@ const RouteApp = () => {
         {currentApp && (
           <>
             {currentApp.id === 'app_test' && <AppTest app={currentApp} />}
-            {!currentApp.is_native && (
+            {currentApp.status === 'upgrading' && <BlockAppUpgrading app={currentApp} />}
+            {!currentApp.is_native && currentApp.status !== 'upgrading' && (
               <AppIframe app={currentApp} refetchApps={refetchAppsRef.current} />
             )}
           </>

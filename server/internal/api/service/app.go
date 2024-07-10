@@ -419,6 +419,84 @@ func (svc *ServiceImpl) AppDelete(ctx context.Context, accountID string, params 
 	return 200, nil
 }
 
+func (svc *ServiceImpl) AppUpgrade(ctx context.Context, accountID string, params *dto.AppUpgrade) (code int, err error) {
+
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)
+
+	if err != nil {
+		return code, eris.Wrap(err, "AppUpgrade")
+	}
+
+	// get app
+	app, err := svc.Repo.GetApp(ctx, params.WorkspaceID, params.ID)
+
+	if err != nil {
+		if sqlscan.NotFound(err) {
+			return 400, err
+		}
+		return 500, eris.Wrap(err, "AppUpgrade")
+	}
+
+	// check that app is not upgrading
+	if app.Status == entity.AppStatusUpgrading {
+		return 400, eris.New("AppUpgrade: app is already upgrading")
+	}
+
+	if params.NewManifest == nil {
+		return 400, eris.New("AppUpgrade: new_manifest is required")
+	}
+
+	// validate manifest
+	if err := params.NewManifest.Validate(nil, false); err != nil {
+		return 400, eris.Wrap(err, "AppUpgrade")
+	}
+
+	// stop app first
+	if _, code, err = svc.AppStop(ctx, accountID, &dto.AppDelete{
+		WorkspaceID: params.WorkspaceID,
+		ID:          params.ID,
+	}); err != nil {
+		return code, eris.Wrap(err, "AppUpgrade")
+	}
+
+	// change app status to upgrading
+	code, err = svc.Repo.RunInTransactionForWorkspace(ctx, workspace.ID, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
+
+		app.Status = entity.AppStatusUpgrading
+
+		if err := svc.Repo.UpdateApp(ctx, app, tx); err != nil {
+			return 500, eris.Wrap(err, "AppStop")
+		}
+
+		// marshal new manifest into string
+		newManifestStr, err := json.Marshal(params.NewManifest)
+
+		if err != nil {
+			return 500, eris.Wrap(err, "AppUpgrade")
+		}
+
+		// launch task to upgrade app
+		if code, err := svc.TaskRun(ctx, accountID, &dto.TaskRunParams{
+			WorkspaceID: params.WorkspaceID,
+			ID:          entity.TaskKindUpgradeApp,
+			MainWorkerState: entity.TaskWorkerState{
+				"app_id":       app.ID,
+				"new_manifest": string(newManifestStr),
+			},
+		}); err != nil {
+			return code, eris.Wrap(err, "AppUpgrade")
+		}
+
+		return 200, nil
+	})
+
+	if err != nil {
+		return code, eris.Wrap(err, "AppUpgrade")
+	}
+
+	return 200, nil
+}
+
 func (svc *ServiceImpl) AppStop(ctx context.Context, accountID string, params *dto.AppDelete) (app *entity.App, code int, err error) {
 
 	workspace, code, err := svc.GetWorkspaceForAccount(ctx, params.WorkspaceID, accountID)

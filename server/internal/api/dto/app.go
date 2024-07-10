@@ -59,6 +59,12 @@ type AppInstall struct {
 	Reinstall   bool                `json:"reinstall"`
 }
 
+type AppUpgrade struct {
+	WorkspaceID string              `json:"workspace_id"`
+	ID          string              `json:"id"`
+	NewManifest *entity.AppManifest `json:"new_manifest,omitempty"`
+}
+
 type AppDelete struct {
 	WorkspaceID string `json:"workspace_id"`
 	ID          string `json:"id"`

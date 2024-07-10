@@ -103,10 +103,7 @@ const RouteObservability = () => {
 
   // console.log('activeIncidentsByCheckId', activeIncidentsByCheckId)
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.container}>
         <div className={CSS.top}>
           <h1>Observability</h1>

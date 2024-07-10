@@ -37,10 +37,7 @@ const RouteWorkspaceDashboard = () => {
   }, [workspaceCtx.workspace.domains])
 
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <Row gutter={24} className={CSS.margin_t_l}>
         <Col span={12}>
           <UsersOnline

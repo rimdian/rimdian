@@ -4,7 +4,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -38,6 +40,7 @@ type Repository interface {
 	RunInTransactionForWorkspace(ctx context.Context, workspaceID string, f func(context.Context, *sql.Tx) (int, error)) (code int, err error)
 	UseWorkspaceDBWithTx(ctx context.Context, workspaceID string, tx *sql.Tx) error
 	IsDuplicateEntry(err error) bool
+	SelectQueryToJSON(ctx context.Context, query string, args []interface{}) (jsonBytes []byte, err error)
 
 	// user lock
 	EnsureUsersLock(ctx context.Context, workspaceID string, lock *entity.UsersLock, withRetry bool) error
@@ -431,6 +434,45 @@ func (repo *RepositoryImpl) RunInTransactionForWorkspace(ctx context.Context, wo
 	conn.Close()
 
 	return code, nil
+}
+
+func (repo *RepositoryImpl) SelectQueryToJSON(ctx context.Context, query string, args []interface{}) (jsonBytes []byte, err error) {
+
+	// an array of JSON objects
+	// the map key is the field name
+	var objects []map[string]interface{}
+
+	rows, err := repo.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		// figure out what columns were returned
+		// the column names will be the JSON object field keys
+		columns, err := rows.ColumnTypes()
+		if err != nil {
+			return nil, err
+		}
+
+		// Scan needs an array of pointers to the values it is setting
+		// This creates the object and sets the values correctly
+		values := make([]interface{}, len(columns))
+		object := map[string]interface{}{}
+		for i, column := range columns {
+			object[column.Name()] = reflect.New(column.ScanType()).Interface()
+			values[i] = object[column.Name()]
+		}
+
+		err = rows.Scan(values...)
+		if err != nil {
+			return nil, err
+		}
+
+		objects = append(objects, object)
+	}
+
+	return json.Marshal(objects)
 }
 
 func (repo *RepositoryImpl) IsDuplicateEntry(err error) bool {

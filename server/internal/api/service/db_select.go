@@ -90,6 +90,8 @@ func (svc *ServiceImpl) DBSelect(ctx context.Context, accountID string, params *
 // We use nodejs to do the query + JSON casting.
 func (svc *ServiceImpl) DoDBSelect(workspaceID string, query string, args []interface{}) (output []byte, err error) {
 
+	// TODO: test repo.SelectQueryToJSON
+
 	payload := struct {
 		Query string        `json:"query"`
 		Args  []interface{} `json:"args"`

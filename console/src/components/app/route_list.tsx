@@ -42,10 +42,7 @@ const RouteApps = () => {
   }
 
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.container} style={{ width: 600 }}>
         <div className={CSS.top}>
           <h1>Apps</h1>

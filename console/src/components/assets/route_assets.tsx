@@ -25,10 +25,7 @@ const RouteFiles = () => {
   const tab = params.get('tab') || 'files'
 
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.container}>
         <div className={CSS.top + ' ' + CSS.margin_l_l}>
           <h1>Assets</h1>

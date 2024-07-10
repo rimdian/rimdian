@@ -63,7 +63,7 @@ const RouteApp = () => {
     <Layout
       hasIframe={true}
       currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
+      currentWorkspaceCtx={workspaceCtx}
       beforeContent={
         <div className={css(CSS.borderBottom.solid1, CSS.padding_h_l)}>
           <div className={CSS.top}>

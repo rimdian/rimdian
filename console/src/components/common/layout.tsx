@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Dropdown,
+  // Dropdown,
   // Avatar,
   Select,
   // Badge,
@@ -12,7 +12,8 @@ import {
   Spin,
   Tooltip,
   Space,
-  Popover
+  Popover,
+  Menu
 } from 'antd'
 import { AccountContextValue, useAccount } from 'components/login/context_account'
 import { useNavigate, useMatch, useParams } from 'react-router-dom'
@@ -20,9 +21,9 @@ import { truncate } from 'lodash'
 import Axios from 'axios'
 import { HandleAxiosError } from 'utils/errors'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import dayjs from 'dayjs'
 import {
   faPlus,
-  faChevronDown,
   faCircleUser,
   faCog,
   faPowerOff,
@@ -33,14 +34,16 @@ import {
   faDatabase,
   faAnglesDown,
   faFolderOpen,
-  faBullhorn
+  faBullhorn,
+  faHammer
 } from '@fortawesome/free-solid-svg-icons'
-import { faSquareCheck } from '@fortawesome/free-regular-svg-icons'
 import { Timezones } from 'utils/countries_timezones'
 import Messages from 'utils/formMessages'
-import { App, Organization, Workspace } from 'interfaces'
+import { App, Organization, TaskExec } from 'interfaces'
 import { css } from '@emotion/css'
 import CSS from 'utils/css'
+import { CurrentWorkspaceCtxValue } from 'components/workspace/context_current_workspace'
+import ButtonTaskAbout from 'components/task_exec/button_about'
 
 const topbarCss = {
   // parent
@@ -150,7 +153,7 @@ const topbarCss = {
 type LayoutProps = {
   loadingText?: string
   currentOrganization?: Organization
-  currentWorkspace?: Workspace
+  currentWorkspaceCtx?: CurrentWorkspaceCtxValue
   children?: JSX.Element[] | JSX.Element
   beforeContent?: JSX.Element[] | JSX.Element
   hasIframe?: boolean // app iframe
@@ -162,27 +165,27 @@ const loaderCss = css({
   textAlign: 'center',
   paddingTop: 200
 })
-const dotSelected = (
-  <div
-    style={{
-      width: 4,
-      height: 4,
-      borderRadius: 4,
-      background: '#FFF',
-      position: 'absolute',
-      marginLeft: '12px',
-      marginTop: '4px',
-      opacity: 0.5
-    }}
-  ></div>
-)
+// const dotSelected = (
+//   <div
+//     style={{
+//       width: 4,
+//       height: 4,
+//       borderRadius: 4,
+//       background: '#FFF',
+//       position: 'absolute',
+//       marginLeft: '12px',
+//       marginTop: '4px',
+//       opacity: 0.5
+//     }}
+//   ></div>
+// )
 
 const Layout: React.FC<LayoutProps> = (props) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Topbar
         currentOrganization={props.currentOrganization}
-        currentWorkspace={props.currentWorkspace}
+        currentWorkspaceCtx={props.currentWorkspaceCtx}
         beforeContent={props.beforeContent}
       />
       {props.hasIframe && props.children}
@@ -203,7 +206,7 @@ const Layout: React.FC<LayoutProps> = (props) => {
 
 type TopbarProps = {
   currentOrganization?: Organization
-  currentWorkspace?: Workspace
+  currentWorkspaceCtx?: CurrentWorkspaceCtxValue
   beforeContent?: JSX.Element[] | JSX.Element
 }
 
@@ -211,14 +214,27 @@ type AppItemProps = {
   icon: JSX.Element
   title: string
   route: string
+  workspaceCtx: CurrentWorkspaceCtxValue
   inTooltip?: boolean
 }
 
 const appItemCss = {
   self: css({
+    position: 'relative',
     display: 'inline-block',
     verticalAlign: 'top'
     // marginLeft: CSS.L
+  }),
+
+  badgeCount: css({
+    position: 'absolute',
+    top: 6,
+    right: -5,
+    backgroundColor: '#03A9F4',
+    borderRadius: '50%',
+    fontSize: '10px',
+    color: '#FFF',
+    padding: '2px 5px'
   }),
 
   icon: css({ marginTop: '15px' }),
@@ -242,6 +258,76 @@ const AppItem = (props: AppItemProps) => {
   }
 
   const matchRoute = useMatch({ path: props.route, end: true })
+
+  if (
+    props.title === 'Running tasks' &&
+    props.workspaceCtx.runningTasks &&
+    props.workspaceCtx.runningTasks.length > 0
+  ) {
+    return (
+      <Popover
+        content={
+          // <Spin spinning={isLoading || isFetching}>
+          <>
+            {props.workspaceCtx.runningTasks.map((x: TaskExec) => (
+              <table className={CSS.margin_v_s} key={x.id}>
+                <tbody>
+                  <tr>
+                    <th style={{ padding: '2px 20px 2px 0' }}>{x.name}</th>
+                    <td style={{ padding: '2px 20px 2px 0' }}>
+                      Started {dayjs(x.db_created_at).fromNow()}
+                    </td>
+                    <td>
+                      <ButtonTaskAbout
+                        workspaceId={props.workspaceCtx.workspace.id}
+                        apiGET={props.workspaceCtx.apiGET}
+                        taskExec={x}
+                        accountTimezone={
+                          props.workspaceCtx.accountCtx.account?.account.timezone as string
+                        }
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            ))}
+          </>
+          // </Spin>
+        }
+        placement="bottom"
+      >
+        <div className={appItemCss.self} onClick={onClick}>
+          {props.workspaceCtx.runningTasks && props.workspaceCtx.runningTasks.length > 0 && (
+            <div className={appItemCss.badgeCount}>{props.workspaceCtx.runningTasks.length}</div>
+          )}
+          <div
+            className={css([
+              CSS.appIcon,
+              !props.inTooltip ? appItemCss.icon : null,
+              matchRoute && appItemCss.selected
+            ])}
+          >
+            {/* rotate the icon when runningTask is positive */}
+            {props.icon}
+            {matchRoute && (
+              <div
+                style={{
+                  width: 4,
+                  height: 4,
+                  borderRadius: 4,
+                  background: props.inTooltip ? '#000' : '#FFF',
+                  position: 'absolute',
+                  marginLeft: '12px',
+                  marginTop: '4px',
+                  opacity: 0.5
+                }}
+              ></div>
+            )}
+          </div>
+        </div>
+      </Popover>
+    )
+  }
 
   return (
     <Tooltip title={props.title} placement="bottom">
@@ -287,17 +373,18 @@ const Topbar = (props: TopbarProps) => {
 
   const apps: AppItemProps[] = []
 
-  const matchSystemRoute = useMatch({
-    path: '/orgs/:organizationId/workspaces/:workspaceId/system',
-    end: false
-  })
+  // const matchSystemRoute = useMatch({
+  //   path: '/orgs/:organizationId/workspaces/:workspaceId/system',
+  //   end: false
+  // })
 
-  if (props.currentWorkspace) {
-    props.currentWorkspace.apps.forEach((app: App) => {
+  if (props.currentWorkspaceCtx?.workspace) {
+    props.currentWorkspaceCtx?.workspace.apps.forEach((app: App) => {
       apps.push({
         icon: <img src={app.manifest.icon_url} alt="" />,
         title: app.name,
-        route: `/orgs/:organizationId/workspaces/:workspaceId/apps/${app.id}`
+        route: `/orgs/:organizationId/workspaces/:workspaceId/apps/${app.id}`,
+        workspaceCtx: props.currentWorkspaceCtx as CurrentWorkspaceCtxValue
       })
     })
   }
@@ -321,6 +408,62 @@ const Topbar = (props: TopbarProps) => {
           </svg>
         </div>
 
+        {accountSettingsVisible && (
+          <UserSettings toggleSettings={toggleAccountSettings} accountCtx={accountCtx} />
+        )}
+        <Popover
+          placement="bottomLeft"
+          overlayInnerStyle={{
+            padding: 0
+          }}
+          content={
+            <>
+              <div className={CSS.padding_a_m}>
+                <span className={CSS.font_weight_semibold}>
+                  {accountCtx.account?.account.full_name || accountCtx.account?.account.email}
+                </span>
+                <br />
+                <span className={topbarCss.userNameBottom}>
+                  {accountCtx.account?.account.timezone}
+                </span>
+              </div>
+              <Menu
+                items={[
+                  {
+                    key: 'user-settings',
+                    label: (
+                      <div onClick={toggleAccountSettings}>
+                        <FontAwesomeIcon icon={faCog} />
+                        &nbsp; My settings
+                      </div>
+                    )
+                  },
+                  {
+                    key: 'logout',
+                    label: (
+                      <div onClick={() => navigate('/logout')}>
+                        <FontAwesomeIcon icon={faPowerOff} />
+                        &nbsp; Sign out
+                      </div>
+                    )
+                  }
+                ]}
+              />
+            </>
+          }
+        >
+          <div className={topbarCss.block}>
+            <div className={topbarCss.itemName}>
+              <div className={topbarCss.itemNameTop}>
+                <FontAwesomeIcon
+                  icon={faCircleUser}
+                  style={{ fontSize: 20, lineHeight: 60, verticalAlign: 'middle' }}
+                />
+              </div>
+            </div>
+          </div>
+        </Popover>
+
         {props.currentOrganization && (
           <div
             className={topbarCss.block}
@@ -334,10 +477,11 @@ const Topbar = (props: TopbarProps) => {
           </div>
         )}
 
-        {props.currentWorkspace && (
+        {props.currentWorkspaceCtx?.workspace && (
           <>
             {spacer}
             <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
               icon={
                 <div
                   style={{
@@ -353,6 +497,7 @@ const Topbar = (props: TopbarProps) => {
             />
             {spacer}
             <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
               icon={
                 <div
                   style={{
@@ -368,6 +513,7 @@ const Topbar = (props: TopbarProps) => {
             />
             {spacer}
             <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
               icon={
                 <div
                   style={{
@@ -383,6 +529,7 @@ const Topbar = (props: TopbarProps) => {
             />
             {spacer}
             <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
               icon={
                 <div
                   style={{
@@ -398,6 +545,7 @@ const Topbar = (props: TopbarProps) => {
             />
             {spacer}
             <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
               icon={
                 <div
                   style={{
@@ -412,27 +560,13 @@ const Topbar = (props: TopbarProps) => {
               route="/orgs/:organizationId/workspaces/:workspaceId/assets"
             />
             {spacer}
-            <div className={appItemCss.self}>
+            {/* <div className={appItemCss.self}>
               <Popover
                 content={
                   <div>
-                    <AppItem
-                      inTooltip={true}
-                      icon={
-                        <div
-                          style={{
-                            color: '#212121',
-                            background: 'linear-gradient(to top, #FF8F00, #FFCA28)'
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faSquareCheck} />
-                        </div>
-                      }
-                      title="Tasks"
-                      route="/orgs/:organizationId/workspaces/:workspaceId/system/tasks"
-                    />
                     {spacer}
                     <AppItem
+                    workspaceCtx={props.currentWorkspaceCtx}
                       inTooltip={true}
                       icon={
                         <div
@@ -449,6 +583,7 @@ const Topbar = (props: TopbarProps) => {
                     />
                     {spacer}
                     <AppItem
+                    workspaceCtx={props.currentWorkspaceCtx}
                       inTooltip={true}
                       icon={
                         <div
@@ -465,6 +600,7 @@ const Topbar = (props: TopbarProps) => {
                     />
                     {spacer}
                     <AppItem
+                    workspaceCtx={props.currentWorkspaceCtx}
                       inTooltip={true}
                       icon={
                         <div
@@ -501,15 +637,89 @@ const Topbar = (props: TopbarProps) => {
                   </div>
                 </div>
               </Popover>
-            </div>
+            </div> */}
+            <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
+              icon={
+                <div
+                  style={{
+                    color: '#FFF',
+                    background: 'linear-gradient(to top, #1f4037, #99f2c8)'
+                  }}
+                >
+                  <FontAwesomeIcon icon={faAnglesDown} />
+                </div>
+              }
+              title="Data logs"
+              route="/orgs/:organizationId/workspaces/:workspaceId/system/data-logs"
+            />
+            {spacer}
+            <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
+              icon={
+                <div
+                  style={{
+                    color: '#FFF',
+                    background: 'linear-gradient(to top, #3E5151, #DECBA4)'
+                  }}
+                >
+                  <FontAwesomeIcon icon={faDatabase} />
+                </div>
+              }
+              title="Database"
+              route="/orgs/:organizationId/workspaces/:workspaceId/system/database"
+            />
+            {spacer}
+            <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
+              icon={
+                <div
+                  style={{
+                    // color: '#212121',
+                    color: '#FFF',
+                    background: 'linear-gradient(to top, #FF8F00, #FFCA28)'
+                  }}
+                >
+                  <FontAwesomeIcon
+                    fade={props.currentWorkspaceCtx?.runningTasks.length > 0}
+                    icon={faHammer}
+                  />
+                </div>
+              }
+              title="Running tasks"
+              route="/orgs/:organizationId/workspaces/:workspaceId/system/tasks"
+            />
+            {spacer}
+            <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
+              icon={
+                <div
+                  style={{
+                    color: '#FFF',
+                    background: 'linear-gradient(to top, #1A237E, #5C6BC0)'
+                  }}
+                >
+                  <FontAwesomeIcon icon={faGear} />
+                </div>
+              }
+              title="Configuration"
+              route="/orgs/:organizationId/workspaces/:workspaceId/system/configuration"
+            />
             {spacer}
             {apps.map((app) => (
               <span key={app.route}>
-                <AppItem icon={app.icon} title={app.title} route={app.route} />
+                <AppItem
+                  workspaceCtx={props.currentWorkspaceCtx as CurrentWorkspaceCtxValue}
+                  icon={app.icon}
+                  title={app.title}
+                  route={app.route}
+                />
+
                 {spacer}
               </span>
             ))}
             <AppItem
+              workspaceCtx={props.currentWorkspaceCtx}
               icon={
                 <div
                   style={{
@@ -525,59 +735,6 @@ const Topbar = (props: TopbarProps) => {
             />
           </>
         )}
-
-        <div className={topbarCss.userWrapper}>
-          {accountSettingsVisible && (
-            <UserSettings toggleSettings={toggleAccountSettings} accountCtx={accountCtx} />
-          )}
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'user-settings',
-                  label: (
-                    <div className={CSS.margin_a_s} onClick={toggleAccountSettings}>
-                      <FontAwesomeIcon icon={faCog} />
-                      &nbsp; My settings
-                    </div>
-                  )
-                },
-                {
-                  key: 'logout',
-                  label: (
-                    <div className={CSS.margin_a_s} onClick={() => navigate('/logout')}>
-                      <FontAwesomeIcon icon={faPowerOff} />
-                      &nbsp; Sign out
-                    </div>
-                  )
-                }
-              ]
-            }}
-          >
-            <div className={topbarCss.user}>
-              <div className={topbarCss.userPicture}>
-                <FontAwesomeIcon
-                  icon={faCircleUser}
-                  style={{ fontSize: 20, lineHeight: 60, verticalAlign: 'middle' }}
-                />
-                {/* <Avatar style={{ backgroundColor: '#1565C0' }} icon={} /> */}
-              </div>
-              <div className={topbarCss.userName}>
-                <div className={topbarCss.userNameTop}>
-                  {accountCtx.account?.account.full_name ||
-                    truncate(accountCtx.account?.account.email, { length: 15 })}
-                  <br />
-                  <span className={topbarCss.userNameBottom}>
-                    {accountCtx.account?.account.timezone}
-                  </span>
-                </div>
-              </div>
-              <div className={topbarCss.userButton}>
-                <FontAwesomeIcon icon={faChevronDown} />
-              </div>
-            </div>
-          </Dropdown>
-        </div>
       </div>
       {props.beforeContent && <div>{props.beforeContent}</div>}
     </div>

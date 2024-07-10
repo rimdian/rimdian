@@ -17,6 +17,7 @@ const menuCSS = {
   item: css({
     padding: CSS.S + ' ' + CSS.S,
     cursor: 'pointer',
+    wordBreak: 'break-all',
     '&:not(:last-child)': {
       borderBottom: 'solid 1px ' + borderColorSecondary
     },
@@ -54,7 +55,7 @@ const BlockDBSchemas = (props: BlockDBSchemasProps) => {
   return (
     <div className={CSS.margin_t_m}>
       <Row gutter={24}>
-        <Col span={5}>
+        <Col span={6}>
           <Block
             title="Tables"
             small
@@ -110,7 +111,7 @@ const BlockDBSchemas = (props: BlockDBSchemasProps) => {
           </Block>
         </Col>
 
-        <Col span={19}>
+        <Col span={18}>
           <Block grid small>
             <div className={kpiCss.self}>
               <div className={kpiCss.title}>Table | View</div>

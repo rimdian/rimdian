@@ -469,10 +469,7 @@ const RouteUsers = () => {
   ])
 
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <Row gutter={[16, 16]}>
         <Col span={5}>
           <div className={CSS.top}>
@@ -581,11 +578,13 @@ const RouteUsers = () => {
                         okText="Delete"
                         okButtonProps={{ danger: true }}
                         cancelText="No"
+                        placement="left"
                       >
                         <Button type="text" size="small">
                           <FontAwesomeIcon icon={faTrashAlt} />
                         </Button>
                       </Popconfirm>
+                      <ButtonUpsertSegment segment={currentSegment} />
                     </Space>
                   )}
               </>

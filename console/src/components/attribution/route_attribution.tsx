@@ -20,10 +20,7 @@ const RouteAttribution = () => {
   const activeKey = searchParams.get('tab') || 'sessions'
 
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.top}>
         <h1>Attribution</h1>
         <div className={CSS.topSeparator}></div>

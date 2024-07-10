@@ -1,4 +1,4 @@
-import { Tag, Table, TablePaginationConfig, Tooltip, Button, message } from 'antd'
+import { Tag, Table, TablePaginationConfig, Tooltip, Button, message, Alert } from 'antd'
 import { TaskExec } from 'interfaces'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import Layout from 'components/common/layout'
@@ -126,11 +126,24 @@ const RouteTasks = () => {
     setSearchParams(newParams)
   }
 
+  const alertTypeFromStatus = (status: number) => {
+    if (status === -2) {
+      return 'error'
+    }
+    if (status === -1) {
+      return 'warning'
+    }
+    if (status === 0) {
+      return 'info'
+    }
+    if (status === 1) {
+      return 'success'
+    }
+    return 'info'
+  }
+
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.top}>
         <h1>Task execs</h1>
       </div>
@@ -158,6 +171,13 @@ const RouteTasks = () => {
               <div>
                 {x.task_id === 'webhook' && <Tag color="blue">Webhook</Tag>}
                 <Tooltip title={x.id}>{x.name}</Tooltip>
+                {x.message && (
+                  <Alert
+                    message={<small style={{ wordBreak: 'break-all' }}>{x.message}</small>}
+                    type={alertTypeFromStatus(x.status)}
+                    className={CSS.margin_v_m}
+                  />
+                )}
               </div>
             )
           },
@@ -201,11 +221,7 @@ const RouteTasks = () => {
                   tag = <Tag color="green">Done</Tag>
                 }
               }
-              return (
-                <>
-                  {tag} <small>{x.message}</small>
-                </>
-              )
+              return tag
             }
           },
           {

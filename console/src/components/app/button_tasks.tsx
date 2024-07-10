@@ -291,6 +291,7 @@ const TasksAppButton = (props: TasksAppButtonProps) => {
               <>
                 <Button
                   size="small"
+                  loading={loadingTaskExecs || isFetchingTaskExecs}
                   onClick={() => {
                     refetchTaskExecs()
                   }}

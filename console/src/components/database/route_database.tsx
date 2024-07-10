@@ -6,7 +6,7 @@ import CSS from 'utils/css'
 import Layout from 'components/common/layout'
 import BlockDBSchemas from './block_list'
 import { Tabs } from 'antd'
-import BlockDBDiagram from './block_diagram'
+// import BlockDBDiagram from './block_diagram'
 
 const RouteDatabase = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
@@ -45,10 +45,7 @@ const RouteDatabase = () => {
   console.log(data)
 
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.top}>
         <h1>Database</h1>
       </div>
@@ -61,12 +58,12 @@ const RouteDatabase = () => {
             key: 'tables',
             label: 'Tables',
             children: <BlockDBSchemas data={data} isLoading={isLoading} isFetching={isFetching} />
-          },
-          {
-            key: 'diagram',
-            label: 'Diagram',
-            children: <BlockDBDiagram data={data} isLoading={isLoading} isFetching={isFetching} />
           }
+          // {
+          //   key: 'diagram',
+          //   label: 'Diagram',
+          //   children: <BlockDBDiagram data={data} isLoading={isLoading} isFetching={isFetching} />
+          // }
         ]}
       />
     </Layout>

@@ -9,10 +9,11 @@ import { DataLogBatch, Organization, Workspace } from 'interfaces'
 // import { useState } from 'react'
 import { QueryObserverResult } from '@tanstack/react-query'
 import CSS from 'utils/css'
+import { CurrentWorkspaceCtxValue } from './context_current_workspace'
 
 type Props = {
   organization: Organization
-  workspace: Workspace
+  workspaceCtx: CurrentWorkspaceCtxValue
   refreshWorkspace: () => Promise<QueryObserverResult<Workspace, unknown>>
   apiGET: (endpoint: string) => Promise<any>
   apiPOST: (endpoint: string, data: any) => Promise<any>
@@ -22,15 +23,15 @@ type Props = {
 
 const RouteWorkspaceSetup = (props: Props) => {
   return (
-    <Layout currentOrganization={props.organization} currentWorkspace={props.workspace}>
-      <h1>Setup - {props.workspace.name}</h1>
+    <Layout currentOrganization={props.organization} currentWorkspaceCtx={props.workspaceCtx}>
+      <h1>Setup - {props.workspaceCtx.workspace.name}</h1>
       <DomainSetup {...props} onComplete={() => {}} />
     </Layout>
   )
 }
 
 const DomainSetup = (props: Props) => {
-  if (props.workspace.domains.length === 0) {
+  if (props.workspaceCtx.workspace.domains.length === 0) {
     return (
       <div className={css([CSS.blockCTA, CSS.padding_v_l])}>
         <h2>Domains</h2>
@@ -46,7 +47,7 @@ const DomainSetup = (props: Props) => {
 
         <div className={CSS.margin_t_l}>
           <UpsertDomainButton
-            workspaceId={props.workspace.id}
+            workspaceId={props.workspaceCtx.workspace.id}
             organizationId={props.organization.id}
             btnContent={
               <>

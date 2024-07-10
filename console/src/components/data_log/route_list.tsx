@@ -179,10 +179,7 @@ const RouteDataLogs = () => {
   }
 
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.top}>
         <h1>Data logs</h1>
       </div>

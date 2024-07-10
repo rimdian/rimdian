@@ -1,21 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Organization,
   Workspace,
   App,
   CubeSchema,
   DataLogBatch,
-  SubscriptionList
+  SubscriptionList,
+  TaskExec,
+  TaskExecList
 } from 'interfaces'
 import { Outlet, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
 import { useCurrentOrganizationCtx } from 'components/organization/context_current_organization'
 import RouteWorkspaceSetup from './route_setup'
 import { QueryObserverResult, useQuery } from '@tanstack/react-query'
 import Layout from 'components/common/layout'
-import { BadgeRunningTasks } from 'components/task_exec/badge_running_tasks'
-import { useAccount } from 'components/login/context_account'
+// import { BadgeRunningTasks } from 'components/task_exec/badge_running_tasks'
+import { AccountContextValue, useAccount } from 'components/login/context_account'
 import DrawerShowUser from 'components/user/drawer_show'
-import { forEach } from 'lodash'
+import { difference, forEach } from 'lodash'
 import { Segment } from 'components/segment/interfaces'
 import LicenseWarning from './block_license_warning'
 import { RimdianCubeProvider } from './context_cube'
@@ -29,6 +31,7 @@ interface CubeSchemaList {
 }
 
 export interface CurrentWorkspaceCtxValue {
+  accountCtx: AccountContextValue
   workspace: Workspace
   refreshWorkspace: () => Promise<QueryObserverResult<Workspace, unknown>>
   isRefreshingWorkspace: boolean
@@ -38,6 +41,7 @@ export interface CurrentWorkspaceCtxValue {
   organization: Organization
   updateOrganization: (org: Organization) => void
   workspaces: Workspace[]
+  runningTasks: TaskExec[]
   segmentsMap: { [key: string]: Segment }
   refetchSegments: () => Promise<QueryObserverResult<SegmentList, unknown>>
   subscriptionLists: SubscriptionList[]
@@ -55,9 +59,10 @@ export const CurrentWorkspaceCtx = () => {
   const accountCtx = useAccount()
   const params = useParams()
   const [searchParams] = useSearchParams()
-  // const [segmentsMap, setSegmentsMap] = useState<{ [key: string]: Segment }>({})
   const [cubeSchemasMap, setCubeSchemasMap] = useState<{ [key: string]: CubeSchema }>({})
-  // const cubeApiRef = useRef<CubeApi | null>(null)
+
+  const [refreshRate, setRefreshRate] = useState(5) // every 5 secs by default
+  const [refreshingSegments, setRefreshingSegments] = useState<string[]>([])
 
   const { isLoading, data, refetch, isFetching } = useQuery<Workspace>(
     ['workspace', params.workspaceId],
@@ -162,6 +167,60 @@ export const CurrentWorkspaceCtx = () => {
     })
   })
 
+  // running tasks
+  const {
+    // isLoading: isLoadingRunningTasks,
+    data: runningTasks,
+    refetch: refetchRunningTasks
+    // isFetching: isFetchingRunningTasks
+  } = useQuery<TaskExec[]>(
+    ['workspace', params.workspaceId, 'runningTasks'],
+    (): Promise<TaskExec[]> => {
+      return new Promise((resolve, reject) => {
+        currentOrgCtx
+          .apiGET('/taskExec.list?status=0&workspace_id=' + params.workspaceId)
+          .then((data: TaskExecList) => {
+            // check if a task is recomputing segments
+            const segmentBeingRefreshed = data.task_execs
+              .filter((x: TaskExec) => x.task_id === 'recompute_segment')
+              .map((x: TaskExec) => x.id)
+
+            // check if a new segment is being refreshed or a segment is done refreshing
+            if (difference(refreshingSegments, segmentBeingRefreshed).length > 0) {
+              // console.log('refreshing segments')
+              refetchSegments()
+            }
+
+            setRefreshingSegments(segmentBeingRefreshed)
+
+            // increase refresh rate when a task is running
+            if (data && data.task_execs?.length > 0) {
+              if (data.task_execs.find((x: any) => !x.is_done) && refreshRate > 5) {
+                setRefreshRate(5)
+              } else if (refreshRate < 30) {
+                setRefreshRate(30)
+              }
+            }
+            resolve(data.task_execs as TaskExec[])
+          })
+          .catch((e) => {
+            reject(e)
+          })
+      })
+    },
+    {
+      enabled: params.workspaceId && currentOrgCtx.workspaces.length > 0 ? true : false
+    }
+  )
+
+  // create a dynamic interval to refresh running tasks
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchRunningTasks()
+    }, refreshRate * 1000)
+    return () => clearInterval(interval)
+  }, [refreshRate, refetchRunningTasks])
+
   const segmentsMap = useMemo(() => {
     if (!segments) return {}
     const map: { [key: string]: Segment } = {}
@@ -210,28 +269,17 @@ export const CurrentWorkspaceCtx = () => {
   if (workspace.has_orders === false && workspace.has_leads === false) isReady = false
   // if (!cubeApiRef.current) isReady = false
 
-  if (!isReady) {
-    return (
-      <RouteWorkspaceSetup
-        workspace={workspace as Workspace}
-        organization={currentOrgCtx.organization}
-        refreshWorkspace={refetch}
-        apiGET={currentOrgCtx.apiGET}
-        apiPOST={currentOrgCtx.apiPOST}
-        collectorPOST={currentOrgCtx.collectorPOST}
-      />
-    )
-  }
-
   const ctx: CurrentWorkspaceCtxValue = {
     // undefined currentWorkspace won't display props.children
     workspace: workspace as Workspace,
     isRefreshingWorkspace: isFetching,
+    accountCtx: accountCtx,
     // forward currentOrg context
     organization: currentOrgCtx.organization,
     organizations: currentOrgCtx.organizations,
     updateOrganization: currentOrgCtx.updateOrganization,
     workspaces: currentOrgCtx.workspaces,
+    runningTasks: runningTasks || [],
     segmentsMap: segmentsMap,
     refetchSegments: refetchSegments,
     subscriptionLists: subscriptionLists || [],
@@ -242,6 +290,19 @@ export const CurrentWorkspaceCtx = () => {
     apiGET: currentOrgCtx.apiGET,
     apiPOST: currentOrgCtx.apiPOST,
     collectorPOST: currentOrgCtx.collectorPOST
+  }
+
+  if (!isReady) {
+    return (
+      <RouteWorkspaceSetup
+        workspaceCtx={ctx}
+        organization={currentOrgCtx.organization}
+        refreshWorkspace={refetch}
+        apiGET={currentOrgCtx.apiGET}
+        apiPOST={currentOrgCtx.apiPOST}
+        collectorPOST={currentOrgCtx.collectorPOST}
+      />
+    )
   }
 
   const showUserId = searchParams.get('showUser')
@@ -255,14 +316,14 @@ export const CurrentWorkspaceCtx = () => {
           <DrawerShowUser workspaceCtx={ctx} userExternalId={showUserId} />
         )}
         <LicenseWarning workspaceCtx={ctx} />
-        <BadgeRunningTasks
+        {/* <BadgeRunningTasks
           organizationId={currentOrgCtx.organization.id}
           workspaceId={workspace.id}
           workspaces={currentOrgCtx.workspaces}
           refetchSegments={refetchSegments}
           accountTimezone={accountCtx.account?.account.timezone as string}
           apiGET={currentOrgCtx.apiGET}
-        />
+        /> */}
       </RimdianCubeProvider>
     </>
   )

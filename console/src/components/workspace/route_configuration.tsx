@@ -27,10 +27,7 @@ const RouteWorkspaceConfiguration = () => {
   const tab = params.get('tab') || 'domains'
 
   return (
-    <Layout
-      currentOrganization={workspaceCtx.organization}
-      currentWorkspace={workspaceCtx.workspace}
-    >
+    <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.container}>
         <div className={CSS.top + ' ' + CSS.margin_l_l}>
           <h1>Configuration</h1>

@@ -25,7 +25,10 @@ func segmentNodeAsSQL(parentSegmentID *string, node *entity.SegmentTreeNode, tim
 			if err != nil {
 				return "", nil, err
 			}
-			sqlChunk = fmt.Sprintf(`u.id IN (%s)`, sqlChunk)
+			// if the child is a leaf, wrap it in an EXISTS
+			if leaf.Kind == entity.SegmentTreeNodeKindLeaf {
+				sqlChunk = fmt.Sprintf(`EXISTS (%s)`, sqlChunk)
+			}
 			args = append(args, argsChunk...)
 			toJoin = append(toJoin, sqlChunk)
 		}
@@ -49,7 +52,9 @@ func segmentNodeAsSQL(parentSegmentID *string, node *entity.SegmentTreeNode, tim
 
 	if node.Leaf.Table == "user" {
 
-		q := sq.Select(alias + ".id").From("`user` as " + alias)
+		q := sq.Select(alias + ".id").
+			From("`user` as " + alias).
+			Where(alias + ".id = u.id") // force subquery to only work on same dataset
 
 		if parentSegmentID != nil {
 
@@ -66,7 +71,11 @@ func segmentNodeAsSQL(parentSegmentID *string, node *entity.SegmentTreeNode, tim
 		return q.Where(whereBuilder).ToSql()
 	}
 
-	queryBuilder := sq.Select(alias + ".user_id").From(fmt.Sprintf("`%v` as %v", node.Leaf.Table, alias)).Where(whereBuilder).GroupBy(alias + ".user_id")
+	queryBuilder := sq.Select(alias + ".user_id").
+		From(fmt.Sprintf("`%v` as %v", node.Leaf.Table, alias)).
+		Where(alias + ".user_id = u.id"). // force subquery to only work on same dataset
+		Where(whereBuilder).
+		GroupBy(alias + ".user_id")
 
 	if node.Leaf.Action.CountOperator == "at_least" {
 		queryBuilder = queryBuilder.Having(sq.GtOrEq{"COUNT(*)": node.Leaf.Action.CountValue})

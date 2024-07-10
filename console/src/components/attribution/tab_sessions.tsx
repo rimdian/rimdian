@@ -151,14 +151,14 @@ const TabAttributionSessions = () => {
 
     workspaceCtx.workspace.installed_apps.forEach((app) => {
       // add vertices first
-      app.app_tables?.forEach((table) => {
-        g.addVertex(table.name, true)
+      forEach(app.cube_schemas, (schema, cubeName) => {
+        g.addVertex(cubeName.toLowerCase(), true)
       })
       // add edges
       forEach(app.cube_schemas, (schema, cubeName) => {
         if (schema.joins) {
           forEach(schema.joins, (_join, tableName) => {
-            g.addEdge(cubeName, tableName)
+            g.addEdge(cubeName.toLowerCase(), tableName.toLowerCase())
           })
         }
       })

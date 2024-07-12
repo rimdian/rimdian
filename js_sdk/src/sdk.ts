@@ -7,6 +7,7 @@ import lifecycle from 'page-lifecycle/dist/lifecycle.mjs'
 // params used to decorate URLs for cross-device / cross-domain linking
 const URLParams = {
   device_external_id: '_did',
+  user_authenticated_external_id: '_authuid',
   user_external_id: '_uid',
   user_is_authenticated: '_auth',
   user_external_id_hmac: '_uidh'
@@ -503,7 +504,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.7.0',
+    version: '2.8.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -1380,7 +1381,13 @@ const Rimdian: IRimdian = {
       }
     }
 
-    let userId = Rimdian.getQueryParam(document.URL, URLParams.user_external_id)
+    // an authenticated user id can be the param "_authuid" or the combination of "_uid" + "_auth=true"
+    const authenticatedUserId = Rimdian.getQueryParam(
+      document.URL,
+      URLParams.user_authenticated_external_id
+    )
+    let userId =
+      authenticatedUserId || Rimdian.getQueryParam(document.URL, URLParams.user_external_id)
 
     // 1. ID found in URL
     // check if the user ID does not contain forbidden patterns
@@ -1391,7 +1398,9 @@ const Rimdian: IRimdian = {
     ) {
       Rimdian.log('info', 'found user ID in URL', userId)
 
-      const isAuthenticated = Rimdian.getQueryParam(document.URL, URLParams.user_is_authenticated)
+      const isAuthenticated = authenticatedUserId
+        ? 'true'
+        : Rimdian.getQueryParam(document.URL, URLParams.user_is_authenticated)
       Rimdian.log('info', 'user authenticated URL value', isAuthenticated)
 
       Rimdian.currentUser = {

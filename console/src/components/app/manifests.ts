@@ -202,7 +202,7 @@ const affilae: AppManifest = {
   short_description: 'Affilae server-to-server tracking.',
   description:
     'Send your conversions to Affilae servers with their corresponding Affilae Click ID.',
-  version: '1.6.0',
+  version: '1.7.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
   tasks: [
@@ -233,7 +233,7 @@ const affilae: AppManifest = {
       FROM \`session\` as s 
       JOIN \`order\` as o ON s.user_id = o.user_id AND s.conversion_id = o.id 
       JOIN \`user\` as u ON s.user_id = u.id 
-      WHERE s.utm_id_from = 'aeclid' 
+      WHERE s.utm_id_from = 'aecid' 
       AND s.conversion_id IS NOT NULL
       AND o.created_at >= ?
       AND o.created_at < ?

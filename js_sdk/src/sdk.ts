@@ -1800,7 +1800,7 @@ const Rimdian: IRimdian = {
     }
 
     // extract gclid+fbclid+MSCLKID from url into utm_id + utm_id_from
-    const ids = ['gclid', 'fbclid', 'msclkid', 'aeclid']
+    const ids = ['gclid', 'fbclid', 'msclkid', 'aecid']
     ids.forEach((param) => {
       const value =
         Rimdian.getQueryParam(document.URL, param) ||

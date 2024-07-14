@@ -132,7 +132,7 @@ const SelectedBlockButtons = (props: SelectedBlockButtonsProp) => {
           open={true}
           onCancel={toggleModal}
           footer={[
-            <Button key="back" type="ghost" loading={loading} onClick={toggleModal}>
+            <Button key="back" ghost loading={loading} onClick={toggleModal}>
               Cancel
             </Button>,
             <Button key="submit" type="primary" loading={loading} onClick={onSubmit}>

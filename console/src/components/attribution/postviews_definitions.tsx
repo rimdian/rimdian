@@ -456,7 +456,7 @@ export const PostviewsMeasuresMapDefinition: Record<string, MeasureDefinition> =
         <Popover
           content={content}
           title={null}
-          trigger={['hover', 'onClick']}
+          trigger={['hover', 'click']}
           placement="left"
           className={CSS.padding_v_m}
         >

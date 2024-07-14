@@ -10,7 +10,7 @@ type Props = {
   apiPOST: (endpoint: string, data: any) => Promise<any>
   onComplete: () => void
   btnSize?: SizeType
-  btnType?: 'link' | 'text' | 'ghost' | 'default' | 'primary' | 'dashed' | undefined
+  btnType?: 'link' | 'text' | 'default' | 'primary' | 'dashed' | undefined
 }
 
 const DeleteChannelButton = (props: Props) => {

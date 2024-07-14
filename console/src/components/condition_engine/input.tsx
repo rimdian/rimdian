@@ -493,7 +493,11 @@ export const ConditionInput = (props: ConditionInputProps) => {
               // popupClassName="cascader-wide"
               onChange={addCondition.bind(null, path, pathKey)}
               expandTrigger="hover"
-              fieldNames={{ children: 'fields' }}
+              fieldNames={
+                {
+                  children: 'fields'
+                } as any
+              }
               options={[
                 { value: 'and', label: 'AND | OR' }, // AND by default, user can switch to OR after
                 // { value: 'or', label: "Group OR", },

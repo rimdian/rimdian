@@ -5,7 +5,7 @@ import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_wor
 
 type Props = {
   btnSize?: SizeType
-  btnType?: 'link' | 'text' | 'ghost' | 'default' | 'primary' | 'dashed' | undefined
+  btnType?: 'link' | 'text' | 'default' | 'primary' | 'dashed' | undefined
 }
 
 const ButtonReattributeConversions = (props: Props) => {

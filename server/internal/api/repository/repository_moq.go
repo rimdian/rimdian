@@ -497,9 +497,6 @@ var _ Repository = &RepositoryMock{}
 //			RunInTransactionForWorkspaceFunc: func(ctx context.Context, workspaceID string, f func(context.Context, *sql.Tx) (int, error)) (int, error) {
 //				panic("mock out the RunInTransactionForWorkspace method")
 //			},
-//			SelectQueryToJSONFunc: func(ctx context.Context, query string, args []interface{}) ([]byte, error) {
-//				panic("mock out the SelectQueryToJSON method")
-//			},
 //			SetTaskExecErrorFunc: func(ctx context.Context, workspaceID string, taskExecID string, workerID int, status int, message string) error {
 //				panic("mock out the SetTaskExecError method")
 //			},
@@ -1076,9 +1073,6 @@ type RepositoryMock struct {
 
 	// RunInTransactionForWorkspaceFunc mocks the RunInTransactionForWorkspace method.
 	RunInTransactionForWorkspaceFunc func(ctx context.Context, workspaceID string, f func(context.Context, *sql.Tx) (int, error)) (int, error)
-
-	// SelectQueryToJSONFunc mocks the SelectQueryToJSON method.
-	SelectQueryToJSONFunc func(ctx context.Context, query string, args []interface{}) ([]byte, error)
 
 	// SetTaskExecErrorFunc mocks the SetTaskExecError method.
 	SetTaskExecErrorFunc func(ctx context.Context, workspaceID string, taskExecID string, workerID int, status int, message string) error
@@ -2830,15 +2824,6 @@ type RepositoryMock struct {
 			// F is the f argument value.
 			F func(context.Context, *sql.Tx) (int, error)
 		}
-		// SelectQueryToJSON holds details about calls to the SelectQueryToJSON method.
-		SelectQueryToJSON []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// Query is the query argument value.
-			Query string
-			// Args is the args argument value.
-			Args []interface{}
-		}
 		// SetTaskExecError holds details about calls to the SetTaskExecError method.
 		SetTaskExecError []struct {
 			// Ctx is the ctx argument value.
@@ -3296,7 +3281,6 @@ type RepositoryMock struct {
 	lockResetSessionsAttributedForConversion  sync.RWMutex
 	lockRunInTransactionForSystem             sync.RWMutex
 	lockRunInTransactionForWorkspace          sync.RWMutex
-	lockSelectQueryToJSON                     sync.RWMutex
 	lockSetTaskExecError                      sync.RWMutex
 	lockShowTables                            sync.RWMutex
 	lockStopAppTasks                          sync.RWMutex
@@ -10108,46 +10092,6 @@ func (mock *RepositoryMock) RunInTransactionForWorkspaceCalls() []struct {
 	mock.lockRunInTransactionForWorkspace.RLock()
 	calls = mock.calls.RunInTransactionForWorkspace
 	mock.lockRunInTransactionForWorkspace.RUnlock()
-	return calls
-}
-
-// SelectQueryToJSON calls SelectQueryToJSONFunc.
-func (mock *RepositoryMock) SelectQueryToJSON(ctx context.Context, query string, args []interface{}) ([]byte, error) {
-	if mock.SelectQueryToJSONFunc == nil {
-		panic("RepositoryMock.SelectQueryToJSONFunc: method is nil but Repository.SelectQueryToJSON was just called")
-	}
-	callInfo := struct {
-		Ctx   context.Context
-		Query string
-		Args  []interface{}
-	}{
-		Ctx:   ctx,
-		Query: query,
-		Args:  args,
-	}
-	mock.lockSelectQueryToJSON.Lock()
-	mock.calls.SelectQueryToJSON = append(mock.calls.SelectQueryToJSON, callInfo)
-	mock.lockSelectQueryToJSON.Unlock()
-	return mock.SelectQueryToJSONFunc(ctx, query, args)
-}
-
-// SelectQueryToJSONCalls gets all the calls that were made to SelectQueryToJSON.
-// Check the length with:
-//
-//	len(mockedRepository.SelectQueryToJSONCalls())
-func (mock *RepositoryMock) SelectQueryToJSONCalls() []struct {
-	Ctx   context.Context
-	Query string
-	Args  []interface{}
-} {
-	var calls []struct {
-		Ctx   context.Context
-		Query string
-		Args  []interface{}
-	}
-	mock.lockSelectQueryToJSON.RLock()
-	calls = mock.calls.SelectQueryToJSON
-	mock.lockSelectQueryToJSON.RUnlock()
 	return calls
 }
 

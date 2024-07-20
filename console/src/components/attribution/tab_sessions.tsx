@@ -19,12 +19,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
 import { Filter, Query, ResultSet, SqlData } from '@cubejs-client/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  MeasureDefinition,
-  SessionsMeasuresMapDefinition,
-  DimensionsMapDefinition,
-  DimensionDefinition
-} from './sessions_definitions'
+import { MeasureDefinition, SessionsMeasuresMapDefinition } from './sessions_definitions'
 import { useDateRangeCtx } from 'components/common/context_date_range'
 import { cloneDeep, forEach, map, set, upperFirst } from 'lodash'
 import FormatNumber from 'utils/format_number'
@@ -34,7 +29,7 @@ import FormatDuration from 'utils/format_duration'
 import { ButtonExpand } from 'components/common/button_table_expand'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons'
-import { Workspace } from 'interfaces'
+import { CubeSchema, CubeSchemaDimension, CubeSchemaMap, Workspace } from 'interfaces'
 import { ButtonSQLExecuted, ExecutedSQL } from './button_sql_executed'
 import CSS from 'utils/css'
 import { css } from '@emotion/css'
@@ -58,6 +53,13 @@ interface AttributionParams {
   refresh_key: string
 }
 
+export interface DimensionDefinition {
+  key: string
+  cube: CubeSchema
+  dimension: CubeSchemaDimension
+  customRender?: (values: any[], currency: string) => JSX.Element | string
+}
+
 // hardcode measures for now...
 const defaultMeasures: MeasureDefinition[] = [
   SessionsMeasuresMapDefinition['Session.unique_users'],
@@ -74,26 +76,6 @@ const defaultMeasures: MeasureDefinition[] = [
   // FieldsMap['Session.linear_percentage_attributed'],
   // FieldsMap['Session.linear_conversions_attributed'],
 ]
-
-const dimensionsAvailable: Record<string, DimensionDefinition> = {
-  'Session.channel_group_id': DimensionsMapDefinition['Session.channel_group_id'],
-  'Session.channel_id': DimensionsMapDefinition['Session.channel_id'],
-  'Session.channel_origin_id': DimensionsMapDefinition['Session.channel_origin_id'],
-  'Session.domain_id': DimensionsMapDefinition['Session.domain_id'],
-  'Session.utm_source': DimensionsMapDefinition['Session.utm_source'],
-  'Session.utm_medium': DimensionsMapDefinition['Session.utm_medium'],
-  'Session.utm_campaign': DimensionsMapDefinition['Session.utm_campaign'],
-  'Session.utm_term': DimensionsMapDefinition['Session.utm_term'],
-  'Session.utm_content': DimensionsMapDefinition['Session.utm_content'],
-  // 'Session.landing_page': DimensionsMapDefinition['Session.landing_page'],
-  'Session.landing_page_path': DimensionsMapDefinition['Session.landing_page_path'],
-  // 'Session.referrer': DimensionsMapDefinition['Session.referrer'],
-  'Session.referrer_path': DimensionsMapDefinition['Session.referrer_path'],
-  'Session.referrer_domain': DimensionsMapDefinition['Session.referrer_domain'],
-  // 'Session.is_first_conversion': DimensionsMapDefinition['Session.is_first_conversion'],
-  'Session.bounced': DimensionsMapDefinition['Session.bounced'],
-  'Session.role': DimensionsMapDefinition['Session.role']
-}
 
 interface TableRow {
   key: string // contains path of parents too
@@ -136,67 +118,101 @@ const TabAttributionSessions = () => {
     }
   }, [searchParams, dateRangeCtx])
 
-  const graph = useMemo(() => {
-    // compute graph network of tables
+  const generateDatabaseGraphForSchema = (
+    schemaName: string,
+    cubeSchemasMap: CubeSchemaMap
+  ): Graph<string, boolean> => {
     const g = new Graph<string, boolean>()
-    g.addVertex('user', true)
-    g.addVertex('session', true)
-    g.addVertex('pageview', true)
-    g.addVertex('order', true)
-    g.addEdge('user', 'session')
-    g.addEdge('user', 'pageview')
-    g.addEdge('user', 'order')
-    g.addEdge('order', 'session')
-    g.addEdge('order', 'pageview')
 
-    workspaceCtx.workspace.installed_apps.forEach((app) => {
-      // add vertices first
-      forEach(app.cube_schemas, (schema, cubeName) => {
-        g.addVertex(cubeName.toLowerCase(), true)
-      })
+    if (!cubeSchemasMap[schemaName]) {
+      return g
+    }
+
+    // recursively add tables linked to tables
+    const addTables = (cubeName: string) => {
+      // abort if schema does not exist
+      if (!cubeSchemasMap[cubeName]) {
+        console.error('Schema not found', cubeName)
+        return
+      }
+
+      const schema = cubeSchemasMap[cubeName]
+      const tableName = cubeName.toLowerCase()
+
+      // abort if table already exists
+      if (g.hasVertex(tableName)) return
+
+      // add vertex
+      g.addVertex(tableName, true)
+
       // add edges
-      forEach(app.cube_schemas, (schema, cubeName) => {
-        if (schema.joins) {
-          forEach(schema.joins, (_join, tableName) => {
-            g.addEdge(cubeName.toLowerCase(), tableName.toLowerCase())
-          })
-        }
-      })
+      if (schema.joins) {
+        forEach(schema.joins, (_join, linkedCubeName) => {
+          if (!g.hasVertex(linkedCubeName.toLowerCase())) {
+            addTables(linkedCubeName) // recursive call
+          }
+
+          g.addEdge(tableName, linkedCubeName.toLowerCase())
+        })
+      }
+    }
+
+    addTables(schemaName)
+
+    // add single-way relationships from apps
+    forEach(cubeSchemasMap, (cubeSchema, cubeName) => {
+      if (cubeSchema.joins) {
+        forEach(cubeSchema.joins, (_join, linkedCubeName) => {
+          // if cube is in the graph
+          if (g.hasVertex(linkedCubeName.toLowerCase())) {
+            // add missing tables
+            if (!g.hasVertex(cubeName.toLowerCase())) {
+              addTables(cubeName) // recursive call
+            }
+
+            g.addEdge(cubeName.toLowerCase(), linkedCubeName.toLowerCase())
+          }
+        })
+      }
     })
+
     return g
-  }, [workspaceCtx.workspace.installed_apps])
+  }
+
+  const graph = useMemo(() => {
+    // start from the Session cube
+    return generateDatabaseGraphForSchema('Session', workspaceCtx.cubeSchemasMap)
+  }, [workspaceCtx.cubeSchemasMap])
 
   // dynamically add app measures to the definitions
   const dimensionsMap: Record<string, DimensionDefinition> = useMemo(() => {
-    const result = cloneDeep(dimensionsAvailable)
+    const result = {} as Record<string, DimensionDefinition>
 
-    // extract app dimensions
-    workspaceCtx.workspace.installed_apps.forEach((app) => {
-      app.app_tables?.forEach((table) => {
-        // check if table is linked to session table
-        if (!graph.hasEdge(table.name, 'session')) {
-          return
+    forEach(workspaceCtx.cubeSchemasMap, (cubeSchema, cubeName) => {
+      // check if has vertex in graph
+      if (!graph.hasVertex(cubeName.toLowerCase())) {
+        console.log('Cube not found in graph', cubeName)
+        return
+      }
+
+      // add dimensions
+      forEach(cubeSchema.dimensions, (dimension, name) => {
+        // only accept strings and booleans for now
+        if (dimension.type === 'string' || dimension.type === 'boolean') {
+          const k = `${cubeName}.${name}`
+          result[k] = {
+            key: name,
+            cube: cubeSchema,
+            dimension: dimension
+          } as DimensionDefinition
         }
-
-        table.columns.forEach((column) => {
-          // only accept strings and booleans for now
-          if (column.type === 'varchar' || column.type === 'boolean') {
-            const tableNameCube = upperFirst(table.name)
-            const k = `${tableNameCube}.${column.name}`
-            result[k] = {
-              key: k,
-              title: column.name,
-              tooltip: column.description,
-              category: 'app',
-              dimension: k
-            } as DimensionDefinition
-          }
-        })
       })
     })
 
     return result
   }, [workspaceCtx.workspace, graph])
+
+  console.log('dimensionsMap', dimensionsMap)
 
   // dynamically add app measures to the definitions
   const measuresMap: Record<string, MeasureDefinition> = useMemo(() => {
@@ -691,7 +707,7 @@ const GenerateTableColumns = (
         const dimension = dimensionsMap[lastDimensionKey]
 
         // find channel group
-        if (dimension.key === 'Session.channel_group_id') {
+        if (dimension.cube.title === 'Session' && dimension.key === 'channel_group_id') {
           const channelGroup = workspace.channel_groups.find(
             (group) => group.id === lastDimensionValue
           )
@@ -708,7 +724,7 @@ const GenerateTableColumns = (
           return channel ? channel.name : lastDimensionValue
         }
 
-        if (dimension.type === 'boolean') {
+        if (dimension.dimension.type === 'boolean') {
           if (lastDimensionValue === null) {
             return 'null'
           }
@@ -822,7 +838,7 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
     return (
       <>
         <TableTag table={field.key.split('.')[0]} />
-        {field.title}
+        {field.dimension.title}
       </>
     )
   }
@@ -883,7 +899,7 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
                 label: (
                   <>
                     <TableTag table={field.key.split('.')[0]} />
-                    {field.title}
+                    {field.dimension.title}
                   </>
                 )
               }
@@ -901,7 +917,7 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
                 label: (
                   <>
                     <TableTag table={field.key.split('.')[0]} />
-                    {field.title}
+                    {field.dimension.title}
                   </>
                 )
               }

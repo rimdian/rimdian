@@ -7,7 +7,8 @@ import {
   DataLogBatch,
   SubscriptionList,
   TaskExec,
-  TaskExecList
+  TaskExecList,
+  CubeSchemaMap
 } from 'interfaces'
 import { Outlet, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
 import { useCurrentOrganizationCtx } from 'components/organization/context_current_organization'
@@ -46,7 +47,7 @@ export interface CurrentWorkspaceCtxValue {
   refetchSegments: () => Promise<QueryObserverResult<SegmentList, unknown>>
   subscriptionLists: SubscriptionList[]
   refetchSubscriptionLists: () => Promise<QueryObserverResult<SubscriptionList[], unknown>>
-  cubeSchemasMap: { [key: string]: CubeSchema }
+  cubeSchemasMap: CubeSchemaMap
   refetchApps: () => Promise<QueryObserverResult<App[], unknown>>
   // refreshWorkspaces: Promise<QueryObserverResult<Workspace[], unknown>>
   apiGET: (endpoint: string) => Promise<any>

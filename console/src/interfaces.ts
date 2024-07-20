@@ -976,6 +976,10 @@ export interface AppManifest {
   is_native?: boolean
 }
 
+export interface CubeSchemaMap {
+  [key: string]: CubeSchema
+}
+
 export interface CubeSchema {
   sql: string
   title: string

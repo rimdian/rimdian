@@ -1980,9 +1980,33 @@ func NewSessionCube() *CubeJSSchema {
 				Type:        "count",
 				SQL:         "id",
 				Title:       "Orders contributions",
-				Description: "Sessions that contributed to an session. Count of: conversion_id IS NOT NULL AND conversion_type = 'order'",
+				Description: "Sessions that contributed to an order. Count of: conversion_id IS NOT NULL AND conversion_type = 'order'",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "${CUBE}.conversion_id IS NOT NULL AND ${CUBE}.conversion_type = 'order'"},
+				},
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"acquisition_orders_contributions": {
+				Type:        "count",
+				SQL:         "id",
+				Title:       "Acquisition orders contributions",
+				Description: "Sessions that contributed to a 1st order. Count of: conversion_id IS NOT NULL AND conversion_type = 'order' AND is_first_conversion = 1",
+				Filters: []CubeJSSchemaMeasureFilter{
+					{SQL: "${CUBE}.conversion_id IS NOT NULL AND ${CUBE}.conversion_type = 'order' AND  ${CUBE}.is_first_conversion = 1"},
+				},
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"retention_orders_contributions": {
+				Type:        "count",
+				SQL:         "id",
+				Title:       "Retention orders contributions",
+				Description: "Sessions that contributed to a 1st order. Count of: conversion_id IS NOT NULL AND conversion_type = 'order' AND is_first_conversion = 1",
+				Filters: []CubeJSSchemaMeasureFilter{
+					{SQL: "${CUBE}.conversion_id IS NOT NULL AND ${CUBE}.conversion_type = 'order' AND  ${CUBE}.is_first_conversion = 1"},
 				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,

@@ -134,14 +134,14 @@ func ResetConversionsAndTouchpointsForChannel(ctx context.Context, channelID str
 	}
 
 	// Reset session+postviews channel_id
-	query = "UPDATE `session` SET channel_id = 'not-mapped', channel_group_id = 'not-mapped' WHERE channel_id = ?"
+	query = "UPDATE `session` SET channel_id = 'not-mapped', channel_group_id = 'not-mapped', channel_origin_id = NULL WHERE channel_id = ?"
 
 	if _, err := tx.ExecContext(ctx, query, channelID); err != nil {
 		tx.Rollback()
 		return eris.Wrap(err, "ResetConversionsAndTouchpointsForChannel")
 	}
 
-	query = "UPDATE `postview` SET channel_id = 'not-mapped', channel_group_id = 'not-mapped' WHERE channel_id = ?"
+	query = "UPDATE `postview` SET channel_id = 'not-mapped', channel_group_id = 'not-mapped', channel_origin_id = NULL WHERE channel_id = ?"
 
 	if _, err := tx.ExecContext(ctx, query, channelID); err != nil {
 		tx.Rollback()
@@ -161,17 +161,25 @@ func SetConversionsAndTouchpointsForChannel(ctx context.Context, channel *entity
 			origin.ID,
 			origin.UTMSource,
 			origin.UTMMedium,
-			origin.UTMCampaign,
 		}
 
-		query := "UPDATE `session` SET channel_id = ?, channel_group_id = ?, channel_origin_id = ? WHERE utm_source = ? AND utm_medium = ? AND utm_campaign = ?"
+		query := "UPDATE `session` SET channel_id = ?, channel_group_id = ?, channel_origin_id = ? WHERE utm_source = ? AND utm_medium = ?"
+
+		if origin.UTMCampaign != nil && *origin.UTMCampaign != "" {
+			query += " AND utm_campaign = ?"
+			args = append(args, *origin.UTMCampaign)
+		}
 
 		if _, err := tx.ExecContext(ctx, query, args...); err != nil {
 			tx.Rollback()
 			return eris.Wrap(err, "SetConversionsAndTouchpointsForChannel")
 		}
 
-		query = "UPDATE `postview` SET channel_id = ?, channel_group_id = ?, channel_origin_id = ? WHERE utm_source = ? AND utm_medium = ? AND utm_campaign = ?"
+		query = "UPDATE `postview` SET channel_id = ?, channel_group_id = ?, channel_origin_id = ? WHERE utm_source = ? AND utm_medium = ?"
+
+		if origin.UTMCampaign != nil && *origin.UTMCampaign != "" {
+			query += " AND utm_campaign = ?"
+		}
 
 		if _, err = tx.ExecContext(ctx, query, args...); err != nil {
 			tx.Rollback()

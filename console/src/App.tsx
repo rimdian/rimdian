@@ -26,7 +26,7 @@ import RouteListApps from 'components/app/route_list'
 import RouteShowApp from 'components/app/route_show'
 import { DateRangeProvider } from 'components/common/context_date_range'
 // init dayjs
-import * as dayjs from 'dayjs'
+import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import relativeTime from 'dayjs/plugin/relativeTime'

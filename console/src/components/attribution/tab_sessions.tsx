@@ -6,10 +6,6 @@ import {
   Spin,
   Select,
   Modal,
-  // Badge,
-  // Row,
-  // Col,
-  // Radio,
   Checkbox,
   Radio,
   RadioChangeEvent
@@ -19,9 +15,9 @@ import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
 import { Filter, Query, ResultSet, SqlData } from '@cubejs-client/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { MeasureDefinition, SessionsMeasuresMapDefinition } from './sessions_definitions'
+// import { MeasureDefinition, SessionsMeasuresMapDefinition } from './sessions_definitions'
 import { useDateRangeCtx } from 'components/common/context_date_range'
-import { cloneDeep, forEach, map, set, upperFirst } from 'lodash'
+import { cloneDeep, map, set } from 'lodash'
 import FormatNumber from 'utils/format_number'
 import FormatPercent from 'utils/format_percent'
 import FormatCurrency from 'utils/format_currency'
@@ -29,14 +25,21 @@ import FormatDuration from 'utils/format_duration'
 import { ButtonExpand } from 'components/common/button_table_expand'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons'
-import { CubeSchema, CubeSchemaDimension, CubeSchemaMap, Workspace } from 'interfaces'
+import { Workspace } from 'interfaces'
 import { ButtonSQLExecuted, ExecutedSQL } from './button_sql_executed'
 import CSS from 'utils/css'
 import { css } from '@emotion/css'
-import { Graph } from '@datastructures-js/graph'
 import { Fullscreenable } from 'components/common/fullscreenable'
 import TableTag from 'components/common/partial_table_tag'
 import { useRimdianCube } from 'components/workspace/context_cube'
+import {
+  AttributionRoleMeasure,
+  DimensionDefinition,
+  MeasureDefinition,
+  generateDatabaseGraphForSchema,
+  generateDimensionsMap,
+  generateMeasuresMap
+} from 'components/common/schema'
 
 interface AttributionParams {
   sortKey: string
@@ -52,30 +55,6 @@ interface AttributionParams {
   vs_date_to: string
   refresh_key: string
 }
-
-export interface DimensionDefinition {
-  key: string
-  cube: CubeSchema
-  dimension: CubeSchemaDimension
-  customRender?: (values: any[], currency: string) => JSX.Element | string
-}
-
-// hardcode measures for now...
-const defaultMeasures: MeasureDefinition[] = [
-  SessionsMeasuresMapDefinition['Session.unique_users'],
-  SessionsMeasuresMapDefinition['Session.count'],
-  SessionsMeasuresMapDefinition['Session.bounce_rate'],
-  SessionsMeasuresMapDefinition['Session.avg_pageviews_count'],
-  SessionsMeasuresMapDefinition['Session.avg_duration'],
-  SessionsMeasuresMapDefinition['Session.orders_contributions'],
-  SessionsMeasuresMapDefinition['Session.distinct_orders'],
-  SessionsMeasuresMapDefinition['Order.subtotal_sum'],
-  SessionsMeasuresMapDefinition['Session.attribution_roles']
-  // FieldsMap['Order.avg_cart'],
-  // FieldsMap['Session.linear_amount_attributed'],
-  // FieldsMap['Session.linear_percentage_attributed'],
-  // FieldsMap['Session.linear_conversions_attributed'],
-]
 
 interface TableRow {
   key: string // contains path of parents too
@@ -101,6 +80,41 @@ const TabAttributionSessions = () => {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(['root'])
   const refreshKeyRef = useRef('')
 
+  const graph = useMemo(() => {
+    return generateDatabaseGraphForSchema('Session', workspaceCtx.cubeSchemasMap)
+  }, [workspaceCtx.cubeSchemasMap])
+
+  const dimensionsMap: Record<string, DimensionDefinition> = useMemo(() => {
+    return generateDimensionsMap(graph, workspaceCtx.cubeSchemasMap)
+  }, [workspaceCtx.workspace, graph])
+
+  // dynamically add app measures to the definitions
+  const measuresMap: Record<string, MeasureDefinition> = useMemo(() => {
+    const result = generateMeasuresMap(graph, workspaceCtx.cubeSchemasMap)
+    // add roles
+    result['Session.attribution_roles'] = AttributionRoleMeasure
+    return result
+  }, [workspaceCtx.cubeSchemasMap, graph])
+
+  // hardcode measures for now...
+  const defaultMeasures: MeasureDefinition[] = useMemo(() => {
+    return [
+      measuresMap['Session.unique_users'],
+      measuresMap['Session.count'],
+      measuresMap['Session.bounce_rate'],
+      measuresMap['Session.avg_pageviews_count'],
+      measuresMap['Session.avg_duration'],
+      measuresMap['Session.orders_contributions'],
+      // measuresMap['Session.distinct_orders'],
+      measuresMap['Order.subtotal_sum'],
+      measuresMap['Session.attribution_roles']
+      // FieldsMap['Order.avg_cart'],
+      // FieldsMap['Session.linear_amount_attributed'],
+      // FieldsMap['Session.linear_percentage_attributed'],
+      // FieldsMap['Session.linear_conversions_attributed'],
+    ]
+  }, [measuresMap])
+
   const params: AttributionParams = useMemo(() => {
     return {
       sortKey: searchParams.get('sortKey') || 'Session.count',
@@ -116,152 +130,18 @@ const TabAttributionSessions = () => {
       vs_date_to: dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD'),
       refresh_key: searchParams.get('refresh_key') || ''
     }
-  }, [searchParams, dateRangeCtx])
-
-  const generateDatabaseGraphForSchema = (
-    schemaName: string,
-    cubeSchemasMap: CubeSchemaMap
-  ): Graph<string, boolean> => {
-    const g = new Graph<string, boolean>()
-
-    if (!cubeSchemasMap[schemaName]) {
-      return g
-    }
-
-    // recursively add tables linked to tables
-    const addTables = (cubeName: string) => {
-      // abort if schema does not exist
-      if (!cubeSchemasMap[cubeName]) {
-        console.error('Schema not found', cubeName)
-        return
-      }
-
-      const schema = cubeSchemasMap[cubeName]
-      const tableName = cubeName.toLowerCase()
-
-      // abort if table already exists
-      if (g.hasVertex(tableName)) return
-
-      // add vertex
-      g.addVertex(tableName, true)
-
-      // add edges
-      if (schema.joins) {
-        forEach(schema.joins, (_join, linkedCubeName) => {
-          if (!g.hasVertex(linkedCubeName.toLowerCase())) {
-            addTables(linkedCubeName) // recursive call
-          }
-
-          g.addEdge(tableName, linkedCubeName.toLowerCase())
-        })
-      }
-    }
-
-    addTables(schemaName)
-
-    // add single-way relationships from apps
-    forEach(cubeSchemasMap, (cubeSchema, cubeName) => {
-      if (cubeSchema.joins) {
-        forEach(cubeSchema.joins, (_join, linkedCubeName) => {
-          // if cube is in the graph
-          if (g.hasVertex(linkedCubeName.toLowerCase())) {
-            // add missing tables
-            if (!g.hasVertex(cubeName.toLowerCase())) {
-              addTables(cubeName) // recursive call
-            }
-
-            g.addEdge(cubeName.toLowerCase(), linkedCubeName.toLowerCase())
-          }
-        })
-      }
-    })
-
-    return g
-  }
-
-  const graph = useMemo(() => {
-    // start from the Session cube
-    return generateDatabaseGraphForSchema('Session', workspaceCtx.cubeSchemasMap)
-  }, [workspaceCtx.cubeSchemasMap])
-
-  // dynamically add app measures to the definitions
-  const dimensionsMap: Record<string, DimensionDefinition> = useMemo(() => {
-    const result = {} as Record<string, DimensionDefinition>
-
-    forEach(workspaceCtx.cubeSchemasMap, (cubeSchema, cubeName) => {
-      // check if has vertex in graph
-      if (!graph.hasVertex(cubeName.toLowerCase())) {
-        console.log('Cube not found in graph', cubeName)
-        return
-      }
-
-      // add dimensions
-      forEach(cubeSchema.dimensions, (dimension, name) => {
-        // only accept strings and booleans for now
-        if (dimension.type === 'string' || dimension.type === 'boolean') {
-          const k = `${cubeName}.${name}`
-          result[k] = {
-            key: name,
-            cube: cubeSchema,
-            dimension: dimension
-          } as DimensionDefinition
-        }
-      })
-    })
-
-    return result
-  }, [workspaceCtx.workspace, graph])
-
-  console.log('dimensionsMap', dimensionsMap)
-
-  // dynamically add app measures to the definitions
-  const measuresMap: Record<string, MeasureDefinition> = useMemo(() => {
-    const result = cloneDeep(SessionsMeasuresMapDefinition)
-
-    // extract app measures
-    workspaceCtx.workspace.installed_apps.forEach((app) => {
-      app.app_tables?.forEach((table) => {
-        // check if table is linked to session table
-        if (!graph.hasEdge(table.name, 'session')) {
-          return
-        }
-
-        table.columns.forEach((column) => {
-          // number columns have SUM and AVG measures
-          if (column.type === 'number') {
-            const tableNameCube = upperFirst(table.name)
-            const sumKey = `${tableNameCube}.${column.name}_sum`
-            result[sumKey] = {
-              key: sumKey,
-              title: `Sum of ${column.name}`,
-              tooltip: `Sum of ${column.name}`,
-              category: 'app',
-              measures: [sumKey]
-            } as MeasureDefinition
-
-            const avgKey = `${tableNameCube}.${column.name}_avg`
-            result[avgKey] = {
-              key: avgKey,
-              title: `Avg. ${column.name}`,
-              tooltip: `Average of ${column.name}`,
-              category: 'app',
-              measures: [avgKey]
-            } as MeasureDefinition
-          }
-        })
-      })
-    })
-
-    return result
-  }, [workspaceCtx.workspace, graph])
+  }, [searchParams, dateRangeCtx, defaultMeasures])
 
   const measures: string[] = useMemo(() => {
+    if (!measuresMap) return []
+
     const result: string[] = []
     params.measures.split(',').forEach((fieldKey) => {
-      result.push(...measuresMap[fieldKey].measures)
+      if (!measuresMap[fieldKey]) return
+      result.push(...(measuresMap[fieldKey].dependsOnMeasures || [fieldKey]))
     })
     return result
-  }, [params.measures, measuresMap])
+  }, [params, measuresMap])
 
   const baseQuery: Query = useMemo(() => {
     const filters: Filter[] = []
@@ -586,7 +466,16 @@ const TabAttributionSessions = () => {
 
   // console.log('executedSQL', executedSQL)
 
-  const selectedMeasures = params.measures.split(',').map((measure) => measuresMap[measure])
+  const selectedMeasures = useMemo(() => {
+    // retrieve measures from params in the map
+    const result: MeasureDefinition[] = []
+    params.measures.split(',').forEach((measure) => {
+      if (measuresMap[measure]) result.push(measuresMap[measure])
+    })
+    return result
+  }, [params.measures, measuresMap])
+
+  // params.measures.split(',').map((measure) => measuresMap[measure])
   const tableColumns = GenerateTableColumns(selectedMeasures, dimensionsMap, workspaceCtx.workspace)
 
   // compute total table width
@@ -609,7 +498,8 @@ const TabAttributionSessions = () => {
         <span className={CSS.padding_h_xs}></span>
         <MeasuresSelector measures={params.measures.split(',')} fieldsMap={measuresMap} />
         <div className={CSS.topSeparator}></div>
-        <Radio.Group
+        TODO: User Segments
+        {/* <Radio.Group
           onChange={(e: RadioChangeEvent) => {
             const allParams: any = {}
             searchParams.forEach((value, key: string) => {
@@ -623,7 +513,7 @@ const TabAttributionSessions = () => {
           <Radio.Button value={'all'}>All conversions</Radio.Button>
           <Radio.Button value={'acquisition'}>Acquisition</Radio.Button>
           <Radio.Button value={'repeat'}>Repeat</Radio.Button>
-        </Radio.Group>
+        </Radio.Group> */}
       </div>
 
       <Fullscreenable>
@@ -680,11 +570,13 @@ const GenerateTableColumns = (
   dimensionsMap: Record<string, DimensionDefinition>,
   workspace: Workspace
 ): any[] => {
+  if (!measures || measures.length === 0) return []
+
   // extract categories from fields
-  const categoriesMap: any = {}
+  const cubesMap: any = {}
 
   measures.forEach((field) => {
-    categoriesMap[field.category] = field.category
+    cubesMap[field.cubeName] = field.cube.title
   })
 
   const categories: any[] = [
@@ -706,8 +598,12 @@ const GenerateTableColumns = (
         const lastDimensionValue = row.dimensionValues[row.dimensionValues.length - 1]
         const dimension = dimensionsMap[lastDimensionKey]
 
+        // console.log('lastDimensionKey', lastDimensionKey)
+        // console.log('lastDimensionValue', lastDimensionValue)
+        // console.log('dimension', dimension)
+
         // find channel group
-        if (dimension.cube.title === 'Session' && dimension.key === 'channel_group_id') {
+        if (dimension.cubeName === 'Session' && dimension.dimensionName === 'channel_group_id') {
           const channelGroup = workspace.channel_groups.find(
             (group) => group.id === lastDimensionValue
           )
@@ -719,7 +615,7 @@ const GenerateTableColumns = (
         }
 
         // find channel
-        if (dimension.key === 'Session.channel_id') {
+        if (dimension.cubeName === 'Session' && dimension.dimensionName === 'channel_id') {
           const channel = workspace.channels.find((ch) => ch.id === lastDimensionValue)
           return channel ? channel.name : lastDimensionValue
         }
@@ -752,7 +648,7 @@ const GenerateTableColumns = (
     }
   ]
 
-  Object.keys(categoriesMap).forEach((key, i, cats) => {
+  Object.keys(cubesMap).forEach((cubeName, i, cats) => {
     const isLastCategory = i === cats.length - 1
     // first column is always the 1st dimension name
     const columns: any[] = []
@@ -760,33 +656,33 @@ const GenerateTableColumns = (
 
     // find fields in this category
     measures.forEach((field) => {
-      if (field.category === key) {
+      if (field.cubeName === cubeName) {
         totalColumnsWidth += 130
         columns.push({
           width: 130,
-          title: field.tooltip ? (
-            <Tooltip title={field.tooltip}>
-              {field.title} <FontAwesomeIcon icon={faQuestionCircle} />
+          title: field.measure.description ? (
+            <Tooltip title={field.measure.description}>
+              {field.measure.title} <FontAwesomeIcon icon={faQuestionCircle} />
             </Tooltip>
           ) : (
-            field.title
+            field.measure.title
           ),
           key: field.key,
           render: (row: TableRow) => {
             if (row.loading) return <Spin size="small" />
-            if (field.type === 'number') {
+            if (field.measure.type === 'number') {
               return FormatNumber(row.result.currentPeriod[field.key])
             }
-            if (field.type === 'percentage') {
+            if (field.measure.meta?.rimdian_format === 'percentage') {
               return FormatPercent(row.result.currentPeriod[field.key])
             }
-            if (field.type === 'currency') {
+            if (field.measure.meta?.rimdian_format === 'currency') {
               return FormatCurrency(row.result.currentPeriod[field.key], workspace.currency)
             }
-            if (field.type === 'duration') {
+            if (field.measure.meta?.rimdian_format === 'duration') {
               return FormatDuration(row.result.currentPeriod[field.key])
             }
-            if (field.type === 'custom' && field.customRender) {
+            if (field.dependsOnMeasures && field.customRender) {
               return field.customRender(
                 row.result.currentPeriod,
                 row.result.previousPeriod,
@@ -810,8 +706,8 @@ const GenerateTableColumns = (
     }
 
     categories.push({
-      key: key,
-      title: <span style={{ textTransform: 'capitalize' }}>{key}</span>,
+      key: cubeName,
+      title: <span style={{ textTransform: 'capitalize' }}>{cubeName}</span>,
       width: totalColumnsWidth,
       children: columns,
       className: columnClass
@@ -837,7 +733,7 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
   const renderField = (field: DimensionDefinition) => {
     return (
       <>
-        <TableTag table={field.key.split('.')[0]} />
+        <TableTag table={field.cubeName.toLocaleLowerCase()} />
         {field.dimension.title}
       </>
     )
@@ -882,7 +778,7 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
             value={dimension1}
             options={map(props.dimensionsMap, (field) => {
               return {
-                value: field.key,
+                value: field.dimensionName,
                 label: renderField(field)
               }
             })}
@@ -895,10 +791,10 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
             value={dimension2}
             options={map(props.dimensionsMap, (field) => {
               return {
-                value: field.key,
+                value: field.dimensionName,
                 label: (
                   <>
-                    <TableTag table={field.key.split('.')[0]} />
+                    <TableTag table={field.cubeName.toLocaleLowerCase()} />
                     {field.dimension.title}
                   </>
                 )
@@ -913,10 +809,10 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
             value={dimension3}
             options={map(props.dimensionsMap, (field) => {
               return {
-                value: field.key,
+                value: field.dimensionName,
                 label: (
                   <>
-                    <TableTag table={field.key.split('.')[0]} />
+                    <TableTag table={field.cubeName.toLocaleLowerCase()} />
                     {field.dimension.title}
                   </>
                 )
@@ -940,21 +836,21 @@ const MeasuresSelector = (props: MeasuresSelectorProps) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const renderField = (field: MeasureDefinition) => {
     return (
-      <Tooltip title={field.tooltip}>
-        <TableTag table={field.key.split('.')[0]} />
-        {field.title}
+      <Tooltip title={field.measure.description}>
+        <TableTag table={field.cubeName.toLocaleLowerCase()} />
+        {field.measure.title}
       </Tooltip>
     )
   }
 
   const trafficFields = Object.values(props.fieldsMap).filter(
-    (field) => field.category === 'traffic'
+    (field) => field.cubeName === 'Session'
   )
   const behaviorFields = Object.values(props.fieldsMap).filter(
-    (field) => field.category === 'behavior'
+    (field) => field.cubeName === 'Session'
   )
-  const ordersFields = Object.values(props.fieldsMap).filter((field) => field.category === 'orders')
-  const appFields = Object.values(props.fieldsMap).filter((field) => field.category === 'app')
+  const ordersFields = Object.values(props.fieldsMap).filter((field) => field.cubeName === 'Order')
+  const appFields = Object.values(props.fieldsMap).filter((field) => field.cubeName === 'app')
 
   // split ordersFields into 2 groups
   const splitArray = (array: any[], groupSize: number) => {

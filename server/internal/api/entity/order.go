@@ -1154,7 +1154,7 @@ func NewOrderCube() *CubeJSSchema {
 		Measures: map[string]CubeJSSchemaMeasure{
 			"count": {
 				Type:        "count",
-				Title:       "Count all",
+				Title:       "Orders",
 				Description: "Count all",
 			},
 			"unique_users": {
@@ -1216,7 +1216,7 @@ func NewOrderCube() *CubeJSSchema {
 			},
 			"acquisition_avg_cart": {
 				Type:        "number",
-				Title:       "Acquisition Average cart",
+				Title:       "Acquisition average cart",
 				Description: "AVG(subtotal_price) WHERE is_first_conversion IS TRUE",
 				SQL:         "COALESCE(AVG(subtotal_price), 0)",
 				Filters: []CubeJSSchemaMeasureFilter{
@@ -1225,7 +1225,7 @@ func NewOrderCube() *CubeJSSchema {
 			},
 			"retention_avg_cart": {
 				Type:        "number",
-				Title:       "Retention Average cart",
+				Title:       "Retention average cart",
 				Description: "AVG(subtotal_price) WHERE is_first_conversion IS FALSE",
 				SQL:         "COALESCE(AVG(subtotal_price), 0)",
 				Filters: []CubeJSSchemaMeasureFilter{
@@ -1263,7 +1263,7 @@ func NewOrderCube() *CubeJSSchema {
 			"acquisition_count": {
 				Type:        "count",
 				SQL:         "id",
-				Title:       "Count of first conversions",
+				Title:       "Acquisition orders",
 				Description: "Count of id WHERE is_first_conversion IS TRUE",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "is_first_conversion IS TRUE"},
@@ -1276,7 +1276,7 @@ func NewOrderCube() *CubeJSSchema {
 			"retention_count": {
 				Type:        "count",
 				SQL:         "id",
-				Title:       "Count of non-first conversions",
+				Title:       "Retention orders",
 				Description: "Count of id WHERE is_first_conversion IS FALSE",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "is_first_conversion IS FALSE"},

@@ -134,14 +134,14 @@ func ResetConversionsAndTouchpointsForChannel(ctx context.Context, channelID str
 	}
 
 	// Reset session+postviews channel_id
-	query = "UPDATE `session` SET channel_id = 'not-mapped', channel_group_id = 'not-mapped', channel_origin_id = NULL WHERE channel_id = ?"
+	query = "UPDATE `session` SET channel_id = 'not-mapped', channel_group_id = 'not-mapped', channel_origin_id = '' WHERE channel_id = ?"
 
 	if _, err := tx.ExecContext(ctx, query, channelID); err != nil {
 		tx.Rollback()
 		return eris.Wrap(err, "ResetConversionsAndTouchpointsForChannel")
 	}
 
-	query = "UPDATE `postview` SET channel_id = 'not-mapped', channel_group_id = 'not-mapped', channel_origin_id = NULL WHERE channel_id = ?"
+	query = "UPDATE `postview` SET channel_id = 'not-mapped', channel_group_id = 'not-mapped', channel_origin_id = '' WHERE channel_id = ?"
 
 	if _, err := tx.ExecContext(ctx, query, channelID); err != nil {
 		tx.Rollback()

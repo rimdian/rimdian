@@ -2095,170 +2095,170 @@ func NewSessionCube() *CubeJSSchema {
 					"hide_from_segmentation": true,
 				},
 			},
-			// "alone_count": {
-			// 	Type:        "count",
-			// 	SQL:         "id",
-			// 	Title:       "Alone role count",
-			// 	Description: "count of: role = 0 AND conversion_id IS NOT NULL",
-			// 	Filters: []CubeJSSchemaMeasureFilter{
-			// 		{SQL: "${CUBE}.role = 0 AND ${CUBE}.conversion_id IS NOT NULL"},
-			// 	},
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
-			// "initiator_count": {
-			// 	Type:        "count",
-			// 	SQL:         "id",
-			// 	Title:       "Initiator role count",
-			// 	Description: "count of: role = 1 AND conversion_id IS NOT NULL",
-			// 	Filters: []CubeJSSchemaMeasureFilter{
-			// 		{SQL: "${CUBE}.role = 1 AND ${CUBE}.conversion_id IS NOT NULL"},
-			// 	},
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
-			// "assisting_count": {
-			// 	Type:        "count",
-			// 	SQL:         "id",
-			// 	Title:       "Assisting role count",
-			// 	Description: "count of: role = 2 AND conversion_id IS NOT NULL",
-			// 	Filters: []CubeJSSchemaMeasureFilter{
-			// 		{SQL: "${CUBE}.role = 2 AND ${CUBE}.conversion_id IS NOT NULL"},
-			// 	},
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
-			// "closer_count": {
-			// 	Type:        "count",
-			// 	SQL:         "id",
-			// 	Title:       "Closer role count",
-			// 	Description: "count of: role = 3 AND conversion_id IS NOT NULL",
-			// 	Filters: []CubeJSSchemaMeasureFilter{
-			// 		{SQL: "${CUBE}.role = 3 AND ${CUBE}.conversion_id IS NOT NULL"},
-			// 	},
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
-			// "alone_ratio": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(${alone_count} / ${contributions_count}, 0)",
-			// 	Title:       "Alone role ratio",
-			// 	Description: "ratio of: alone_count / contributions_count",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
+			"alone_count": {
+				Type:        "count",
+				SQL:         "id",
+				Title:       "Alone role count",
+				Description: "count of: role = 0 AND conversion_id IS NOT NULL",
+				Filters: []CubeJSSchemaMeasureFilter{
+					{SQL: "${CUBE}.role = 0 AND ${CUBE}.conversion_id IS NOT NULL"},
+				},
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"initiator_count": {
+				Type:        "count",
+				SQL:         "id",
+				Title:       "Initiator role count",
+				Description: "count of: role = 1 AND conversion_id IS NOT NULL",
+				Filters: []CubeJSSchemaMeasureFilter{
+					{SQL: "${CUBE}.role = 1 AND ${CUBE}.conversion_id IS NOT NULL"},
+				},
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"assisting_count": {
+				Type:        "count",
+				SQL:         "id",
+				Title:       "Assisting role count",
+				Description: "count of: role = 2 AND conversion_id IS NOT NULL",
+				Filters: []CubeJSSchemaMeasureFilter{
+					{SQL: "${CUBE}.role = 2 AND ${CUBE}.conversion_id IS NOT NULL"},
+				},
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"closer_count": {
+				Type:        "count",
+				SQL:         "id",
+				Title:       "Closer role count",
+				Description: "count of: role = 3 AND conversion_id IS NOT NULL",
+				Filters: []CubeJSSchemaMeasureFilter{
+					{SQL: "${CUBE}.role = 3 AND ${CUBE}.conversion_id IS NOT NULL"},
+				},
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"alone_ratio": {
+				Type:        "number",
+				SQL:         "COALESCE(${alone_count} / ${contributions_count}, 0)",
+				Title:       "Alone role ratio",
+				Description: "ratio of: alone_count / contributions_count",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
 
-			// "initiator_ratio": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(${initiator_count} / ${contributions_count}, 0)",
-			// 	Title:       "Initiator role ratio",
-			// 	Description: "ratio of: initiator_count / contributions_count",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 		"rimdian_format":         "percentage",
-			// 	},
-			// },
-			// "assisting_ratio": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(${assisting_count} / ${contributions_count}, 0)",
-			// 	Title:       "Assisting role ratio",
-			// 	Description: "ratio of: assisting_count / contributions_count",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 		"rimdian_format":         "percentage",
-			// 	},
-			// },
-			// "closer_ratio": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(${closer_count} / ${contributions_count}, 0)",
-			// 	Title:       "Closer role ratio",
-			// 	Description: "ratio of: closer_count / contributions_count",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 		"rimdian_format":         "percentage",
-			// 	},
-			// },
-			// "alone_linear_conversions_attributed": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
-			// 	Title:       "Alone linear conversions attributed",
-			// 	Description: "Sum of: CASE WHEN role = 0 THEN linear_percentage_attributed ELSE 0 END",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
-			// "initiator_linear_conversions_attributed": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
-			// 	Title:       "Initiator linear conversions attributed",
-			// 	Description: "Sum of: CASE WHEN role = 1 THEN linear_percentage_attributed ELSE 0 END",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
-			// "assisting_linear_conversions_attributed": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
-			// 	Title:       "Assisting linear conversions attributed",
-			// 	Description: "Sum of: CASE WHEN role = 2 THEN linear_percentage_attributed ELSE 0 END",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
-			// "closer_linear_conversions_attributed": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
-			// 	Title:       "Closer linear conversions attributed",
-			// 	Description: "Sum of: CASE WHEN role = 3 THEN linear_percentage_attributed ELSE 0 END",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 	},
-			// },
-			// "alone_linear_amount_attributed": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-			// 	Title:       "Alone linear amount attributed",
-			// 	Description: "Sum of: CASE WHEN role = 0 THEN linear_amount_attributed ELSE 0 END",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 		"rimdian_format":         "currency",
-			// 	},
-			// },
-			// "initiator_linear_amount_attributed": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-			// 	Title:       "Initiator linear amount attributed",
-			// 	Description: "Sum of: CASE WHEN role = 1 THEN linear_amount_attributed ELSE 0 END",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 		"rimdian_format":         "currency",
-			// 	},
-			// },
-			// "assisting_linear_amount_attributed": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-			// 	Title:       "Assisting linear amount attributed",
-			// 	Description: "Sum of: CASE WHEN role = 2 THEN linear_amount_attributed ELSE 0 END",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 		"rimdian_format":         "currency",
-			// 	},
-			// },
-			// "closer_linear_amount_attributed": {
-			// 	Type:        "number",
-			// 	SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-			// 	Title:       "Closer linear amount attributed",
-			// 	Description: "Sum of: CASE WHEN role = 3 THEN linear_amount_attributed ELSE 0 END",
-			// 	Meta: MapOfInterfaces{
-			// 		"hide_from_segmentation": true,
-			// 		"rimdian_format":         "currency",
-			// 	},
-			// },
+			"initiator_ratio": {
+				Type:        "number",
+				SQL:         "COALESCE(${initiator_count} / ${contributions_count}, 0)",
+				Title:       "Initiator role ratio",
+				Description: "ratio of: initiator_count / contributions_count",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
+				},
+			},
+			"assisting_ratio": {
+				Type:        "number",
+				SQL:         "COALESCE(${assisting_count} / ${contributions_count}, 0)",
+				Title:       "Assisting role ratio",
+				Description: "ratio of: assisting_count / contributions_count",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
+				},
+			},
+			"closer_ratio": {
+				Type:        "number",
+				SQL:         "COALESCE(${closer_count} / ${contributions_count}, 0)",
+				Title:       "Closer role ratio",
+				Description: "ratio of: closer_count / contributions_count",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
+				},
+			},
+			"alone_linear_conversions_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				Title:       "Alone linear conversions attributed",
+				Description: "Sum of: CASE WHEN role = 0 THEN linear_percentage_attributed ELSE 0 END",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"initiator_linear_conversions_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				Title:       "Initiator linear conversions attributed",
+				Description: "Sum of: CASE WHEN role = 1 THEN linear_percentage_attributed ELSE 0 END",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"assisting_linear_conversions_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				Title:       "Assisting linear conversions attributed",
+				Description: "Sum of: CASE WHEN role = 2 THEN linear_percentage_attributed ELSE 0 END",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"closer_linear_conversions_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				Title:       "Closer linear conversions attributed",
+				Description: "Sum of: CASE WHEN role = 3 THEN linear_percentage_attributed ELSE 0 END",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+				},
+			},
+			"alone_linear_amount_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				Title:       "Alone linear amount attributed",
+				Description: "Sum of: CASE WHEN role = 0 THEN linear_amount_attributed ELSE 0 END",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"initiator_linear_amount_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				Title:       "Initiator linear amount attributed",
+				Description: "Sum of: CASE WHEN role = 1 THEN linear_amount_attributed ELSE 0 END",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"assisting_linear_amount_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				Title:       "Assisting linear amount attributed",
+				Description: "Sum of: CASE WHEN role = 2 THEN linear_amount_attributed ELSE 0 END",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"closer_linear_amount_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				Title:       "Closer linear amount attributed",
+				Description: "Sum of: CASE WHEN role = 3 THEN linear_amount_attributed ELSE 0 END",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
 			// Acquisition
 			"acquisition_contributions_count": {
 				Type:        "count",

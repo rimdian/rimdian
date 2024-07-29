@@ -78,7 +78,7 @@ type Session struct {
 	ReferrerPath    *string         `db:"referrer_path" json:"referrer_path,omitempty"`     // computed from referrer
 
 	// channel mapping:
-	ChannelOriginID string `db:"channel_origin_id" json:"channel_origin_id"` // db computed field: source / medium( / campaign)
+	ChannelOriginID string `db:"channel_origin_id" json:"channel_origin_id"` // source / medium( / campaign)
 	ChannelID       string `db:"channel_id" json:"channel_id"`               // field set while repo upsert with utm_ params
 	ChannelGroupID  string `db:"channel_group_id" json:"channel_group_id"`   // field set while repo upsert with utm_ params
 

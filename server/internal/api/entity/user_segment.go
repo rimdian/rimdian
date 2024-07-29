@@ -24,6 +24,31 @@ func NewUserSegment(userID string, segmentID string) *UserSegment {
 	}
 }
 
+func NewUserSegmentCube() *CubeJSSchema {
+	return &CubeJSSchema{
+		Title:       "User segments",
+		Description: "User segments",
+		SQL:         "SELECT * FROM `user_segment`",
+		Joins:       map[string]CubeJSSchemaJoin{},
+		Segments:    map[string]CubeJSSchemaSegment{},
+		Measures:    map[string]CubeJSSchemaMeasure{},
+		Dimensions: map[string]CubeJSSchemaDimension{
+			"user_id": {
+				SQL:         "user_id",
+				Type:        "string",
+				Title:       "User ID",
+				Description: "field: user_id",
+			},
+			"segment_id": {
+				SQL:         "segment_id",
+				Type:        "string",
+				Title:       "Segment ID",
+				Description: "field: segment_id",
+			},
+		},
+	}
+}
+
 var UserSegmentSchema string = `CREATE TABLE IF NOT EXISTS user_segment (
 	user_id VARCHAR(64) NOT NULL,
 	segment_id VARCHAR(64) NOT NULL,

@@ -79,7 +79,7 @@ const topbarCss = {
     transition: 'all 0.3s ease',
     cursor: 'pointer',
     borderLeft: '1px solid rgba(255, 255, 255, 0.3)',
-    borderRight: '1px solid rgba(255, 255, 255, 0.3)',
+    // borderRight: '1px solid rgba(255, 255, 255, 0.3)',
     '&:hover': {
       backgroundColor: 'rgba(0, 0, 0, 0.1)'
     }

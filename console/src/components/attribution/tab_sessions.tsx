@@ -1,21 +1,9 @@
-import {
-  Tag,
-  Table,
-  Tooltip,
-  Button,
-  Spin,
-  Select,
-  Modal,
-  Checkbox,
-  Radio,
-  RadioChangeEvent
-} from 'antd'
+import { Tag, Table, Tooltip, Button, Spin, Select, Modal, Space } from 'antd'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
 import { Filter, Query, ResultSet, SqlData } from '@cubejs-client/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-// import { MeasureDefinition, SessionsMeasuresMapDefinition } from './sessions_definitions'
 import { useDateRangeCtx } from 'components/common/context_date_range'
 import { cloneDeep, map, set } from 'lodash'
 import FormatNumber from 'utils/format_number'
@@ -33,22 +21,23 @@ import { Fullscreenable } from 'components/common/fullscreenable'
 import TableTag from 'components/common/partial_table_tag'
 import { useRimdianCube } from 'components/workspace/context_cube'
 import {
-  AttributionRoleMeasure,
+  AcquisitionAttributionRoleMeasure,
   DimensionDefinition,
   MeasureDefinition,
+  RetentionAttributionRoleMeasure,
   generateDatabaseGraphForSchema,
   generateDimensionsMap,
   generateMeasuresMap
 } from 'components/common/schema'
 
-interface AttributionParams {
+export interface AttributionParams {
   sortKey: string
   sortOrder: string
   dimension1: string
   dimension2: string
   dimension3: string
   measures: string
-  conversions_filter: string
+  segment: string
   date_from: string
   date_to: string
   vs_date_from: string
@@ -56,7 +45,7 @@ interface AttributionParams {
   refresh_key: string
 }
 
-interface TableRow {
+export interface TableRow {
   key: string // contains path of parents too
   loading: boolean
   query?: Query // query is used by children to extract dimensions etc... and build drill down queries
@@ -86,36 +75,40 @@ const TabAttributionSessions = () => {
 
   const dimensionsMap: Record<string, DimensionDefinition> = useMemo(() => {
     return generateDimensionsMap(graph, workspaceCtx.cubeSchemasMap)
-  }, [workspaceCtx.workspace, graph])
+  }, [workspaceCtx.cubeSchemasMap, graph])
 
   // dynamically add app measures to the definitions
   const measuresMap: Record<string, MeasureDefinition> = useMemo(() => {
     const result = generateMeasuresMap(graph, workspaceCtx.cubeSchemasMap)
     // add roles
-    result['Session.attribution_roles'] = AttributionRoleMeasure
+    result['Session.acquisition_attribution_roles'] = AcquisitionAttributionRoleMeasure
+    result['Session.retention_attribution_roles'] = RetentionAttributionRoleMeasure
     return result
   }, [workspaceCtx.cubeSchemasMap, graph])
 
   // hardcode measures for now...
   const defaultMeasures: MeasureDefinition[] = useMemo(() => {
     return [
-      measuresMap['Session.unique_users'],
+      // measuresMap['Session.unique_users'],
       measuresMap['Session.count'],
-      measuresMap['Session.bounce_rate'],
-      measuresMap['Session.avg_pageviews_count'],
-      measuresMap['Session.avg_duration'],
-      measuresMap['Session.orders_contributions'],
-      // measuresMap['Session.distinct_orders'],
+      // measuresMap['Session.bounce_rate'],
+      // measuresMap['Session.avg_pageviews_count'],
+      // measuresMap['Session.avg_duration'],
+      measuresMap['Session.acquisition_orders_contributions'],
+      measuresMap['Session.acquisition_linear_amount_attributed'],
+      measuresMap['Session.acquisition_attribution_roles'],
+      measuresMap['Session.retention_orders_contributions'],
+      measuresMap['Session.retention_linear_amount_attributed'],
+      measuresMap['Session.retention_attribution_roles'],
       measuresMap['Order.subtotal_sum'],
-      measuresMap['Session.attribution_roles']
-      // FieldsMap['Order.avg_cart'],
-      // FieldsMap['Session.linear_amount_attributed'],
-      // FieldsMap['Session.linear_percentage_attributed'],
-      // FieldsMap['Session.linear_conversions_attributed'],
+      measuresMap['Order.count']
+      // measuresMap['Session.linear_percentage_attributed'],
+      // measuresMap['Session.linear_conversions_attributed'],
     ]
   }, [measuresMap])
 
   const params: AttributionParams = useMemo(() => {
+    // console.log('defaultMeasures', defaultMeasures)
     return {
       sortKey: searchParams.get('sortKey') || 'Session.count',
       sortOrder: searchParams.get('sortOrder') || 'desc',
@@ -123,6 +116,7 @@ const TabAttributionSessions = () => {
       dimension2: searchParams.get('dimension2') || 'Session.channel_id',
       dimension3: searchParams.get('dimension3') || 'Session.channel_origin_id',
       measures: searchParams.get('measures') || defaultMeasures.map((field) => field.key).join(','),
+      segment: searchParams.get('segment') || '_all',
       conversions_filter: searchParams.get('conversions_filter') || 'all',
       date_from: dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
       date_to: dateRangeCtx.dateRange[1].format('YYYY-MM-DD'),
@@ -143,23 +137,16 @@ const TabAttributionSessions = () => {
     return result
   }, [params, measuresMap])
 
+  // console.log('measures', measures)
   const baseQuery: Query = useMemo(() => {
     const filters: Filter[] = []
 
-    // add conversion filter
-    if (params.conversions_filter === 'acquisition') {
+    // add user segment
+    if (params.segment !== '_all') {
       filters.push({
-        dimension: 'Order.is_first_conversion',
+        dimension: 'User_segment.segment_id',
         operator: 'equals',
-        values: ['1']
-      })
-    }
-
-    if (params.conversions_filter === 'repeat') {
-      filters.push({
-        dimension: 'Order.is_first_conversion',
-        operator: 'equals',
-        values: ['0']
+        values: [params.segment]
       })
     }
 
@@ -200,7 +187,7 @@ const TabAttributionSessions = () => {
     measures,
     params.sortKey,
     params.sortOrder,
-    params.conversions_filter,
+    params.segment,
     dateRangeCtx,
     accountCtx,
     params.refresh_key
@@ -484,7 +471,7 @@ const TabAttributionSessions = () => {
     totalX += col.width
   })
 
-  // console.log('tableData', tableData)
+  // console.log('params', params)
 
   return (
     <>
@@ -496,9 +483,31 @@ const TabAttributionSessions = () => {
           dimensionsMap={dimensionsMap}
         />
         <span className={CSS.padding_h_xs}></span>
-        <MeasuresSelector measures={params.measures.split(',')} fieldsMap={measuresMap} />
+        {/* <MeasuresSelector measures={params.measures.split(',')} fieldsMap={measuresMap} /> */}
         <div className={CSS.topSeparator}></div>
-        TODO: User Segments
+        <Select
+          // style={{ width: 300 }}
+          popupMatchSelectWidth={false}
+          value={params.segment}
+          options={map(workspaceCtx.segmentsMap, (segment) => {
+            return {
+              value: segment.id,
+              label: (
+                <>
+                  <Tag color={segment.color}>{segment.name}</Tag>
+                  <span className={CSS.font_size_xxs}>{FormatNumber(segment.users_count)}</span>
+                </>
+              )
+            }
+          })}
+          onChange={(value) => {
+            const allParams: any = {}
+            searchParams.forEach((value, key: string) => {
+              allParams[key] = value
+            })
+            setSearchParams({ ...allParams, segment: value })
+          }}
+        />
         {/* <Radio.Group
           onChange={(e: RadioChangeEvent) => {
             const allParams: any = {}
@@ -565,7 +574,7 @@ const TabAttributionSessions = () => {
   )
 }
 
-const GenerateTableColumns = (
+export const GenerateTableColumns = (
   measures: MeasureDefinition[],
   dimensionsMap: Record<string, DimensionDefinition>,
   workspace: Workspace
@@ -670,9 +679,6 @@ const GenerateTableColumns = (
           key: field.key,
           render: (row: TableRow) => {
             if (row.loading) return <Spin size="small" />
-            if (field.measure.type === 'number') {
-              return FormatNumber(row.result.currentPeriod[field.key])
-            }
             if (field.measure.meta?.rimdian_format === 'percentage') {
               return FormatPercent(row.result.currentPeriod[field.key])
             }
@@ -681,6 +687,9 @@ const GenerateTableColumns = (
             }
             if (field.measure.meta?.rimdian_format === 'duration') {
               return FormatDuration(row.result.currentPeriod[field.key])
+            }
+            if (field.measure.type === 'number') {
+              return FormatNumber(row.result.currentPeriod[field.key])
             }
             if (field.dependsOnMeasures && field.customRender) {
               return field.customRender(
@@ -717,25 +726,26 @@ const GenerateTableColumns = (
   return categories
 }
 
-interface DimensionsSelectorProps {
+export interface DimensionsSelectorProps {
   dimension1: string
   dimension2: string
   dimension3: string
   dimensionsMap: Record<string, DimensionDefinition>
 }
 
-const DimensionsSelector = (props: DimensionsSelectorProps) => {
+export const DimensionsSelector = (props: DimensionsSelectorProps) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [dimension1, setDimension1] = useState(props.dimension1)
   const [dimension2, setDimension2] = useState(props.dimension2)
   const [dimension3, setDimension3] = useState(props.dimension3)
   const [modalVisible, setModalVisible] = useState(false)
+
   const renderField = (field: DimensionDefinition) => {
     return (
-      <>
+      <Space>
         <TableTag table={field.cubeName.toLocaleLowerCase()} />
         {field.dimension.title}
-      </>
+      </Space>
     )
   }
   const valueStyle = {
@@ -773,12 +783,12 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
         >
           <Select
             style={{ width: '100%' }}
-            className={CSS.margin_b_m}
-            dropdownMatchSelectWidth={false}
+            className={CSS.margin_b_m + ' ' + CSS.margin_t_l}
+            popupMatchSelectWidth={false}
             value={dimension1}
             options={map(props.dimensionsMap, (field) => {
               return {
-                value: field.dimensionName,
+                value: field.cubeName + '.' + field.dimensionName,
                 label: renderField(field)
               }
             })}
@@ -787,17 +797,11 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
           <Select
             style={{ width: '100%' }}
             className={CSS.margin_b_m}
-            dropdownMatchSelectWidth={false}
             value={dimension2}
             options={map(props.dimensionsMap, (field) => {
               return {
-                value: field.dimensionName,
-                label: (
-                  <>
-                    <TableTag table={field.cubeName.toLocaleLowerCase()} />
-                    {field.dimension.title}
-                  </>
-                )
+                value: field.cubeName + '.' + field.dimensionName,
+                label: renderField(field)
               }
             })}
             onChange={setDimension2}
@@ -805,17 +809,12 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
           <Select
             style={{ width: '100%' }}
             className={CSS.margin_b_m}
-            dropdownMatchSelectWidth={false}
+            popupMatchSelectWidth={false}
             value={dimension3}
             options={map(props.dimensionsMap, (field) => {
               return {
-                value: field.dimensionName,
-                label: (
-                  <>
-                    <TableTag table={field.cubeName.toLocaleLowerCase()} />
-                    {field.dimension.title}
-                  </>
-                )
+                value: field.cubeName + '.' + field.dimensionName,
+                label: renderField(field)
               }
             })}
             onChange={setDimension3}
@@ -826,135 +825,160 @@ const DimensionsSelector = (props: DimensionsSelectorProps) => {
   )
 }
 
-interface MeasuresSelectorProps {
-  measures: string[]
-  fieldsMap: { [key: string]: MeasureDefinition }
-}
+// interface UserSegmentSelectorProps {
+//   userSegment?: string
+//   userSegments: Segment[]
+// }
 
-const MeasuresSelector = (props: MeasuresSelectorProps) => {
-  const [modalVisible, setModalVisible] = useState(false)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const renderField = (field: MeasureDefinition) => {
-    return (
-      <Tooltip title={field.measure.description}>
-        <TableTag table={field.cubeName.toLocaleLowerCase()} />
-        {field.measure.title}
-      </Tooltip>
-    )
-  }
+// const UserSegmentSelector = (props: UserSegmentSelectorProps) => {
+//   return (
+//     <Select
+//       style={{ width: '100%' }}
+//       className={CSS.margin_b_m}
+//       value={props.userSegment}
+//       options={props.userSegments.map((segment) => {
+//         return {
+//           value: segment.id,
+//           label: <Tag color={segment.color}>{segment.name}</Tag>
+//         }
+//       })}
+//       onChange={(value) => {
+//         console.log('value', value)
 
-  const trafficFields = Object.values(props.fieldsMap).filter(
-    (field) => field.cubeName === 'Session'
-  )
-  const behaviorFields = Object.values(props.fieldsMap).filter(
-    (field) => field.cubeName === 'Session'
-  )
-  const ordersFields = Object.values(props.fieldsMap).filter((field) => field.cubeName === 'Order')
-  const appFields = Object.values(props.fieldsMap).filter((field) => field.cubeName === 'app')
+//       }
+//     />
+//   )
+// }
 
-  // split ordersFields into 2 groups
-  const splitArray = (array: any[], groupSize: number) => {
-    const groups = []
-    for (let i = 0; i < array.length; i += groupSize) {
-      groups.push(array.slice(i, i + groupSize))
-    }
-    return groups
-  }
+// interface MeasuresSelectorProps {
+//   measures: string[]
+//   fieldsMap: { [key: string]: MeasureDefinition }
+// }
 
-  const [ordersFields1, ordersFields2] = splitArray(
-    ordersFields,
-    Math.ceil(ordersFields.length / 2)
-  )
+// const MeasuresSelector = (props: MeasuresSelectorProps) => {
+//   const [modalVisible, setModalVisible] = useState(false)
+//   const [searchParams, setSearchParams] = useSearchParams()
+//   const renderField = (field: MeasureDefinition) => {
+//     return (
+//       <Tooltip title={field.measure.description}>
+//         <TableTag table={field.cubeName.toLocaleLowerCase()} />
+//         {field.measure.title}
+//       </Tooltip>
+//     )
+//   }
 
-  const renderFields = (fields: MeasureDefinition[]) => {
-    return fields.map((field: MeasureDefinition) => (
-      <div key={field.key}>
-        <Checkbox
-          key={field.key}
-          className={CSS.margin_b_xs}
-          checked={props.measures.includes(field.key)}
-          onChange={(e) => {
-            const allParams: any = {}
-            searchParams.forEach((value, key: string) => {
-              allParams[key] = value
-            })
+//   const trafficFields = Object.values(props.fieldsMap).filter(
+//     (field) => field.cubeName === 'Session'
+//   )
+//   const behaviorFields = Object.values(props.fieldsMap).filter(
+//     (field) => field.cubeName === 'Session'
+//   )
+//   const ordersFields = Object.values(props.fieldsMap).filter((field) => field.cubeName === 'Order')
+//   const appFields = Object.values(props.fieldsMap).filter((field) => field.cubeName === 'app')
 
-            if (e.target.checked) {
-              setSearchParams({
-                ...allParams,
-                measures: [...props.measures, field.key].join(',')
-              })
-            } else {
-              setSearchParams({
-                ...allParams,
-                measures: props.measures.filter((c) => c !== field.key).join(',')
-              })
-            }
-          }}
-        >
-          {renderField(field)}
-        </Checkbox>
-      </div>
-    ))
-  }
+//   // split ordersFields into 2 groups
+//   const splitArray = (array: any[], groupSize: number) => {
+//     const groups = []
+//     for (let i = 0; i < array.length; i += groupSize) {
+//       groups.push(array.slice(i, i + groupSize))
+//     }
+//     return groups
+//   }
 
-  return (
-    <>
-      <Tooltip title="Select measures">
-        <Button onClick={() => setModalVisible(true)}>
-          Measures
-          <span
-            className={CSS.margin_l_s}
-            style={{
-              backgroundColor: 'rgb(243, 246, 252)',
-              color: 'rgb(78, 108, 255)',
-              // backgroundColor: '#B2EBF2',
-              fontSize: 11,
-              fontWeight: 500,
-              padding: '1px 3px',
-              borderRadius: '3px'
-            }}
-          >
-            {props.measures.length}
-          </span>
-        </Button>
-      </Tooltip>
-      {modalVisible && (
-        <Modal
-          title="Select measures"
-          open={true}
-          width="90%"
-          onOk={() => {
-            setModalVisible(false)
-          }}
-          onCancel={() => setModalVisible(false)}
-        >
-          {/* create flex column for each category */}
-          <div style={{ display: 'flex' }}>
-            <div className={CSS.padding_r_l}>
-              <div className={CSS.margin_b_m}>Traffic</div>
-              {renderFields(trafficFields)}
-              <div className={CSS.margin_v_m}>Behavior</div>
-              {renderFields(behaviorFields)}
-            </div>
-            <div>
-              <div className={CSS.margin_b_m}>Orders</div>
-              <div style={{ display: 'flex' }}>
-                <div className={CSS.padding_r_l}>{renderFields(ordersFields1)}</div>
-                <div>{renderFields(ordersFields2)}</div>
-              </div>
-            </div>
-            <div>
-              <div className={CSS.margin_b_m}>Apps</div>
-              <div style={{ display: 'flex' }}>
-                <div>{renderFields(appFields)}</div>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </>
-  )
-}
+//   const [ordersFields1, ordersFields2] = splitArray(
+//     ordersFields,
+//     Math.ceil(ordersFields.length / 2)
+//   )
+
+//   const renderFields = (fields: MeasureDefinition[]) => {
+//     return fields.map((field: MeasureDefinition) => (
+//       <div key={field.key}>
+//         <Checkbox
+//           key={field.key}
+//           className={CSS.margin_b_xs}
+//           checked={props.measures.includes(field.key)}
+//           onChange={(e) => {
+//             const allParams: any = {}
+//             searchParams.forEach((value, key: string) => {
+//               allParams[key] = value
+//             })
+
+//             if (e.target.checked) {
+//               setSearchParams({
+//                 ...allParams,
+//                 measures: [...props.measures, field.key].join(',')
+//               })
+//             } else {
+//               setSearchParams({
+//                 ...allParams,
+//                 measures: props.measures.filter((c) => c !== field.key).join(',')
+//               })
+//             }
+//           }}
+//         >
+//           {renderField(field)}
+//         </Checkbox>
+//       </div>
+//     ))
+//   }
+
+//   return (
+//     <>
+//       <Tooltip title="Select measures">
+//         <Button onClick={() => setModalVisible(true)}>
+//           Measures
+//           <span
+//             className={CSS.margin_l_s}
+//             style={{
+//               backgroundColor: 'rgb(243, 246, 252)',
+//               color: 'rgb(78, 108, 255)',
+//               // backgroundColor: '#B2EBF2',
+//               fontSize: 11,
+//               fontWeight: 500,
+//               padding: '1px 3px',
+//               borderRadius: '3px'
+//             }}
+//           >
+//             {props.measures.length}
+//           </span>
+//         </Button>
+//       </Tooltip>
+//       {modalVisible && (
+//         <Modal
+//           title="Select measures"
+//           open={true}
+//           width="90%"
+//           onOk={() => {
+//             setModalVisible(false)
+//           }}
+//           onCancel={() => setModalVisible(false)}
+//         >
+//           {/* create flex column for each category */}
+//           <div style={{ display: 'flex' }}>
+//             <div className={CSS.padding_r_l}>
+//               <div className={CSS.margin_b_m}>Traffic</div>
+//               {renderFields(trafficFields)}
+//               <div className={CSS.margin_v_m}>Behavior</div>
+//               {renderFields(behaviorFields)}
+//             </div>
+//             <div>
+//               <div className={CSS.margin_b_m}>Orders</div>
+//               <div style={{ display: 'flex' }}>
+//                 <div className={CSS.padding_r_l}>{renderFields(ordersFields1)}</div>
+//                 <div>{renderFields(ordersFields2)}</div>
+//               </div>
+//             </div>
+//             <div>
+//               <div className={CSS.margin_b_m}>Apps</div>
+//               <div style={{ display: 'flex' }}>
+//                 <div>{renderFields(appFields)}</div>
+//               </div>
+//             </div>
+//           </div>
+//         </Modal>
+//       )}
+//     </>
+//   )
+// }
 
 export default TabAttributionSessions

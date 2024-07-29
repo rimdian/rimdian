@@ -328,6 +328,7 @@ func GenerateSchemas(installedApps InstalledApps) (schemas map[string]*CubeJSSch
 
 	schemas = map[string]*CubeJSSchema{
 		"User":         NewUserCube(),
+		"User_segment": NewUserSegmentCube(),
 		"Order":        NewOrderCube(),
 		"Order_item":   NewOrderItemCube(),
 		"Session":      NewSessionCube(),

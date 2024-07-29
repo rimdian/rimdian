@@ -1186,77 +1186,98 @@ func NewOrderCube() *CubeJSSchema {
 			},
 			"subtotal_sum": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(subtotal_price), 0)",
-				Title:       "Subtotal sum",
+				SQL:         "COALESCE(SUM(${CUBE}.subtotal_price), 0)",
+				Title:       "Subtotal",
 				Description: "SUM(subtotal_price)",
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
+				},
 			},
 			"acquisition_subtotal_sum": {
 				Type:        "number",
-				Title:       "Acquisition Subtotal sum",
+				Title:       "Acquisition: subtotal",
 				Description: "SUM(subtotal_price)",
-				SQL:         "COALESCE(SUM(subtotal_price), 0)",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "is_first_conversion IS TRUE"},
+				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.is_first_conversion = 1 THEN ${CUBE}.subtotal_price ELSE 0 END), 0)",
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
 				},
 			},
 			"retention_subtotal_sum": {
 				Type:        "number",
 				Title:       "Retention Subtotal sum",
-				Description: "SUM(subtotal_price) WHERE is_first_conversion IS FALSE",
-				SQL:         "COALESCE(SUM(subtotal_price), 0)",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "is_first_conversion IS FALSE"},
+				Description: "SUM(subtotal_price) WHERE is_first_conversion = 0",
+				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.is_first_conversion = 0 THEN ${CUBE}.subtotal_price ELSE 0 END), 0)",
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
 				},
 			},
 			"avg_cart": {
 				Type:        "number",
 				Title:       "Average cart",
 				Description: "AVG(subtotal_price)",
-				SQL:         "COALESCE(AVG(subtotal_price), 0)",
+				SQL:         "COALESCE(AVG(${CUBE}.subtotal_price), 0)",
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
+				},
 			},
 			"acquisition_avg_cart": {
 				Type:        "number",
 				Title:       "Acquisition average cart",
-				Description: "AVG(subtotal_price) WHERE is_first_conversion IS TRUE",
-				SQL:         "COALESCE(AVG(subtotal_price), 0)",
+				Description: "AVG(subtotal_price) WHERE is_first_conversion = 1",
+				SQL:         "COALESCE(AVG(${CUBE}.subtotal_price), 0)",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "is_first_conversion IS TRUE"},
+					{SQL: "${CUBE}.is_first_conversion = 0"},
+				},
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
 				},
 			},
 			"retention_avg_cart": {
 				Type:        "number",
 				Title:       "Retention average cart",
 				Description: "AVG(subtotal_price) WHERE is_first_conversion IS FALSE",
-				SQL:         "COALESCE(AVG(subtotal_price), 0)",
+				SQL:         "COALESCE(AVG(${CUBE}.subtotal_price), 0)",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "is_first_conversion IS FALSE"},
+				},
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
 				},
 			},
 			"avg_ttc": {
 				Type:        "number",
 				Title:       "Average time to conversion",
 				Description: "AVG(time_to_conversion) WHERE time_to_conversion > 0",
-				SQL:         "COALESCE(AVG(time_to_conversion), 0)",
+				SQL:         "COALESCE(AVG(${CUBE}.time_to_conversion), 0)",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "time_to_conversion > 0"},
+				},
+				Meta: MapOfInterfaces{
+					"rimdian_format": "duration",
 				},
 			},
 			"acquisition_avg_ttc": {
 				Type:        "number",
 				Title:       "Acquisition Average time to conversion",
 				Description: "AVG(time_to_conversion) WHERE time_to_conversion > 0 AND is_first_conversion IS TRUE",
-				SQL:         "COALESCE(AVG(time_to_conversion), 0)",
+				SQL:         "COALESCE(AVG(${CUBE}.time_to_conversion), 0)",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "time_to_conversion > 0 AND is_first_conversion IS TRUE"},
+				},
+				Meta: MapOfInterfaces{
+					"rimdian_format": "duration",
 				},
 			},
 			"retention_avg_ttc": {
 				Type:        "number",
 				Title:       "Retention Average time to conversion",
 				Description: "AVG(time_to_conversion) WHERE time_to_conversion > 0 AND is_first_conversion IS FALSE",
-				SQL:         "COALESCE(AVG(time_to_conversion), 0)",
+				SQL:         "COALESCE(AVG(${CUBE}.time_to_conversion), 0)",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "time_to_conversion > 0 AND is_first_conversion IS FALSE"},
+				},
+				Meta: MapOfInterfaces{
+					"rimdian_format": "duration",
 				},
 			},
 
@@ -1264,9 +1285,9 @@ func NewOrderCube() *CubeJSSchema {
 				Type:        "count",
 				SQL:         "id",
 				Title:       "Acquisition orders",
-				Description: "Count of id WHERE is_first_conversion IS TRUE",
+				Description: "Count of id WHERE is_first_conversion = 1",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "is_first_conversion IS TRUE"},
+					{SQL: "${CUBE}.is_first_conversion = 1"},
 				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
@@ -1277,23 +1298,23 @@ func NewOrderCube() *CubeJSSchema {
 				Type:        "count",
 				SQL:         "id",
 				Title:       "Retention orders",
-				Description: "Count of id WHERE is_first_conversion IS FALSE",
+				Description: "Count of id WHERE is_first_conversion = 0",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "is_first_conversion IS FALSE"},
+					{SQL: "${CUBE}.is_first_conversion = 0"},
 				},
 			},
 			"avg_devices_type": {
 				Type:        "number",
 				Title:       "Average count of devices type",
 				Description: "AVG(devices_type_count)",
-				SQL:         "COALESCE(AVG(devices_type_count), 0)",
+				SQL:         "COALESCE(AVG(${CUBE}.devices_type_count), 0)",
 			},
 
 			"avg_domains": {
 				Type:        "number",
 				Title:       "Average domains count",
 				Description: "AVG(domains_count)",
-				SQL:         "COALESCE(AVG(domains_count), 0)",
+				SQL:         "COALESCE(AVG(${CUBE}.domains_count), 0)",
 			},
 
 			"cross_device_count": {
@@ -1302,7 +1323,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Cross device conversion paths",
 				Description: "Count of id WHERE devices_type_count > 1",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "devices_type_count > 1"},
+					{SQL: "${CUBE}.devices_type_count > 1"},
 				},
 			},
 
@@ -1313,6 +1334,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${retention_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1323,6 +1345,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${cross_device_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1332,7 +1355,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Desktop device count",
 				Description: "Count of: devices_funnel = 'desktop'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "devices_funnel = 'desktop'"},
+					{SQL: "${CUBE}.devices_funnel = 'desktop'"},
 				},
 			},
 
@@ -1343,6 +1366,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${desktop_device_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1352,7 +1376,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Mobile device count",
 				Description: "Count of: devices_funnel = 'mobile'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "devices_funnel = 'mobile'"},
+					{SQL: "${CUBE}.devices_funnel = 'mobile'"},
 				},
 			},
 
@@ -1363,6 +1387,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${mobile_device_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1372,7 +1397,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Tablet device count",
 				Description: "Count of: devices_funnel = 'tablet'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "devices_funnel = 'tablet'"},
+					{SQL: "${CUBE}.devices_funnel = 'tablet'"},
 				},
 			},
 
@@ -1383,6 +1408,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${tablet_device_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1392,7 +1418,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Non cross device count",
 				Description: "Count of: devices_type_count = 1",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "devices_type_count = 1"},
+					{SQL: "${CUBE}.devices_type_count = 1"},
 				},
 			},
 
@@ -1402,7 +1428,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Web domain count",
 				Description: "Count of: domains_type_funnel = 'web'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "domains_type_funnel = 'web'"},
+					{SQL: "${CUBE}.domains_type_funnel = 'web'"},
 				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
@@ -1416,6 +1442,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${web_domain_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1425,7 +1452,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Retail domain count",
 				Description: "Count of: domains_type_funnel = 'retail'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "domains_type_funnel = 'retail'"},
+					{SQL: "${CUBE}.domains_type_funnel = 'retail'"},
 				},
 			},
 
@@ -1436,6 +1463,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${retail_domain_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1445,7 +1473,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "App domain count",
 				Description: "Count of: domains_type_funnel = 'app'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "domains_type_funnel = 'app'"},
+					{SQL: "${CUBE}.domains_type_funnel = 'app'"},
 				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
@@ -1459,6 +1487,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${app_domain_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1468,7 +1497,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Marketplace domain count",
 				Description: "Count of: domains_type_funnel = 'marketplace'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "domains_type_funnel = 'marketplace'"},
+					{SQL: "${CUBE}.domains_type_funnel = 'marketplace'"},
 				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
@@ -1482,6 +1511,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${marketplace_domain_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1491,7 +1521,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Telephone domain count",
 				Description: "Count of: domains_type_funnel = 'telephone'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "domains_type_funnel = 'telephone'"},
+					{SQL: "${CUBE}.domains_type_funnel = 'telephone'"},
 				},
 			},
 
@@ -1502,6 +1532,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${telephone_domain_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1511,7 +1542,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Web to retail domain count",
 				Description: "Count of: domains_type_funnel = 'web~retail'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "domains_type_funnel = 'web~retail'"},
+					{SQL: "${CUBE}.domains_type_funnel = 'web~retail'"},
 				},
 			},
 
@@ -1522,6 +1553,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${web_to_retail_domain_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1531,7 +1563,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Retail to web domain count",
 				Description: "Count of: domains_type_funnel = 'retail~web'",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "domains_type_funnel = 'retail~web'"},
+					{SQL: "${CUBE}.domains_type_funnel = 'retail~web'"},
 				},
 			},
 
@@ -1542,6 +1574,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${retail_to_web_domain_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -1551,7 +1584,7 @@ func NewOrderCube() *CubeJSSchema {
 				Title:       "Cross domain count",
 				Description: "Count of: domains_count > 1",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "domains_count > 1"},
+					{SQL: "${CUBE}.domains_count > 1"},
 				},
 			},
 
@@ -1562,6 +1595,7 @@ func NewOrderCube() *CubeJSSchema {
 				SQL:         "(${cross_domain_count}) / ${count}",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 		},

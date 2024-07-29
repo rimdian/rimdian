@@ -1928,7 +1928,7 @@ func NewSessionCube() *CubeJSSchema {
 		Measures: map[string]CubeJSSchemaMeasure{
 			"count": {
 				Type:        "count",
-				Title:       "Count all",
+				Title:       "Sessions",
 				Description: "count of all sessions",
 			},
 			"unique_users": {
@@ -2016,6 +2016,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "Conversion rate: distinct_conversions / count",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 			"bounce_rate": {
@@ -2025,6 +2026,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "Bounce rate: AVG(bounced)",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 			"avg_duration": {
@@ -2034,6 +2036,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "Avg duration: AVG(CASE WHEN duration > 0 THEN duration ELSE NULL END)",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "duration",
 				},
 			},
 			"pageviews_sum": {
@@ -2070,6 +2073,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "Sum of linear_amount_attributed",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
 				},
 			},
 			"linear_percentage_attributed": {
@@ -2079,6 +2083,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "Avg of linear_percentage_attributed",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 			"linear_conversions_attributed": {
@@ -2090,168 +2095,175 @@ func NewSessionCube() *CubeJSSchema {
 					"hide_from_segmentation": true,
 				},
 			},
-			"alone_count": {
-				Type:        "count",
-				SQL:         "id",
-				Title:       "Alone role count",
-				Description: "count of: role = 0 AND conversion_id IS NOT NULL",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.role = 0 AND ${CUBE}.conversion_id IS NOT NULL"},
-				},
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"initiator_count": {
-				Type:        "count",
-				SQL:         "id",
-				Title:       "Initiator role count",
-				Description: "count of: role = 1 AND conversion_id IS NOT NULL",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.role = 1 AND ${CUBE}.conversion_id IS NOT NULL"},
-				},
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"assisting_count": {
-				Type:        "count",
-				SQL:         "id",
-				Title:       "Assisting role count",
-				Description: "count of: role = 2 AND conversion_id IS NOT NULL",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.role = 2 AND ${CUBE}.conversion_id IS NOT NULL"},
-				},
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"closer_count": {
-				Type:        "count",
-				SQL:         "id",
-				Title:       "Closer role count",
-				Description: "count of: role = 3 AND conversion_id IS NOT NULL",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.role = 3 AND ${CUBE}.conversion_id IS NOT NULL"},
-				},
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"alone_ratio": {
-				Type:        "number",
-				SQL:         "COALESCE(${alone_count} / ${contributions_count}, 0)",
-				Title:       "Alone role ratio",
-				Description: "ratio of: alone_count / contributions_count",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
+			// "alone_count": {
+			// 	Type:        "count",
+			// 	SQL:         "id",
+			// 	Title:       "Alone role count",
+			// 	Description: "count of: role = 0 AND conversion_id IS NOT NULL",
+			// 	Filters: []CubeJSSchemaMeasureFilter{
+			// 		{SQL: "${CUBE}.role = 0 AND ${CUBE}.conversion_id IS NOT NULL"},
+			// 	},
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
+			// "initiator_count": {
+			// 	Type:        "count",
+			// 	SQL:         "id",
+			// 	Title:       "Initiator role count",
+			// 	Description: "count of: role = 1 AND conversion_id IS NOT NULL",
+			// 	Filters: []CubeJSSchemaMeasureFilter{
+			// 		{SQL: "${CUBE}.role = 1 AND ${CUBE}.conversion_id IS NOT NULL"},
+			// 	},
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
+			// "assisting_count": {
+			// 	Type:        "count",
+			// 	SQL:         "id",
+			// 	Title:       "Assisting role count",
+			// 	Description: "count of: role = 2 AND conversion_id IS NOT NULL",
+			// 	Filters: []CubeJSSchemaMeasureFilter{
+			// 		{SQL: "${CUBE}.role = 2 AND ${CUBE}.conversion_id IS NOT NULL"},
+			// 	},
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
+			// "closer_count": {
+			// 	Type:        "count",
+			// 	SQL:         "id",
+			// 	Title:       "Closer role count",
+			// 	Description: "count of: role = 3 AND conversion_id IS NOT NULL",
+			// 	Filters: []CubeJSSchemaMeasureFilter{
+			// 		{SQL: "${CUBE}.role = 3 AND ${CUBE}.conversion_id IS NOT NULL"},
+			// 	},
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
+			// "alone_ratio": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(${alone_count} / ${contributions_count}, 0)",
+			// 	Title:       "Alone role ratio",
+			// 	Description: "ratio of: alone_count / contributions_count",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
 
-			"initiator_ratio": {
-				Type:        "number",
-				SQL:         "COALESCE(${initiator_count} / ${contributions_count}, 0)",
-				Title:       "Initiator role ratio",
-				Description: "ratio of: initiator_count / contributions_count",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"assisting_ratio": {
-				Type:        "number",
-				SQL:         "COALESCE(${assisting_count} / ${contributions_count}, 0)",
-				Title:       "Assisting role ratio",
-				Description: "ratio of: assisting_count / contributions_count",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"closer_ratio": {
-				Type:        "number",
-				SQL:         "COALESCE(${closer_count} / ${contributions_count}, 0)",
-				Title:       "Closer role ratio",
-				Description: "ratio of: closer_count / contributions_count",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"alone_linear_conversions_attributed": {
-				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
-				Title:       "Alone linear conversions attributed",
-				Description: "Sum of: CASE WHEN role = 0 THEN linear_percentage_attributed ELSE 0 END",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"initiator_linear_conversions_attributed": {
-				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
-				Title:       "Initiator linear conversions attributed",
-				Description: "Sum of: CASE WHEN role = 1 THEN linear_percentage_attributed ELSE 0 END",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"assisting_linear_conversions_attributed": {
-				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
-				Title:       "Assisting linear conversions attributed",
-				Description: "Sum of: CASE WHEN role = 2 THEN linear_percentage_attributed ELSE 0 END",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"closer_linear_conversions_attributed": {
-				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
-				Title:       "Closer linear conversions attributed",
-				Description: "Sum of: CASE WHEN role = 3 THEN linear_percentage_attributed ELSE 0 END",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"alone_linear_amount_attributed": {
-				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-				Title:       "Alone linear amount attributed",
-				Description: "Sum of: CASE WHEN role = 0 THEN linear_amount_attributed ELSE 0 END",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"initiator_linear_amount_attributed": {
-				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-				Title:       "Initiator linear amount attributed",
-				Description: "Sum of: CASE WHEN role = 1 THEN linear_amount_attributed ELSE 0 END",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"assisting_linear_amount_attributed": {
-				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-				Title:       "Assisting linear amount attributed",
-				Description: "Sum of: CASE WHEN role = 2 THEN linear_amount_attributed ELSE 0 END",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
-			"closer_linear_amount_attributed": {
-				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-				Title:       "Closer linear amount attributed",
-				Description: "Sum of: CASE WHEN role = 3 THEN linear_amount_attributed ELSE 0 END",
-				Meta: MapOfInterfaces{
-					"hide_from_segmentation": true,
-				},
-			},
+			// "initiator_ratio": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(${initiator_count} / ${contributions_count}, 0)",
+			// 	Title:       "Initiator role ratio",
+			// 	Description: "ratio of: initiator_count / contributions_count",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 		"rimdian_format":         "percentage",
+			// 	},
+			// },
+			// "assisting_ratio": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(${assisting_count} / ${contributions_count}, 0)",
+			// 	Title:       "Assisting role ratio",
+			// 	Description: "ratio of: assisting_count / contributions_count",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 		"rimdian_format":         "percentage",
+			// 	},
+			// },
+			// "closer_ratio": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(${closer_count} / ${contributions_count}, 0)",
+			// 	Title:       "Closer role ratio",
+			// 	Description: "ratio of: closer_count / contributions_count",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 		"rimdian_format":         "percentage",
+			// 	},
+			// },
+			// "alone_linear_conversions_attributed": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+			// 	Title:       "Alone linear conversions attributed",
+			// 	Description: "Sum of: CASE WHEN role = 0 THEN linear_percentage_attributed ELSE 0 END",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
+			// "initiator_linear_conversions_attributed": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+			// 	Title:       "Initiator linear conversions attributed",
+			// 	Description: "Sum of: CASE WHEN role = 1 THEN linear_percentage_attributed ELSE 0 END",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
+			// "assisting_linear_conversions_attributed": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+			// 	Title:       "Assisting linear conversions attributed",
+			// 	Description: "Sum of: CASE WHEN role = 2 THEN linear_percentage_attributed ELSE 0 END",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
+			// "closer_linear_conversions_attributed": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+			// 	Title:       "Closer linear conversions attributed",
+			// 	Description: "Sum of: CASE WHEN role = 3 THEN linear_percentage_attributed ELSE 0 END",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 	},
+			// },
+			// "alone_linear_amount_attributed": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+			// 	Title:       "Alone linear amount attributed",
+			// 	Description: "Sum of: CASE WHEN role = 0 THEN linear_amount_attributed ELSE 0 END",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 		"rimdian_format":         "currency",
+			// 	},
+			// },
+			// "initiator_linear_amount_attributed": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+			// 	Title:       "Initiator linear amount attributed",
+			// 	Description: "Sum of: CASE WHEN role = 1 THEN linear_amount_attributed ELSE 0 END",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 		"rimdian_format":         "currency",
+			// 	},
+			// },
+			// "assisting_linear_amount_attributed": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+			// 	Title:       "Assisting linear amount attributed",
+			// 	Description: "Sum of: CASE WHEN role = 2 THEN linear_amount_attributed ELSE 0 END",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 		"rimdian_format":         "currency",
+			// 	},
+			// },
+			// "closer_linear_amount_attributed": {
+			// 	Type:        "number",
+			// 	SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+			// 	Title:       "Closer linear amount attributed",
+			// 	Description: "Sum of: CASE WHEN role = 3 THEN linear_amount_attributed ELSE 0 END",
+			// 	Meta: MapOfInterfaces{
+			// 		"hide_from_segmentation": true,
+			// 		"rimdian_format":         "currency",
+			// 	},
+			// },
 			// Acquisition
 			"acquisition_contributions_count": {
 				Type:        "count",
 				SQL:         "id",
-				Title:       "Acquisition: Contributions",
+				Title:       "Acquisition: contributions",
 				Description: "count of: conversion_id IS NOT NULL AND is_first_conversion = 1",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "${CUBE}.conversion_id IS NOT NULL AND ${CUBE}.is_first_conversion = 1"},
@@ -2263,7 +2275,7 @@ func NewSessionCube() *CubeJSSchema {
 			"acquisition_orders_contributions": {
 				Type:        "count",
 				SQL:         "id",
-				Title:       "Acquisition orders contributions",
+				Title:       "Acquisition: orders contributions",
 				Description: "Sessions that contributed to a 1st order. Count of: conversion_id IS NOT NULL AND conversion_type = 'order' AND is_first_conversion = 1",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "${CUBE}.conversion_id IS NOT NULL AND ${CUBE}.conversion_type = 'order' AND  ${CUBE}.is_first_conversion = 1"},
@@ -2337,6 +2349,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "ratio of: acquisition_initiator_count / acquisition_contributions_count",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 			"acquisition_assisting_ratio": {
@@ -2346,6 +2359,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "ratio of: acquisition_assisting_count / acquisition_contributions_count",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 			"acquisition_closer_ratio": {
@@ -2355,6 +2369,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "ratio of: acquisition_closer_count / acquisition_contributions_count",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 			"acquisition_alone_linear_conversions_attributed": {
@@ -2371,84 +2386,99 @@ func NewSessionCube() *CubeJSSchema {
 			},
 			"acquisition_initiator_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN (${CUBE}.role = 1 AND ${CUBE}.is_first_conversion = 1) THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
 				Title:       "Acquisition: Initiator linear conversions attributed",
 				Description: "Sum of: CASE WHEN role = 1 THEN linear_percentage_attributed ELSE 0 END, WHERE is_first_conversion = 1",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 1"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
 			},
 			"acquisition_assisting_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN (${CUBE}.role = 2 AND ${CUBE}.is_first_conversion = 1) THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
 				Title:       "Acquisition: Assisting linear conversions attributed",
 				Description: "Sum of: CASE WHEN role = 2 THEN linear_percentage_attributed ELSE 0 END, WHERE is_first_conversion = 1",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 1"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
 			},
 			"acquisition_closer_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN (${CUBE}.role = 3 AND ${CUBE}.is_first_conversion = 1) THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
 				Title:       "Acquisition: Closer linear conversions attributed",
 				Description: "Sum of: CASE WHEN role = 3 THEN linear_percentage_attributed ELSE 0 END, WHERE is_first_conversion = 1",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 1"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
 			},
 			"acquisition_alone_linear_amount_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				SQL:         "COALESCE(SUM(CASE WHEN (${CUBE}.role = 0 AND ${CUBE}.is_first_conversion = 1) THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
 				Title:       "Acquisition: alone linear amount attributed",
 				Description: "Sum of: CASE WHEN role = 0 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 1",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 1"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
 				},
 			},
 			"acquisition_initiator_linear_amount_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				SQL:         "COALESCE(SUM(CASE WHEN (${CUBE}.role = 1 AND ${CUBE}.is_first_conversion = 1) THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
 				Title:       "Acquisition: initiator linear amount attributed",
 				Description: "Sum of: CASE WHEN role = 1 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 1",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 1"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
 				},
 			},
 			"acquisition_assisting_linear_amount_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				SQL:         "COALESCE(SUM(CASE WHEN (${CUBE}.role = 2 AND ${CUBE}.is_first_conversion = 1) THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
 				Title:       "Acquisition: assisting linear amount attributed",
 				Description: "Sum of: CASE WHEN role = 2 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 1",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"acquisition_closer_linear_amount_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(SUM(CASE WHEN (${CUBE}.role = 3 AND ${CUBE}.is_first_conversion = 1) THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				Title:       "Acquisition: closer linear amount attributed",
+				Description: "Sum of: CASE WHEN role = 3 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 1",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"acquisition_linear_amount_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.is_first_conversion = 1 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				Title:       "Acquisition: Linear amount attributed",
+				Description: "Sum of linear_amount_attributed WHERE is_first_conversion = 1",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"acquisition_linear_percentage_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(ROUND(AVG(linear_percentage_attributed) / 10000, 2), 0)",
+				Title:       "Acquisition: Linear percentage attributed",
+				Description: "Avg of linear_percentage_attributed WHERE is_first_conversion = 1",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "${CUBE}.is_first_conversion = 1"},
 				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
-			"acquisition_closer_linear_amount_attributed": {
+			"acquisition_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-				Title:       "Acquisition: closer linear amount attributed",
-				Description: "Sum of: CASE WHEN role = 3 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 1",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 1"},
-				},
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.is_first_conversion = 1 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				Title:       "Acquisition: Linear conversions attributed",
+				Description: "Sum of linear_percentage_attributed WHERE is_first_conversion = 1",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
@@ -2470,10 +2500,10 @@ func NewSessionCube() *CubeJSSchema {
 			"retention_orders_contributions": {
 				Type:        "count",
 				SQL:         "id",
-				Title:       "Retention orders contributions",
+				Title:       "Retention: orders contributions",
 				Description: "Sessions that contributed to a 1st order. Count of: conversion_id IS NOT NULL AND conversion_type = 'order' AND is_first_conversion = 1",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.conversion_id IS NOT NULL AND ${CUBE}.conversion_type = 'order' AND  ${CUBE}.is_first_conversion = 1"},
+					{SQL: "${CUBE}.conversion_id IS NOT NULL AND ${CUBE}.conversion_type = 'order' AND  ${CUBE}.is_first_conversion = 0"},
 				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
@@ -2534,6 +2564,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "ratio of: retention_alone_count / retention_contributions_count",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 
@@ -2553,6 +2584,7 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "ratio of: retention_assisting_count / retention_contributions_count",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 			"retention_closer_ratio": {
@@ -2562,100 +2594,113 @@ func NewSessionCube() *CubeJSSchema {
 				Description: "ratio of: retention_closer_count / retention_contributions_count",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
 			"retention_alone_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN (${CUBE}.role = 0 AND ${CUBE}.is_first_conversion = 0) THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
 				Title:       "Retention: Alone linear conversions attributed",
 				Description: "Sum of: CASE WHEN role = 0 THEN linear_percentage_attributed ELSE 0 END, WHERE is_first_conversion = 0",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 0"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
 			},
 			"retention_initiator_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN (${CUBE}.role = 1 AND ${CUBE}.is_first_conversion = 0) THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
 				Title:       "Retention: Initiator linear conversions attributed",
 				Description: "Sum of: CASE WHEN role = 1 THEN linear_percentage_attributed ELSE 0 END, WHERE is_first_conversion = 0",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 0"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
 			},
 			"retention_assisting_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN (${CUBE}.role = 2 AND ${CUBE}.is_first_conversion = 0) THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
 				Title:       "Retention: Assisting linear conversions attributed",
 				Description: "Sum of: CASE WHEN role = 2 THEN linear_percentage_attributed ELSE 0 END, WHERE is_first_conversion = 0",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 0"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
 			},
 			"retention_closer_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN (${CUBE}.role = 3 AND ${CUBE}.is_first_conversion = 0) THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
 				Title:       "Retention: Closer linear conversions attributed",
 				Description: "Sum of: CASE WHEN role = 3 THEN linear_percentage_attributed ELSE 0 END, WHERE is_first_conversion = 0",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 0"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
 			},
 			"retention_alone_linear_amount_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 0 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				SQL:         "COALESCE(SUM(CASE WHEN (${CUBE}.role = 0 AND ${CUBE}.is_first_conversion = 0) THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
 				Title:       "Retention: Alone linear amount attributed",
 				Description: "Sum of: CASE WHEN role = 0 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 0",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 0"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
 				},
 			},
 			"retention_initiator_linear_amount_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 1 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				SQL:         "COALESCE(SUM(CASE WHEN (${CUBE}.role = 1 AND ${CUBE}.is_first_conversion = 0) THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
 				Title:       "Retention: Initiator linear amount attributed",
 				Description: "Sum of: CASE WHEN role = 1 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 0",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 0"},
-				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
 				},
 			},
 			"retention_assisting_linear_amount_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 2 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				SQL:         "COALESCE(SUM(CASE WHEN (${CUBE}.role = 2 AND ${CUBE}.is_first_conversion = 0) THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
 				Title:       "Retention: Assisting linear amount attributed",
 				Description: "Sum of: CASE WHEN role = 2 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 0",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"retention_closer_linear_amount_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(SUM(CASE WHEN (${CUBE}.role = 3 AND ${CUBE}.is_first_conversion = 0) THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				Title:       "Retention: Closer linear amount attributed",
+				Description: "Sum of: CASE WHEN role = 3 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 0",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"retention_linear_amount_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.is_first_conversion = 0 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
+				Title:       "Retention: Linear amount attributed",
+				Description: "Sum of linear_amount_attributed WHERE is_first_conversion = 0",
+				Meta: MapOfInterfaces{
+					"hide_from_segmentation": true,
+					"rimdian_format":         "currency",
+				},
+			},
+			"retention_linear_percentage_attributed": {
+				Type:        "number",
+				SQL:         "COALESCE(ROUND(AVG(linear_percentage_attributed) / 10000, 2), 0)",
+				Title:       "Retention: Linear percentage attributed",
+				Description: "Avg of linear_percentage_attributed WHERE is_first_conversion = 0",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "${CUBE}.is_first_conversion = 0"},
 				},
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
+					"rimdian_format":         "percentage",
 				},
 			},
-			"retention_closer_linear_amount_attributed": {
+			"retention_linear_conversions_attributed": {
 				Type:        "number",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.role = 3 THEN ${CUBE}.linear_amount_attributed ELSE 0 END), 0)",
-				Title:       "Retention: Closer linear amount attributed",
-				Description: "Sum of: CASE WHEN role = 3 THEN linear_amount_attributed ELSE 0 END, WHERE is_first_conversion = 0",
-				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "${CUBE}.is_first_conversion = 0"},
-				},
+				SQL:         "COALESCE(ROUND(SUM(CASE WHEN ${CUBE}.is_first_conversion = 0 THEN ${CUBE}.linear_percentage_attributed ELSE 0 END) / 10000, 2), 0)",
+				Title:       "Retention: Linear conversions attributed",
+				Description: "Sum of linear_percentage_attributed WHERE is_first_conversion = 0",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},

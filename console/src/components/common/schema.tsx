@@ -148,10 +148,7 @@ export const generateDatabaseGraphForSchema = (
 }
 
 export const AttributionRoleMeasure = {
-  // key: 'Session.attribution_roles',
-  // title: 'Role',
-  // category: 'orders',
-  // type: 'custom',
+  key: 'Session.attribution_roles',
   measureName: 'Session.attribution_roles',
   cubeName: 'Session',
   cube: {
@@ -326,12 +323,15 @@ export const AttributionRoleMeasure = {
 } as MeasureDefinition
 
 export const AcquisitionAttributionRoleMeasure = {
+  key: 'Session.acquisition_attribution_roles',
   measureName: 'Session.acquisition_attribution_roles',
   cubeName: 'Session',
   cube: {
     title: 'Session'
   } as CubeSchema,
-  measure: {} as CubeSchemaMeasure,
+  measure: {
+    title: 'Acquisition: roles'
+  } as CubeSchemaMeasure,
   dependsOnMeasures: [
     'Session.acquisition_alone_count',
     'Session.acquisition_alone_ratio',
@@ -493,6 +493,187 @@ export const AcquisitionAttributionRoleMeasure = {
             style={{
               marginBottom: '2px',
               width: (currentPeriod['Session.acquisition_closer_ratio'] || 0) * 100 + '%',
+              backgroundColor: '#F06292',
+              height: '3px'
+            }}
+          ></div>
+        </div>
+      </Popover>
+    )
+  }
+} as MeasureDefinition
+
+export const RetentionAttributionRoleMeasure = {
+  key: 'Session.retention_attribution_roles',
+  measureName: 'Session.retention_attribution_roles',
+  cubeName: 'Session',
+  cube: {
+    title: 'Session'
+  } as CubeSchema,
+  measure: {
+    title: 'Retention: roles'
+  } as CubeSchemaMeasure,
+  dependsOnMeasures: [
+    'Session.retention_alone_count',
+    'Session.retention_alone_ratio',
+    'Session.retention_initiator_count',
+    'Session.retention_initiator_ratio',
+    'Session.retention_assisting_count',
+    'Session.retention_assisting_ratio',
+    'Session.retention_closer_count',
+    'Session.retention_closer_ratio',
+    'Session.retention_alone_linear_conversions_attributed',
+    'Session.retention_alone_linear_amount_attributed',
+    'Session.retention_initiator_linear_conversions_attributed',
+    'Session.retention_initiator_linear_amount_attributed',
+    'Session.retention_assisting_linear_conversions_attributed',
+    'Session.retention_assisting_linear_amount_attributed',
+    'Session.retention_closer_linear_conversions_attributed',
+    'Session.retention_closer_linear_amount_attributed'
+  ],
+  customRender: (currentPeriod: any, previousPeriod: any, currency: string) => {
+    const data = [
+      {
+        key: 'alone',
+        title: 'Alone',
+        width: (currentPeriod['Session.retention_alone_ratio'] || 0) * 100 + 'px',
+        color: '#607D8B',
+        contributions: currentPeriod['Session.retention_alone_count'] || 0,
+        contributionsRatio: currentPeriod['Session.retention_alone_ratio'] || 0,
+        previousContributionsRatio: previousPeriod['Session.retention_alone_ratio'] || 0,
+        linearConversions:
+          currentPeriod['Session.retention_alone_linear_conversions_attributed'] || 0,
+        linearRevenue: currentPeriod['Session.retention_alone_linear_amount_attributed'] || 0
+      },
+      {
+        key: 'initiator',
+        title: 'Initiator',
+        width: (currentPeriod['Session.retention_initiator_ratio'] || 0) * 100 + 'px',
+        color: '#00BCD4',
+        contributions: currentPeriod['Session.retention_initiator_count'] || 0,
+        contributionsRatio: currentPeriod['Session.retention_initiator_ratio'] || 0,
+        previousContributionsRatio: previousPeriod['Session.retention_initiator_ratio'] || 0,
+        linearConversions:
+          currentPeriod['Session.retention_initiator_linear_conversions_attributed'] || 0,
+        linearRevenue: currentPeriod['Session.retention_initiator_linear_amount_attributed'] || 0
+      },
+      {
+        key: 'assisting',
+        title: 'Assisting',
+        width: (currentPeriod['Session.retention_assisting_ratio'] || 0) * 100 + 'px',
+        color: '#CDDC39',
+        contributions: currentPeriod['Session.retention_assisting_count'] || 0,
+        contributionsRatio: currentPeriod['Session.retention_assisting_ratio'] || 0,
+        previousContributionsRatio: previousPeriod['Session.retention_assisting_ratio'] || 0,
+        linearConversions:
+          currentPeriod['Session.retention_assisting_linear_conversions_attributed'] || 0,
+        linearRevenue: currentPeriod['Session.retention_assisting_linear_amount_attributed'] || 0
+      },
+      {
+        key: 'closer',
+        title: 'Closer',
+        width: (currentPeriod['Session.retention_closer_ratio'] || 0) * 100 + 'px',
+        color: '#F06292',
+        contributions: currentPeriod['Session.retention_closer_count'] || 0,
+        contributionsRatio: currentPeriod['Session.retention_closer_ratio'] || 0,
+        previousContributionsRatio: previousPeriod['Session.retention_closer_ratio'] || 0,
+        linearConversions:
+          currentPeriod['Session.retention_closer_linear_conversions_attributed'] || 0,
+        linearRevenue: currentPeriod['Session.retention_closer_linear_amount_attributed'] || 0
+      }
+    ]
+
+    const content = (
+      <Table
+        rowKey="key"
+        dataSource={data}
+        size="small"
+        pagination={false}
+        columns={[
+          {
+            key: 'title',
+            title: '',
+            render: (record: any) => record.title
+          },
+          {
+            key: 'bar',
+            title: '',
+            render: (record: any) => (
+              <div>
+                <span
+                  style={{
+                    width: record.width,
+                    display: 'inline-block',
+                    backgroundColor: record.color,
+                    height: '5px'
+                  }}
+                ></span>
+                <div className={CSS.font_size_xxs}>
+                  {FormatGrowth(record.contributionsRatio, record.previousContributionsRatio)}
+                </div>
+              </div>
+            )
+          },
+          {
+            key: 'contributionRatio',
+            title: '',
+            render: (record: any) => FormatPercent(record.contributionsRatio)
+          },
+          {
+            key: 'contributions',
+            title: 'Contributions',
+            render: (record: any) => FormatNumber(record.contributions)
+          },
+          {
+            key: 'linearConversions',
+            title: 'Linear conversions',
+            render: (record: any) => FormatNumber(record.linearConversions)
+          },
+          {
+            key: 'linearRevenue',
+            title: 'Linear revenue',
+            render: (record: any) => FormatCurrency(record.linearRevenue, currency, { light: true })
+          }
+        ]}
+      />
+    )
+    return (
+      <Popover
+        content={content}
+        title={null}
+        trigger={['hover', 'click']}
+        placement="left"
+        className={CSS.padding_v_m}
+      >
+        <div style={{ cursor: 'help', width: '100px' }}>
+          <div
+            style={{
+              marginBottom: '2px',
+              width: (currentPeriod['Session.retention_alone_ratio'] || 0) * 100 + '%',
+              backgroundColor: '#607D8B',
+              height: '3px'
+            }}
+          ></div>
+          <div
+            style={{
+              marginBottom: '2px',
+              width: (currentPeriod['Session.retention_initiator_ratio'] || 0) * 100 + '%',
+              backgroundColor: '#00BCD4',
+              height: '3px'
+            }}
+          ></div>
+          <div
+            style={{
+              marginBottom: '2px',
+              width: (currentPeriod['Session.retention_assisting_ratio'] || 0) * 100 + '%',
+              backgroundColor: '#CDDC39',
+              height: '3px'
+            }}
+          ></div>
+          <div
+            style={{
+              marginBottom: '2px',
+              width: (currentPeriod['Session.retention_closer_ratio'] || 0) * 100 + '%',
               backgroundColor: '#F06292',
               height: '3px'
             }}

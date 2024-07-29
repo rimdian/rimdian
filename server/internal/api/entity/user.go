@@ -2205,7 +2205,11 @@ func NewUserCube() *CubeJSSchema {
 		Title:       "Users",
 		Description: "Users",
 		SQL:         "SELECT * FROM `user` WHERE is_merged = FALSE",
-		Joins:       map[string]CubeJSSchemaJoin{
+		Joins: map[string]CubeJSSchemaJoin{
+			"User_segment": {
+				Relationship: "one_to_many",
+				SQL:          "${CUBE}.id = ${User_segment.user_id}",
+			},
 			// "Order": {
 			// 	Relationship: "hasMany",
 			// 	SQL:          "${CUBE}.id = ${Order.user_id}",

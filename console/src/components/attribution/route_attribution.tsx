@@ -4,7 +4,7 @@ import Layout from 'components/common/layout'
 import DateRangeSelector from 'components/common/partial_date_range'
 import CSS from 'utils/css'
 import TabAttributionSessions from './tab_sessions'
-import TabAttributionPostviews from './tab_postviews'
+// import TabAttributionPostviews from './tab_postviews'
 import TabAttributionNotMapped from './tab_not_mapped'
 import { useSearchParams } from 'react-router-dom'
 import TabAttributionCrossChannels from './tab_cross_channels'
@@ -63,11 +63,11 @@ const RouteAttribution = () => {
             label: 'Sessions not-mapped',
             children: <TabAttributionNotMapped />
           },
-          {
-            key: 'postviews',
-            label: 'Postviews',
-            children: <TabAttributionPostviews />
-          },
+          // {
+          //   key: 'postviews',
+          //   label: 'Postviews',
+          //   children: <TabAttributionPostviews />
+          // },
           {
             key: 'cross-channels',
             label: 'Cross-channels',

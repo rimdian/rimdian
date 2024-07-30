@@ -445,7 +445,7 @@ const googleAds: AppManifest = {
     'Import your Google Ads clicks & metrics (campaigns, ad groups, keywords...) to enrich your web sessions & compute your ROAS. Improve your Google Ads measurement with Enhanced Conversions.',
   description:
     'The Google Ads app automatically imports your ads clicks metadata (campaign, term, ad, cost...) to properly attribute the web sessions, and imports your campaigns, ad groups and keywords to analyze your ROAS. It also sends your conversions to the Google Ads API to improve the accuracy of your Google Ads conversions by sending first-party customer data in a privacy-safe way.',
-  version: '2.2.0',
+  version: '2.3.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
   sql_queries: [
@@ -586,14 +586,17 @@ const googleAds: AppManifest = {
       type: 'select',
       name: 'Fetch users that should be removed from a Customer Match list.',
       description: 'Fetch users that should be removed from a Customer Match list.',
-      query: `SELECT DISTINCT d.user_id FROM data_log d
+      query: `SELECT d.user_id, u.email, u.telephone FROM data_log d
+        INNER JOIN user u ON u.id = d.user_id
         LEFT JOIN user_segment us ON d.user_id = us.user_id AND us.segment_id = ?
         WHERE 
             d.event_at_trunc > ? AND 
             d.event_at > ? AND 
             d.kind = 'segment' AND 
             d.action = 'exit' AND 
-            us.user_id IS NULL
+            us.user_id IS NULL AND 
+            (u.email IS NOT NULL OR u.telephone IS NOT NULL) 
+        GROUP BY d.user_id
         LIMIT ? OFFSET ?
       `,
       test_args: ['authenticated', '2024-06-26T17:18:56.664Z', '2024-06-26T17:18:56.664Z', 5000, 0]

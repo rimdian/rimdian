@@ -320,7 +320,7 @@ export const TreeNodeInput = (props: TreeNodeInputProps) => {
       } as ActionCondition
     }
 
-    console.log('leaf', leaf)
+    // console.log('leaf', leaf)
 
     // // https://cube.dev/docs/product/apis-integrations/rest-api/query-format#filters-operators
     // switch (selectedOptions[1].type) {
@@ -516,6 +516,13 @@ export const TreeNodeInput = (props: TreeNodeInputProps) => {
                   {node.leaf?.action.timeframe_operator !== 'anytime' && (
                     <div>
                       <Space>
+                        {node.leaf?.action.timeframe_operator === 'in_the_last_days' && (
+                          <>
+                            <span className={CSS.opacity_60}>in the last</span>
+                            <Tag color="blue">{node.leaf?.action.timeframe_values?.[0]}</Tag>
+                            <span className={CSS.opacity_60}>days</span>
+                          </>
+                        )}
                         {node.leaf?.action.timeframe_operator === 'in_date_range' && (
                           <>
                             <span className={CSS.opacity_60}>between</span>

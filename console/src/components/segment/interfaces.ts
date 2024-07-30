@@ -45,7 +45,12 @@ export interface DimensionFilter {
 export interface ActionCondition {
   count_operator: 'at_least' | 'at_most' | 'exactly'
   count_value: number
-  timeframe_operator?: 'anytime' | 'in_date_range' | 'before_date' | 'after_date'
+  timeframe_operator?:
+    | 'anytime'
+    | 'in_date_range'
+    | 'before_date'
+    | 'after_date'
+    | 'in_the_last_days'
   timeframe_values?: string[]
 }
 

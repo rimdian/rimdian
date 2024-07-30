@@ -167,7 +167,8 @@ export const LeafActionForm = (props: LeafFormProps) => {
                   { value: 'anytime', label: 'anytime' },
                   { value: 'in_date_range', label: 'in date range' },
                   { value: 'before_date', label: 'before date' },
-                  { value: 'after_date', label: 'after date' }
+                  { value: 'after_date', label: 'after date' },
+                  { value: 'in_the_last_days', label: 'in the last' }
                 ]}
               />
             </Form.Item>
@@ -175,7 +176,34 @@ export const LeafActionForm = (props: LeafFormProps) => {
               {(funcs) => {
                 const timeframe_operator = funcs.getFieldValue(['action', 'timeframe_operator'])
 
-                if (timeframe_operator === 'in_date_range') {
+                if (timeframe_operator === 'in_the_last_days') {
+                  return (
+                    <Space>
+                      <Form.Item
+                        noStyle
+                        name={['action', 'timeframe_values']}
+                        colon={false}
+                        rules={[
+                          { required: true, type: 'array', min: 1, message: Messages.RequiredField }
+                        ]}
+                        dependencies={['action', 'timeframe_operator']}
+                        getValueProps={(values: string[]) => {
+                          // convert array to single value
+                          return {
+                            value: parseInt(values[0])
+                          }
+                        }}
+                        getValueFromEvent={(args: any) => {
+                          // convert single value to array
+                          return ['' + args]
+                        }}
+                      >
+                        <InputNumber step={1} size="small" />
+                      </Form.Item>
+                      <span className={CSS.opacity_60}>days</span>
+                    </Space>
+                  )
+                } else if (timeframe_operator === 'in_date_range') {
                   return (
                     <Form.Item
                       noStyle

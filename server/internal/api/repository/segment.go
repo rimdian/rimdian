@@ -88,12 +88,14 @@ func segmentNodeAsSQL(parentSegmentID *string, node *entity.SegmentTreeNode, tim
 	if node.Leaf.Action.TimeframeOperator == "anytime" {
 		// do nothing
 	} else if node.Leaf.Action.TimeframeOperator == "in_date_range" {
-		queryBuilder = queryBuilder.Having(sq.Expr("MAX("+alias+".created_at_trunc) >= TIMESTAMP(convert_tz(?, '+00:00', ?))", node.Leaf.Action.TimeframeValues[0], timezone))
-		queryBuilder = queryBuilder.Having(sq.Expr("MAX("+alias+".created_at_trunc) <= TIMESTAMP(convert_tz(?, '+00:00', ?))", node.Leaf.Action.TimeframeValues[1], timezone))
+		queryBuilder = queryBuilder.Where(sq.Expr("MAX("+alias+".created_at_trunc) >= TIMESTAMP(convert_tz(?, '+00:00', ?))", node.Leaf.Action.TimeframeValues[0], timezone))
+		queryBuilder = queryBuilder.Where(sq.Expr("MAX("+alias+".created_at_trunc) <= TIMESTAMP(convert_tz(?, '+00:00', ?))", node.Leaf.Action.TimeframeValues[1], timezone))
 	} else if node.Leaf.Action.TimeframeOperator == "before_date" {
-		queryBuilder = queryBuilder.Having(sq.Expr("MAX("+alias+".created_at_trunc) < TIMESTAMP(convert_tz(?, '+00:00', ?))", node.Leaf.Action.TimeframeValues[0], timezone))
+		queryBuilder = queryBuilder.Where(sq.Expr("MAX("+alias+".created_at_trunc) < TIMESTAMP(convert_tz(?, '+00:00', ?))", node.Leaf.Action.TimeframeValues[0], timezone))
 	} else if node.Leaf.Action.TimeframeOperator == "after_date" {
-		queryBuilder = queryBuilder.Having(sq.Expr("MAX("+alias+".created_at_trunc) > TIMESTAMP(convert_tz(?, '+00:00', ?))", node.Leaf.Action.TimeframeValues[0], timezone))
+		queryBuilder = queryBuilder.Where(sq.Expr("MAX("+alias+".created_at_trunc) > TIMESTAMP(convert_tz(?, '+00:00', ?))", node.Leaf.Action.TimeframeValues[0], timezone))
+	} else if node.Leaf.Action.TimeframeOperator == "in_the_last_days" {
+		queryBuilder = queryBuilder.Where(sq.Expr(alias+".created_at_trunc > DATE_SUB(NOW(), INTERVAL ? DAY)", node.Leaf.Action.TimeframeValues[0]))
 	}
 
 	return queryBuilder.ToSql()

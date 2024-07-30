@@ -128,7 +128,7 @@ type SegmentDimensionFilter struct {
 type SegmentActionCondition struct {
 	CountOperator     string   `json:"count_operator"` // at_least | at_most | exactly
 	CountValue        int      `json:"count_value"`
-	TimeframeOperator string   `json:"timeframe_operator"` // 'anytime' | 'in_date_range' | 'before_date' | 'after_date'
+	TimeframeOperator string   `json:"timeframe_operator"` // 'anytime' | 'in_date_range' | 'before_date' | 'after_date' | 'in_the_last_days'
 	TimeframeValues   []string `json:"timeframe_values"`
 }
 
@@ -260,7 +260,7 @@ func (node *SegmentTreeNode) Validate(schemasMap map[string]*CubeJSSchema) error
 				return eris.Errorf("count_operator must be one of %v, got %v", SegmentFilterOperatorsNumber, node.Leaf.Action.CountOperator)
 			}
 
-			if !govalidator.IsIn(node.Leaf.Action.TimeframeOperator, "anytime", "in_date_range", "before_date", "after_date") {
+			if !govalidator.IsIn(node.Leaf.Action.TimeframeOperator, "anytime", "in_date_range", "before_date", "after_date", "in_the_last_days") {
 				return eris.Errorf("timeframe_operator must be one of %v, got %v", SegmentFilterOperatorsTime, node.Leaf.Action.TimeframeOperator)
 			}
 
@@ -272,7 +272,7 @@ func (node *SegmentTreeNode) Validate(schemasMap map[string]*CubeJSSchema) error
 				return eris.Errorf("timeframe_values must be 2, got %v", len(node.Leaf.Action.TimeframeValues))
 			}
 
-			if (node.Leaf.Action.TimeframeOperator == "before_date" || node.Leaf.Action.TimeframeOperator == "after_date") && len(node.Leaf.Action.TimeframeValues) != 1 {
+			if (node.Leaf.Action.TimeframeOperator == "before_date" || node.Leaf.Action.TimeframeOperator == "after_date" || node.Leaf.Action.TimeframeOperator == "in_the_last_days") && len(node.Leaf.Action.TimeframeValues) != 1 {
 				return eris.Errorf("timeframe_values must be 1, got %v", len(node.Leaf.Action.TimeframeValues))
 			}
 

@@ -27,6 +27,8 @@ var (
 	TaskKindReattributeConversions        string = "system_reattribute_conversions"
 	TaskKindImportUsersToSubscriptionList string = "system_import_users_to_subscription_list"
 	TaskKindUpgradeApp                    string = "system_upgrade_app"
+	TaskKindRecomputeSegment                     = "system_recompute_segment"
+	TaskKindRefreshOutdatedSegments              = "system_refresh_outdated_segments"
 
 	SystemTasks = []TaskManifest{
 		{
@@ -59,6 +61,19 @@ var (
 			Name:           "Upgrade app",
 			IsCron:         false,
 			OnMultipleExec: OnMultipleExecDiscardNew,
+		},
+		{
+			ID:             TaskKindRecomputeSegment,
+			Name:           "Recompute segment",
+			IsCron:         false,
+			OnMultipleExec: OnMultipleExecAbortExisting,
+		},
+		{
+			ID:              TaskKindRefreshOutdatedSegments,
+			Name:            "Refresh outdated segments",
+			IsCron:          true,
+			OnMultipleExec:  OnMultipleExecDiscardNew,
+			MinutesInterval: 60 * 12, // every 12 hours
 		},
 	}
 

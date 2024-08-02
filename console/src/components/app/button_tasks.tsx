@@ -128,8 +128,10 @@ const TasksAppButton = (props: TasksAppButtonProps) => {
           width={960}
           open={true}
           onClose={closeDrawer}
-          headerStyle={{ backgroundColor: backgroundColorBase }}
-          bodyStyle={{ backgroundColor: backgroundColorBase }}
+          styles={{
+            header: { backgroundColor: backgroundColorBase },
+            body: { backgroundColor: backgroundColorBase }
+          }}
         >
           <Block
             title="Tasks"

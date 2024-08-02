@@ -1,4 +1,13 @@
-import { Tag, Table, TablePaginationConfig, Tooltip, Button, message, Alert } from 'antd'
+import {
+  Tag,
+  Table,
+  TablePaginationConfig,
+  Tooltip,
+  Button,
+  message,
+  Alert,
+  Popconfirm
+} from 'antd'
 import { TaskExec } from 'interfaces'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import Layout from 'components/common/layout'
@@ -14,6 +23,7 @@ import { faChevronLeft, faChevronRight, faRefresh } from '@fortawesome/free-soli
 import ButtonTaskAbout from './button_about'
 import dayjs from 'dayjs'
 import ButtonAbortTask from './button_abort'
+import { useState } from 'react'
 
 interface TaskExecList {
   task_execs: TaskExec[]
@@ -35,6 +45,7 @@ const RouteTasks = () => {
   const accountCtx = useAccount()
   const workspaceCtx = useCurrentWorkspaceCtx()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [loading, setLoading] = useState(false)
 
   const params: TaskExecListParams = {
     limit: searchParams.get('limit') || '' + pageSize,
@@ -142,10 +153,45 @@ const RouteTasks = () => {
     return 'info'
   }
 
+  const forceRefreshSegments = () => {
+    workspaceCtx
+      .apiPOST('/task.run', {
+        workspace_id: workspaceCtx.workspace.id,
+        id: 'system_refresh_outdated_segments',
+        main_worker_state: {}
+      })
+      .then(() => {
+        // refetch tasks + task execs
+        refetch()
+          .then(() => {
+            message.success('Task launched')
+            setLoading(false)
+          })
+          .catch((e: Error) => {
+            message.error(e.message)
+            setLoading(false)
+          })
+      })
+      .catch((e) => {
+        message.error(e.message)
+        setLoading(false)
+      })
+  }
+
   return (
     <Layout currentOrganization={workspaceCtx.organization} currentWorkspaceCtx={workspaceCtx}>
       <div className={CSS.top}>
         <h1>Task execs</h1>
+        <div className={CSS.topSeparator}></div>
+        <Popconfirm
+          title="Do you really want to force a refresh of outdated segments?"
+          onConfirm={forceRefreshSegments}
+          okText="Refresh outdated segments"
+        >
+          <Button disabled={loading} type="text">
+            Refresh segments
+          </Button>
+        </Popconfirm>
       </div>
 
       <Table

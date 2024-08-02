@@ -60,7 +60,7 @@ func (svc *ServiceImpl) DataLogReprocessUntil(ctx context.Context, untilDate tim
 			State:          taskState,
 		}
 
-		code, err = svc.doTaskCreate(ctx, workspace.ID, taskExec)
+		code, err = DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, workspace.ID, taskExec)
 
 		if err != nil {
 			// ignore error if a similar task is already running

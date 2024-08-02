@@ -28,7 +28,7 @@ func (svc *ServiceImpl) ScheduledTaskDo(ctx context.Context, scheduledTask *enti
 
 	result = &common.ResponseForTaskQueue{}
 
-	code, err := svc.doTaskCreate(ctx, scheduledTask.WorkspaceID, &scheduledTask.TaskExec)
+	code, err := DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, scheduledTask.WorkspaceID, &scheduledTask.TaskExec)
 
 	if err != nil {
 		result.HasError = true

@@ -93,7 +93,7 @@ func (svc *ServiceImpl) SegmentCreate(ctx context.Context, accountID string, seg
 			State:           state,
 		}
 
-		return svc.doTaskCreate(ctx, workspace.ID, taskExec)
+		return DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, workspace.ID, taskExec)
 	})
 
 	if err != nil {
@@ -230,7 +230,7 @@ func (svc *ServiceImpl) SegmentUpdate(ctx context.Context, accountID string, seg
 			State:           state,
 		}
 
-		return svc.doTaskCreate(ctx, workspace.ID, taskExec)
+		return DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, workspace.ID, taskExec)
 	})
 
 	if err != nil {

@@ -152,7 +152,7 @@ func (svc *ServiceImpl) WorkspaceCreateOrResetDemo(ctx context.Context, accountI
 				State:          state,
 			}
 
-			if code, err := svc.doTaskCreate(ctx, workspace.ID, taskExec); err != nil {
+			if code, err := DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, workspace.ID, taskExec); err != nil {
 				return code, err
 			}
 		}

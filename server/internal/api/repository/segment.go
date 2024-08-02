@@ -266,7 +266,7 @@ func (repo *RepositoryImpl) ListSegments(ctx context.Context, workspaceID string
 
 	if withUsersCount {
 		queryBuilder = queryBuilder.LeftJoin("user_segment ON segment.id = user_segment.segment_id")
-		queryBuilder = queryBuilder.GroupBy("segment.id")
+		queryBuilder = queryBuilder.GroupBy("segment.id").OrderBy("segment.db_created_at DESC")
 		queryBuilder = queryBuilder.Column("COALESCE(COUNT(user_segment.user_id), 0) AS users_count")
 	}
 

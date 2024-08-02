@@ -307,18 +307,18 @@ func (repo *RepositoryImpl) ListTaskExecs(ctx context.Context, workspaceID strin
 	return
 }
 
-func (repo *RepositoryImpl) AddTaskExecWorker(ctx context.Context, taskExecID string, newJobID string, workerID int, initialWorkerState entity.TaskWorkerState, tx *sql.Tx) error {
+func (repo *RepositoryImpl) AddTaskExecWorker(ctx context.Context, taskExecID string, newJobID string, newWorker *entity.NewTaskExecWorker, tx *sql.Tx) error {
 
-	jsonState, err := json.Marshal(initialWorkerState)
+	jsonState, err := json.Marshal(newWorker.InitialState)
 
 	if err != nil {
-		return eris.Wrapf(err, "AddTaskWorker state json err: %v", initialWorkerState)
+		return eris.Wrapf(err, "AddTaskWorker state json err: %v", newWorker.InitialState)
 	}
 
-	exprState := fmt.Sprintf("JSON_SET_JSON(state, 'workers', %v, ?)", workerID)
+	exprState := fmt.Sprintf("JSON_SET_JSON(state, 'workers', %v, ?)", newWorker.WorkerID)
 
 	if repo.Config.DB_TYPE == "mysql" {
-		exprState = fmt.Sprintf("JSON_SET(state, '$.workers.\"%v\"', CAST(? AS JSON))", workerID)
+		exprState = fmt.Sprintf("JSON_SET(state, '$.workers.\"%v\"', CAST(? AS JSON))", newWorker.WorkerID)
 	}
 
 	query, args, err := sq.Update("task_exec").

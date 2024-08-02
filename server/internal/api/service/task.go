@@ -63,7 +63,7 @@ func (svc *ServiceImpl) TaskRun(ctx context.Context, accountID string, params *d
 		MultipleExecKey: params.MultipleExecKey,
 	}
 
-	code, err = svc.doTaskCreate(ctx, task.WorkspaceID, taskExec)
+	code, err = DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, task.WorkspaceID, taskExec)
 
 	return code, err
 }
@@ -101,7 +101,7 @@ func (svc *ServiceImpl) TaskWakeUpCron(ctx context.Context) (code int, err error
 				State:          entity.NewTaskState(),
 			}
 
-			code, err := svc.doTaskCreate(ctx, scheduledTask.WorkspaceID, taskExec)
+			code, err := DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, scheduledTask.WorkspaceID, taskExec)
 
 			if err != nil {
 				// return error only for errors that are not "already running"

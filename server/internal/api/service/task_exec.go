@@ -11,6 +11,7 @@ import (
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/dto"
 	"github.com/rimdian/rimdian/internal/api/entity"
+	"github.com/rimdian/rimdian/internal/api/repository"
 	common "github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/rimdian/rimdian/internal/common/taskorchestrator"
 	"github.com/rotisserie/eris"
@@ -156,7 +157,7 @@ func (svc *ServiceImpl) TaskExecCreate(ctx context.Context, accountID string, pa
 		State:           state,
 	}
 
-	return svc.doTaskCreate(ctx, workspace.ID, taskExec)
+	return DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, workspace.ID, taskExec)
 }
 
 // receives a job from the Cloud Task Orchestrator
@@ -216,17 +217,17 @@ func (svc *ServiceImpl) TaskExecDo(ctx context.Context, workspaceID string, payl
 }
 
 // creates a new task and inserts it in DB & enqueue a new job to exec the task
-func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, taskExec *entity.TaskExec) (code int, err error) {
+func DoTaskCreate(ctx context.Context, repo repository.Repository, cfg *entity.Config, taskOrchestrator taskorchestrator.Client, workspaceID string, taskExec *entity.TaskExec) (code int, err error) {
 
 	if workspaceID == "" {
 		return 500, eris.New("TaskCreate workspace id is required")
 	}
 
 	// insert task in db + enqueue job
-	code, err = svc.Repo.RunInTransactionForWorkspace(ctx, workspaceID, func(ctx context.Context, tx *sql.Tx) (int, error) {
+	code, err = repo.RunInTransactionForWorkspace(ctx, workspaceID, func(ctx context.Context, tx *sql.Tx) (int, error) {
 
 		if taskExec.OnMultipleExec != entity.OnMultipleExecAllow {
-			runningTask, err := svc.Repo.GetRunningTaskExecByTaskID(ctx, taskExec.TaskID, taskExec.MultipleExecKey, tx)
+			runningTask, err := repo.GetRunningTaskExecByTaskID(ctx, taskExec.TaskID, taskExec.MultipleExecKey, tx)
 			if err != nil {
 				return 500, err
 			}
@@ -247,7 +248,7 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 			case entity.OnMultipleExecAbortExisting:
 				// end existing task
 				if runningTask != nil {
-					if err := svc.Repo.AbortTaskExec(ctx, runningTask.ID, "A similar task has been launched", tx); err != nil {
+					if err := repo.AbortTaskExec(ctx, runningTask.ID, "A similar task has been launched", tx); err != nil {
 						return 500, err
 					}
 				}
@@ -261,9 +262,9 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 
 		googleTaskQueueJob := &taskorchestrator.TaskRequest{
 			UniqueID:          &job.ID,
-			QueueLocation:     svc.Config.TASK_QUEUE_LOCATION,
+			QueueLocation:     cfg.TASK_QUEUE_LOCATION,
 			QueueName:         entity.TaskExecsQueueName,
-			PostEndpoint:      svc.Config.API_ENDPOINT + entity.TaskExecEndpoint + "?workspace_id=" + workspaceID,
+			PostEndpoint:      cfg.API_ENDPOINT + entity.TaskExecEndpoint + "?workspace_id=" + workspaceID,
 			TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 		}
 
@@ -285,6 +286,7 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 		case entity.TaskKindDataLogReprocessUntil,
 			entity.TaskKindReattributeConversions,
 			entity.TaskKindRecomputeSegment,
+			entity.TaskKindRefreshOutdatedSegments,
 			entity.TaskKindImportUsersToSubscriptionList,
 			entity.TaskKindUpgradeApp,
 			entity.TaskKindLaunchBroadcastCampaign:
@@ -311,7 +313,7 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 			// verify that app exists
 			appID := bits[0] + "_" + bits[1]
 
-			_, err := svc.Repo.GetApp(ctx, workspaceID, appID)
+			_, err := repo.GetApp(ctx, workspaceID, appID)
 			if err != nil {
 				if sqlscan.NotFound(err) {
 					return 400, err
@@ -329,7 +331,7 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 		}
 
 		// persist in db
-		if err := svc.Repo.InsertTaskExec(ctx, workspaceID, taskExec, job, tx); err != nil {
+		if err := repo.InsertTaskExec(ctx, workspaceID, taskExec, job, tx); err != nil {
 			if eris.Is(err, entity.ErrTaskExecAlreadyExists) {
 				return 400, eris.Wrap(entity.ErrTaskExecAlreadyExists, "TaskCreate")
 			}
@@ -337,7 +339,7 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 		}
 
 		// enqueue job
-		if err := svc.TaskOrchestrator.PostRequest(ctx, googleTaskQueueJob); err != nil {
+		if err := taskOrchestrator.PostRequest(ctx, googleTaskQueueJob); err != nil {
 			return 500, err
 		}
 
@@ -353,9 +355,9 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 	if taskExec.TaskID == entity.TaskKindReattributeConversions {
 
 		// update workspace
-		code, err = svc.Repo.RunInTransactionForSystem(ctx, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
+		code, err = repo.RunInTransactionForSystem(ctx, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
 
-			workspace, err := svc.Repo.GetWorkspace(ctx, workspaceID)
+			workspace, err := repo.GetWorkspace(ctx, workspaceID)
 			if err != nil {
 				if sqlscan.NotFound(err) {
 					return 400, err
@@ -365,7 +367,7 @@ func (svc *ServiceImpl) doTaskCreate(ctx context.Context, workspaceID string, ta
 
 			workspace.OutdatedConversionsAttribution = false
 
-			if err := svc.Repo.UpdateWorkspace(ctx, workspace, tx); err != nil {
+			if err := repo.UpdateWorkspace(ctx, workspace, tx); err != nil {
 				return 500, eris.Wrap(err, "TaskCreate")
 			}
 

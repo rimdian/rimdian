@@ -50,15 +50,33 @@ var (
 
 type TaskWorkerState map[string]interface{}
 
+type NewTaskExecWorker struct {
+	WorkerID     int             `json:"worker_id"`
+	InitialState TaskWorkerState `json:"initial_state"`
+}
+
+func (w *NewTaskExecWorker) Validate() error {
+	if w.WorkerID == 0 || w.WorkerID < 0 {
+		return eris.New("worker_id should be > 0")
+	}
+
+	if w.InitialState == nil {
+		w.InitialState = TaskWorkerState{}
+	}
+
+	return nil
+}
+
 type TaskExecResult struct {
-	IsDone                 bool                `json:"is_done"`
-	UpdatedWorkerState     TaskWorkerState     `json:"updated_worker_state"`
-	AppStateMutations      []*AppStateMutation `json:"app_state_mutations,omitempty"`
-	ItemsToImport          []string            `json:"items_to_import,omitempty"`
-	WorkerID               int                 `json:"worker_id"`
-	IsError                bool                `json:"is_error"`
-	Message                *string             `json:"message"`
-	DelayNextRequestInSecs *int                `json:"delay_next_request_in_secs,omitempty"`
+	IsDone                 bool                 `json:"is_done"`
+	UpdatedWorkerState     TaskWorkerState      `json:"updated_worker_state"`
+	AppStateMutations      []*AppStateMutation  `json:"app_state_mutations,omitempty"`
+	ItemsToImport          []string             `json:"items_to_import,omitempty"`
+	WorkerID               int                  `json:"worker_id"`
+	IsError                bool                 `json:"is_error"`
+	Message                *string              `json:"message"`
+	DelayNextRequestInSecs *int                 `json:"delay_next_request_in_secs,omitempty"`
+	NewWorkers             []*NewTaskExecWorker `json:"new_workers,omitempty"`
 }
 
 func (taskExecResult *TaskExecResult) SetError(message string, isDone bool) {

@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"strings"
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -9,7 +10,6 @@ import (
 )
 
 var (
-	TaskKindRecomputeSegment = "recompute_segment"
 	TaskNameRecomputeSegment = "Recompute segment"
 
 	SegmentStatusActive   = "active"
@@ -112,6 +112,10 @@ type Segment struct {
 
 	// server-side JOINED fields:
 	UsersCount int `db:"users_count" json:"users_count"`
+}
+
+func (s *Segment) HasRelativeTimeFilter() bool {
+	return strings.Contains(s.GeneratedSQL, "NOW()")
 }
 
 func (s *Segment) Validate(existingSegments []*Segment, schemasMap map[string]*CubeJSSchema) (err error) {

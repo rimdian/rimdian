@@ -57,7 +57,7 @@ func (svc *ServiceImpl) BroadcastCampaignLaunch(ctx context.Context, accountID s
 			State:           state,
 		}
 
-		return svc.doTaskCreate(ctx, workspace.ID, taskExec)
+		return DoTaskCreate(ctx, svc.Repo, svc.Config, svc.TaskOrchestrator, workspace.ID, taskExec)
 	})
 
 	return code, err

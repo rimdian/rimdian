@@ -79,7 +79,10 @@ func TaskExecGenerateDemo(ctx context.Context, pipe *TaskExecPipeline) (result *
 					"total_data_logs": 0,
 				}
 
-				pipe.TaskExecAddWorker(spanCtx, i, workerState)
+				pipe.TaskExecAddWorker(spanCtx, &entity.NewTaskExecWorker{
+					WorkerID:     i,
+					InitialState: workerState,
+				})
 
 				if pipe.HasError() {
 					result.SetError("error while adding worker", false)

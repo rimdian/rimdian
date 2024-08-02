@@ -44,7 +44,7 @@ var _ Repository = &RepositoryMock{}
 //			AddJobToTaskExecFunc: func(ctxWithTimeout context.Context, taskExecID string, newJobID string, tx *sql.Tx) error {
 //				panic("mock out the AddJobToTaskExec method")
 //			},
-//			AddTaskExecWorkerFunc: func(ctx context.Context, taskID string, newJobID string, workerID int, initialWorkerState entity.TaskWorkerState, tx *sql.Tx) error {
+//			AddTaskExecWorkerFunc: func(ctx context.Context, taskID string, newJobID string, newWorker *entity.NewWorker, tx *sql.Tx) error {
 //				panic("mock out the AddTaskExecWorker method")
 //			},
 //			CancelOrganizationInvitationFunc: func(ctx context.Context, organizationID string, email string) error {
@@ -622,7 +622,7 @@ type RepositoryMock struct {
 	AddJobToTaskExecFunc func(ctxWithTimeout context.Context, taskExecID string, newJobID string, tx *sql.Tx) error
 
 	// AddTaskExecWorkerFunc mocks the AddTaskExecWorker method.
-	AddTaskExecWorkerFunc func(ctx context.Context, taskID string, newJobID string, workerID int, initialWorkerState entity.TaskWorkerState, tx *sql.Tx) error
+	AddTaskExecWorkerFunc func(ctx context.Context, taskID string, newJobID string, newWorker *entity.NewTaskExecWorker, tx *sql.Tx) error
 
 	// CancelOrganizationInvitationFunc mocks the CancelOrganizationInvitation method.
 	CancelOrganizationInvitationFunc func(ctx context.Context, organizationID string, email string) error
@@ -1261,10 +1261,8 @@ type RepositoryMock struct {
 			TaskID string
 			// NewJobID is the newJobID argument value.
 			NewJobID string
-			// WorkerID is the workerID argument value.
-			WorkerID int
-			// InitialWorkerState is the initialWorkerState argument value.
-			InitialWorkerState entity.TaskWorkerState
+			// NewWorker is the newWorker argument value.
+			NewWorker *entity.NewTaskExecWorker
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
@@ -3632,29 +3630,27 @@ func (mock *RepositoryMock) AddJobToTaskExecCalls() []struct {
 }
 
 // AddTaskExecWorker calls AddTaskExecWorkerFunc.
-func (mock *RepositoryMock) AddTaskExecWorker(ctx context.Context, taskID string, newJobID string, workerID int, initialWorkerState entity.TaskWorkerState, tx *sql.Tx) error {
+func (mock *RepositoryMock) AddTaskExecWorker(ctx context.Context, taskID string, newJobID string, newWorker *entity.NewTaskExecWorker, tx *sql.Tx) error {
 	if mock.AddTaskExecWorkerFunc == nil {
 		panic("RepositoryMock.AddTaskExecWorkerFunc: method is nil but Repository.AddTaskExecWorker was just called")
 	}
 	callInfo := struct {
-		Ctx                context.Context
-		TaskID             string
-		NewJobID           string
-		WorkerID           int
-		InitialWorkerState entity.TaskWorkerState
-		Tx                 *sql.Tx
+		Ctx       context.Context
+		TaskID    string
+		NewJobID  string
+		NewWorker *entity.NewTaskExecWorker
+		Tx        *sql.Tx
 	}{
-		Ctx:                ctx,
-		TaskID:             taskID,
-		NewJobID:           newJobID,
-		WorkerID:           workerID,
-		InitialWorkerState: initialWorkerState,
-		Tx:                 tx,
+		Ctx:       ctx,
+		TaskID:    taskID,
+		NewJobID:  newJobID,
+		NewWorker: newWorker,
+		Tx:        tx,
 	}
 	mock.lockAddTaskExecWorker.Lock()
 	mock.calls.AddTaskExecWorker = append(mock.calls.AddTaskExecWorker, callInfo)
 	mock.lockAddTaskExecWorker.Unlock()
-	return mock.AddTaskExecWorkerFunc(ctx, taskID, newJobID, workerID, initialWorkerState, tx)
+	return mock.AddTaskExecWorkerFunc(ctx, taskID, newJobID, newWorker, tx)
 }
 
 // AddTaskExecWorkerCalls gets all the calls that were made to AddTaskExecWorker.
@@ -3662,20 +3658,18 @@ func (mock *RepositoryMock) AddTaskExecWorker(ctx context.Context, taskID string
 //
 //	len(mockedRepository.AddTaskExecWorkerCalls())
 func (mock *RepositoryMock) AddTaskExecWorkerCalls() []struct {
-	Ctx                context.Context
-	TaskID             string
-	NewJobID           string
-	WorkerID           int
-	InitialWorkerState entity.TaskWorkerState
-	Tx                 *sql.Tx
+	Ctx       context.Context
+	TaskID    string
+	NewJobID  string
+	NewWorker *entity.NewTaskExecWorker
+	Tx        *sql.Tx
 } {
 	var calls []struct {
-		Ctx                context.Context
-		TaskID             string
-		NewJobID           string
-		WorkerID           int
-		InitialWorkerState entity.TaskWorkerState
-		Tx                 *sql.Tx
+		Ctx       context.Context
+		TaskID    string
+		NewJobID  string
+		NewWorker *entity.NewTaskExecWorker
+		Tx        *sql.Tx
 	}
 	mock.lockAddTaskExecWorker.RLock()
 	calls = mock.calls.AddTaskExecWorker

@@ -127,7 +127,7 @@ type Repository interface {
 	GetRunningTaskExecByTaskID(ctx context.Context, taskID string, multipleExecKey *string, tx *sql.Tx) (task *entity.TaskExec, err error)
 	SetTaskExecError(ctx context.Context, workspaceID string, taskExecID string, workerID int, status int, message string) error
 	UpdateTaskExecFromResult(ctx context.Context, taskExecRequestPayload *dto.TaskExecRequestPayload, taskExecResult *entity.TaskExecResult, tx *sql.Tx) error
-	AddTaskExecWorker(ctx context.Context, taskID string, newJobID string, workerID int, initialWorkerState entity.TaskWorkerState, tx *sql.Tx) error
+	AddTaskExecWorker(ctx context.Context, taskID string, newJobID string, newWorker *entity.NewTaskExecWorker, tx *sql.Tx) error
 	ListTaskExecs(ctx context.Context, workspaceID string, params *dto.TaskExecListParams) (tasks []*entity.TaskExec, nextToken string, previousToken string, code int, err error)
 	StopTaskExecsForApp(ctx context.Context, appID string, tx *sql.Tx) error
 	AddJobToTaskExec(ctxWithTimeout context.Context, taskExecID string, newJobID string, tx *sql.Tx) error

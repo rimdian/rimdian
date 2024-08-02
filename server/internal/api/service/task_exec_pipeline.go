@@ -43,7 +43,8 @@ type ITaskExecPipeline interface {
 
 	// TaskExecPipeline interface
 	Init(ctx context.Context)
-	TaskExecAddWorker(ctx context.Context, workerID int, initialWorkerState entity.TaskWorkerState)
+	TaskExecAddWorker(ctx context.Context, newWorker *entity.NewTaskExecWorker)
+	CreateTask(ctx context.Context, taskExec *entity.TaskExec) (code int, err error)
 
 	// ComputeSegmentsForGivenUsers()
 	ReattributeUsersOrders(ctx context.Context)
@@ -249,6 +250,20 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 
 			// enqueue next task if has more to do
 			if !pipe.TaskExecResult.IsDone {
+
+				// add new workers if any
+				if pipe.TaskExecResult.NewWorkers != nil && len(pipe.TaskExecResult.NewWorkers) > 0 {
+					for _, newWorker := range pipe.TaskExecResult.NewWorkers {
+						if err := newWorker.Validate(); err != nil {
+							return 400, err
+						}
+						pipe.TaskExecAddWorker(ctx, newWorker)
+						if pipe.HasError() {
+							return 500, eris.New("TaskExecAddWorker error")
+						}
+					}
+				}
+
 				// compute a new job id
 				id, err := uuid.NewRandom()
 				if err != nil {
@@ -318,6 +333,10 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 			return
 		case entity.TaskKindRecomputeSegment:
 			pipe.TaskExecResult = TaskExecRecomputeSegment(spanCtx, pipe)
+			pipe.ProcessNextStep(spanCtx)
+			return
+		case entity.TaskKindRefreshOutdatedSegments:
+			pipe.TaskExecResult = TaskExecRefreshOutdatedSegments(spanCtx, pipe)
 			pipe.ProcessNextStep(spanCtx)
 			return
 		case entity.TaskKindImportUsersToSubscriptionList:
@@ -407,12 +426,12 @@ func (pipe *TaskExecPipeline) Init(ctx context.Context) {
 
 // add a parallel worker for a given task
 // each worker has its own JSON state persisted in DB
-func (pipe *TaskExecPipeline) TaskExecAddWorker(ctx context.Context, workerID int, initialWorkerState entity.TaskWorkerState) {
+func (pipe *TaskExecPipeline) TaskExecAddWorker(ctx context.Context, newWorker *entity.NewTaskExecWorker) {
 
 	spanCtx, span := trace.StartSpan(ctx, "TaskExecAddWorker")
 	defer span.End()
 
-	if workerID == 0 {
+	if newWorker.WorkerID == 0 {
 		// should not happen
 		pipe.SetError("server", entity.ErrTaskWorkerIDNotAllowed.Error(), false)
 		return
@@ -429,7 +448,7 @@ func (pipe *TaskExecPipeline) TaskExecAddWorker(ctx context.Context, workerID in
 		newJobID := fmt.Sprintf("%v_%v", id.String(), pipe.TaskExec.TaskID) // random id first, for Google performance sharding
 
 		// add worker state / jobid in task
-		if err := pipe.Repo().AddTaskExecWorker(ctx, pipe.TaskExec.ID, newJobID, workerID, initialWorkerState, tx); err != nil {
+		if err := pipe.Repo().AddTaskExecWorker(ctx, pipe.TaskExec.ID, newJobID, newWorker, tx); err != nil {
 			return 500, err
 		}
 
@@ -441,7 +460,7 @@ func (pipe *TaskExecPipeline) TaskExecAddWorker(ctx context.Context, workerID in
 			TaskTimeoutInSecs: &entity.TaskTimeoutInSecs,
 			Payload: dto.TaskExecRequestPayload{
 				TaskExecID: pipe.TaskExec.ID,
-				WorkerID:   workerID,
+				WorkerID:   newWorker.WorkerID,
 				JobID:      newJobID,
 			},
 		}
@@ -456,6 +475,10 @@ func (pipe *TaskExecPipeline) TaskExecAddWorker(ctx context.Context, workerID in
 	if err != nil {
 		pipe.SetError("server", err.Error(), true)
 	}
+}
+
+func (pipe *TaskExecPipeline) CreateTask(ctx context.Context, taskExec *entity.TaskExec) (code int, err error) {
+	return DoTaskCreate(ctx, pipe.Repository, pipe.Config, pipe.TaskOrchestrator, pipe.Workspace.ID, taskExec)
 }
 
 func (pipe *TaskExecPipeline) ReattributeUsersOrders(ctx context.Context) {

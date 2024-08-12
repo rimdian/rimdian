@@ -48,8 +48,8 @@ func DataLogEnqueue(ctx context.Context, cfg *entity.Config, netClient httpClien
 	}
 
 	if itemsCount > 0 {
-		// cut items into batches of 100 and import them internally
-		const maxBatchSize int = 100
+		// cut items into batches of 250 and import them internally
+		const maxBatchSize int = 250
 		skip := 0
 
 		batchCount := int(math.Ceil(float64(itemsCount) / float64(maxBatchSize)))

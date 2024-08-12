@@ -6,8 +6,9 @@ import { useAccount } from 'components/login/context_account'
 import { useState } from 'react'
 import AntdCaretDown from 'utils/antd_caret_down'
 import { useDateRangeCtx } from './context_date_range'
-import dayjs from 'dayjs'
 import CSS from 'utils/css'
+import dayjs from 'dayjs'
+
 const { RangePicker } = DatePicker
 
 type DateRangeSelectorProps = {
@@ -155,9 +156,9 @@ const DateRangeSelector = (props: DateRangeSelectorProps) => {
                   setOpenCustom(false)
                 }
               }}
-              disabledDate={(date: any) =>
-                dayjs.tz(date, timezone).endOf('day').isAfter(dayjs().tz(timezone).endOf('day'))
-              }
+              disabledDate={(date: any) => {
+                return date.endOf('day').isAfter(dayjs().tz(timezone).endOf('day'))
+              }}
             />
           )}
         </Button>

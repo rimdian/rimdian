@@ -95,6 +95,7 @@ type IRimdian = {
     eventHandler: Function,
     useCapture: boolean
   ) => void
+  _normalizeUTMSource: (source: string) => string
   _decorateURL: (e: MouseEvent) => void
   _wipeAll: () => void
 }
@@ -504,7 +505,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.8.0',
+    version: '2.9.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -1818,6 +1819,8 @@ const Rimdian: IRimdian = {
       utm_medium = 'ads'
     }
 
+    utm_source = Rimdian._normalizeUTMSource(utm_source)
+
     Rimdian.log('info', 'RMD utm_source is:', utm_source)
     Rimdian.log('info', 'RMD utm_medium is:', utm_medium)
     Rimdian.log('info', 'RMD utm_campaign is:', utm_campaign)
@@ -2132,6 +2135,15 @@ const Rimdian: IRimdian = {
     remove: (key: string) => {
       localStorage.removeItem(Rimdian.config.namespace + key)
     }
+  },
+
+  _normalizeUTMSource: (source: string) => {
+    // replace 98ad0bb6e8ada73c81aab4e8c2637e7f.safeframe.googlesyndication.com by safeframe.googlesyndication.com
+    if (source.indexOf('safeframe.googlesyndication.com') !== -1) {
+      return 'safeframe.googlesyndication.com'
+    }
+
+    return source
   },
 
   // inject the device + user ids on the fly

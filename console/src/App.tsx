@@ -25,6 +25,12 @@ import RouteAttribution from 'components/attribution/route_attribution'
 import RouteListApps from 'components/app/route_list'
 import RouteShowApp from 'components/app/route_show'
 import { DateRangeProvider } from 'components/common/context_date_range'
+
+import { css, CSSInterpolation, injectGlobal } from '@emotion/css'
+import CSS from 'utils/css'
+import RouteDatabase from 'components/database/route_database'
+import RouteAssets from 'components/assets/route_assets'
+import RouteBroadcasts from 'components/broadcast/route_broadcast'
 // init dayjs
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
@@ -32,16 +38,23 @@ import timezone from 'dayjs/plugin/timezone'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import duration from 'dayjs/plugin/duration'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
-import { css, CSSInterpolation, injectGlobal } from '@emotion/css'
-import CSS from 'utils/css'
-import RouteDatabase from 'components/database/route_database'
-import RouteAssets from 'components/assets/route_assets'
-import RouteBroadcasts from 'components/broadcast/route_broadcast'
+import advancedFormat from 'dayjs/plugin/advancedFormat'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+import localeData from 'dayjs/plugin/localeData'
+import weekday from 'dayjs/plugin/weekday'
+import weekOfYear from 'dayjs/plugin/weekOfYear'
+import weekYear from 'dayjs/plugin/weekYear'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 dayjs.extend(utc)
 dayjs.extend(timezone)
 dayjs.extend(localizedFormat)
+dayjs.extend(customParseFormat)
+dayjs.extend(advancedFormat)
+dayjs.extend(weekday)
+dayjs.extend(localeData)
+dayjs.extend(weekOfYear)
+dayjs.extend(weekYear)
 
 // the config is declared in public/config.js in dev
 // and is replaced with production variables

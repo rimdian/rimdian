@@ -57,6 +57,7 @@ declare type IRimdian = {
     _cartHash: (data: ICart) => string;
     _localStorage: ILocalStorage;
     _addEventListener: (element: any, eventType: string, eventHandler: Function, useCapture: boolean) => void;
+    _normalizeUTMSource: (source: string) => string;
     _decorateURL: (e: MouseEvent) => void;
     _wipeAll: () => void;
 };

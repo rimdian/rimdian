@@ -143,7 +143,7 @@ func (app *App) EnrichMetadatas(cfg *Config, workspaceCurrency string, workspace
 	if app.SQLUsername != "" {
 		app.SQLAccess = &AppSQLAccess{
 			User:     app.SQLUsername,
-			Database: workspaceID,
+			Database: cfg.DB_PREFIX + workspaceID,
 		}
 
 		// parse config DSN to extract host and port

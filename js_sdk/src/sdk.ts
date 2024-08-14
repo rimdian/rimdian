@@ -505,7 +505,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.9.0',
+    version: '2.10.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -1718,6 +1718,15 @@ const Rimdian: IRimdian = {
     }
   },
 
+  _normalizeUTMSource: (source: string) => {
+    // replace 98ad0bb6e8ada73c81aab4e8c2637e7f.safeframe.googlesyndication.com by safeframe.googlesyndication.com
+    if (source.indexOf('safeframe.googlesyndication.com') !== -1) {
+      return 'safeframe.googlesyndication.com'
+    }
+
+    return source
+  },
+
   // session is stored in a cookie and will expire with its cookie
   // scenarii:
   // 1. no existing session -> create new session
@@ -2135,15 +2144,6 @@ const Rimdian: IRimdian = {
     remove: (key: string) => {
       localStorage.removeItem(Rimdian.config.namespace + key)
     }
-  },
-
-  _normalizeUTMSource: (source: string) => {
-    // replace 98ad0bb6e8ada73c81aab4e8c2637e7f.safeframe.googlesyndication.com by safeframe.googlesyndication.com
-    if (source.indexOf('safeframe.googlesyndication.com') !== -1) {
-      return 'safeframe.googlesyndication.com'
-    }
-
-    return source
   },
 
   // inject the device + user ids on the fly

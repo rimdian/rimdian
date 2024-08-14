@@ -969,7 +969,7 @@ export interface AppManifest {
   app_tables?: AppTable[]
   data_hooks?: DataHookManifest[]
   extra_columns?: ExtraColumnsManifest[]
-  sql_queries?: SqlQuery[]
+  sql_access?: SQLAccessManifest
   cube_schemas?: {
     [key: string]: CubeSchema
   }
@@ -990,6 +990,17 @@ export interface CubeSchema {
   segments?: { [key: string]: CubeSchemaSegment }
   measures: { [key: string]: CubeSchemaMeasure }
   dimensions: { [key: string]: CubeSchemaDimension }
+}
+
+export interface SQLAccessManifest {
+  tables_permissions?: TablePermission[]
+  predefined_queries?: SqlQuery[]
+}
+
+export interface TablePermission {
+  table: string
+  read: boolean
+  write: boolean
 }
 
 export interface SqlQuery {

@@ -202,7 +202,7 @@ const affilae: AppManifest = {
   short_description: 'Affilae server-to-server tracking.',
   description:
     'Send your conversions to Affilae servers with their corresponding Affilae Click ID.',
-  version: '1.7.0',
+  version: '2.0.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
   tasks: [
@@ -214,14 +214,15 @@ const affilae: AppManifest = {
       minutes_interval: 720
     }
   ],
-  sql_queries: [
-    {
-      id: 'appx_affilae_conversions',
-      type: 'select',
-      name: 'Fetch conversions with Affilae click IDs',
-      description:
-        'Retrieve conversions with their corresponding Affilae sessions. Deduplicated by aecid (utm_id).',
-      query: `SELECT 
+  sql_access: {
+    predefined_queries: [
+      {
+        id: 'appx_affilae_conversions',
+        type: 'select',
+        name: 'Fetch conversions with Affilae click IDs',
+        description:
+          'Retrieve conversions with their corresponding Affilae sessions. Deduplicated by aecid (utm_id).',
+        query: `SELECT 
           s.utm_id as aeclid, 
           o.external_id as order_external_id, 
           o.subtotal_price as order_subtotal_price, 
@@ -240,9 +241,10 @@ const affilae: AppManifest = {
       AND o.cancelled_at IS NULL
       GROUP BY s.utm_id
       LIMIT ? OFFSET ?`,
-      test_args: ['2024-06-26T17:18:56.664Z', '2024-07-03T17:18:56.664Z', 20, 0]
-    }
-  ]
+        test_args: ['2024-06-26T17:18:56.664Z', '2024-07-03T17:18:56.664Z', 20, 0]
+      }
+    ]
+  }
 }
 
 const meta: AppManifest = {
@@ -445,127 +447,27 @@ const googleAds: AppManifest = {
     'Import your Google Ads clicks & metrics (campaigns, ad groups, keywords...) to enrich your web sessions & compute your ROAS. Improve your Google Ads measurement with Enhanced Conversions.',
   description:
     'The Google Ads app automatically imports your ads clicks metadata (campaign, term, ad, cost...) to properly attribute the web sessions, and imports your campaigns, ad groups and keywords to analyze your ROAS. It also sends your conversions to the Google Ads API to improve the accuracy of your Google Ads conversions by sending first-party customer data in a privacy-safe way.',
-  version: '2.3.0',
+  version: '3.0.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
-  sql_queries: [
-    {
-      id: 'appx_googleads_sessions',
-      type: 'select',
-      name: 'Fetch sessions with GCLIDs',
-      description:
-        'Retrieve sessions and users core infos matching GCLIDs. Deduplicated by gclid (utm_id).',
-      query:
-        "SELECT s.external_id as session_external_id, s.user_id as user_id, s.domain_id as session_domain_id, s.created_at as session_created_at, s.utm_id as session_utm_id, u.external_id as user_external_id, u.is_authenticated as user_is_authenticated, u.created_at as user_created_at, u.timezone as user_timezone, u.language as user_language, u.country as user_country FROM `session` as s JOIN `user` as u ON s.user_id = u.id WHERE s.utm_id IN (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) AND s.utm_id_from = 'gclid' GROUP BY s.utm_id;",
-      test_args: [
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a',
-        'a'
-      ]
-    },
-    {
-      id: 'appx_googleads_sync_user_lists_add',
-      type: 'select',
-      name: 'Fetch users that should be added to a Customer Match list',
-      description: 'Retrieve users that should be added to the Customer Match user lists.',
-      query: `SELECT u.email, u.telephone FROM user u
+  sql_access: {
+    predefined_queries: [
+      {
+        id: 'appx_googleads_sessions',
+        type: 'select',
+        name: 'Fetch sessions with GCLIDs',
+        description:
+          'Retrieve sessions and users core infos matching GCLIDs. Deduplicated by gclid (utm_id).',
+        query:
+          "SELECT s.external_id as session_external_id, s.user_id as user_id, s.domain_id as session_domain_id, s.created_at as session_created_at, s.utm_id as session_utm_id, u.external_id as user_external_id, u.is_authenticated as user_is_authenticated, u.created_at as user_created_at, u.timezone as user_timezone, u.language as user_language, u.country as user_country FROM `session` as s JOIN `user` as u ON s.user_id = u.id WHERE s.utm_id IN (PARAMS(100)) AND s.utm_id_from = 'gclid' GROUP BY s.utm_id;",
+        test_args: ['a']
+      },
+      {
+        id: 'appx_googleads_sync_user_lists_add',
+        type: 'select',
+        name: 'Fetch users that should be added to a Customer Match list',
+        description: 'Retrieve users that should be added to the Customer Match user lists.',
+        query: `SELECT u.email, u.telephone FROM user u
         JOIN user_segment us ON u.id = us.user_id
         WHERE
           us.segment_id = ?
@@ -579,14 +481,14 @@ const googleAds: AppManifest = {
         AND us.db_created_at > ?
         LIMIT ? OFFSET ?
       `,
-      test_args: ['authenticated', '2024-06-26T17:18:56.664Z', 5000, 0]
-    },
-    {
-      id: 'appx_googleads_sync_user_lists_remove',
-      type: 'select',
-      name: 'Fetch users that should be removed from a Customer Match list.',
-      description: 'Fetch users that should be removed from a Customer Match list.',
-      query: `SELECT d.user_id, u.email, u.telephone FROM data_log d
+        test_args: ['authenticated', '2024-06-26T17:18:56.664Z', 5000, 0]
+      },
+      {
+        id: 'appx_googleads_sync_user_lists_remove',
+        type: 'select',
+        name: 'Fetch users that should be removed from a Customer Match list.',
+        description: 'Fetch users that should be removed from a Customer Match list.',
+        query: `SELECT d.user_id, u.email, u.telephone FROM data_log d
         INNER JOIN user u ON u.id = d.user_id
         LEFT JOIN user_segment us ON d.user_id = us.user_id AND us.segment_id = ?
         WHERE 
@@ -599,9 +501,16 @@ const googleAds: AppManifest = {
         GROUP BY d.user_id
         LIMIT ? OFFSET ?
       `,
-      test_args: ['authenticated', '2024-06-26T17:18:56.664Z', '2024-06-26T17:18:56.664Z', 5000, 0]
-    }
-  ],
+        test_args: [
+          'authenticated',
+          '2024-06-26T17:18:56.664Z',
+          '2024-06-26T17:18:56.664Z',
+          5000,
+          0
+        ]
+      }
+    ]
+  },
   tasks: [
     {
       id: 'appx_googleads_import_clicks',
@@ -736,6 +645,12 @@ const googleAds: AppManifest = {
           size: 256,
           is_required: false,
           description: 'User list (audience) external ID'
+        },
+        {
+          name: 'is_processed',
+          type: 'boolean',
+          is_required: false,
+          description: 'Is the click imported and processed?'
         },
         {
           name: 'id',

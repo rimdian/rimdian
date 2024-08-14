@@ -44,7 +44,7 @@ var _ Repository = &RepositoryMock{}
 //			AddJobToTaskExecFunc: func(ctxWithTimeout context.Context, taskExecID string, newJobID string, tx *sql.Tx) error {
 //				panic("mock out the AddJobToTaskExec method")
 //			},
-//			AddTaskExecWorkerFunc: func(ctx context.Context, taskID string, newJobID string, newWorker *entity.NewWorker, tx *sql.Tx) error {
+//			AddTaskExecWorkerFunc: func(ctx context.Context, taskID string, newJobID string, newWorker *entity.NewTaskExecWorker, tx *sql.Tx) error {
 //				panic("mock out the AddTaskExecWorker method")
 //			},
 //			CancelOrganizationInvitationFunc: func(ctx context.Context, organizationID string, email string) error {
@@ -61,6 +61,9 @@ var _ Repository = &RepositoryMock{}
 //			},
 //			CountSuccessfulDataLogsForDemoFunc: func(ctx context.Context, workspaceID string) (int64, error) {
 //				panic("mock out the CountSuccessfulDataLogsForDemo method")
+//			},
+//			CreateAppSQLAccessFunc: func(ctx context.Context, workspaceID string, app *entity.App) error {
+//				panic("mock out the CreateAppSQLAccess method")
 //			},
 //			CreateChannelFunc: func(ctx context.Context, workspace *entity.Workspace, channel *entity.Channel) error {
 //				panic("mock out the CreateChannel method")
@@ -83,7 +86,7 @@ var _ Repository = &RepositoryMock{}
 //			DeactivateOrganizationAccountFunc: func(ctx context.Context, accountID string, deactivateAccountID string, organizationID string) error {
 //				panic("mock out the DeactivateOrganizationAccount method")
 //			},
-//			DeleteAppFunc: func(ctx context.Context, appID string, tx *sql.Tx) error {
+//			DeleteAppFunc: func(ctx context.Context, app *entity.App, tx *sql.Tx) error {
 //				panic("mock out the DeleteApp method")
 //			},
 //			DeleteAppItemByExternalIDFunc: func(ctx context.Context, workspace *entity.Workspace, kind string, externalID string, tx *sql.Tx) error {
@@ -281,7 +284,7 @@ var _ Repository = &RepositoryMock{}
 //			InsertAccountSessionFunc: func(ctx context.Context, accountSession *entity.AccountSession) error {
 //				panic("mock out the InsertAccountSession method")
 //			},
-//			InsertAppFunc: func(ctx context.Context, app *entity.App, tx *sql.Tx) error {
+//			InsertAppFunc: func(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) error {
 //				panic("mock out the InsertApp method")
 //			},
 //			InsertAppItemFunc: func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error {
@@ -479,6 +482,9 @@ var _ Repository = &RepositoryMock{}
 //			ReleaseUsersLockFunc: func(workspaceID string, lock *entity.UsersLock) error {
 //				panic("mock out the ReleaseUsersLock method")
 //			},
+//			RemoveSQLUserFunc: func(ctx context.Context, username string) error {
+//				panic("mock out the RemoveSQLUser method")
+//			},
 //			RenameTableFunc: func(ctx context.Context, workspaceID string, tableName string, newName string) error {
 //				panic("mock out the RenameTable method")
 //			},
@@ -518,7 +524,7 @@ var _ Repository = &RepositoryMock{}
 //			UpdateAccountSessionLastAccessFunc: func(ctx context.Context, accountID string, accountSessionID string, now time.Time) error {
 //				panic("mock out the UpdateAccountSessionLastAccess method")
 //			},
-//			UpdateAppFunc: func(ctx context.Context, app *entity.App, tx *sql.Tx) error {
+//			UpdateAppFunc: func(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) error {
 //				panic("mock out the UpdateApp method")
 //			},
 //			UpdateAppItemFunc: func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error {
@@ -639,6 +645,9 @@ type RepositoryMock struct {
 	// CountSuccessfulDataLogsForDemoFunc mocks the CountSuccessfulDataLogsForDemo method.
 	CountSuccessfulDataLogsForDemoFunc func(ctx context.Context, workspaceID string) (int64, error)
 
+	// CreateAppSQLAccessFunc mocks the CreateAppSQLAccess method.
+	CreateAppSQLAccessFunc func(ctx context.Context, workspaceID string, app *entity.App) error
+
 	// CreateChannelFunc mocks the CreateChannel method.
 	CreateChannelFunc func(ctx context.Context, workspace *entity.Workspace, channel *entity.Channel) error
 
@@ -661,7 +670,7 @@ type RepositoryMock struct {
 	DeactivateOrganizationAccountFunc func(ctx context.Context, accountID string, deactivateAccountID string, organizationID string) error
 
 	// DeleteAppFunc mocks the DeleteApp method.
-	DeleteAppFunc func(ctx context.Context, appID string, tx *sql.Tx) error
+	DeleteAppFunc func(ctx context.Context, app *entity.App, tx *sql.Tx) error
 
 	// DeleteAppItemByExternalIDFunc mocks the DeleteAppItemByExternalID method.
 	DeleteAppItemByExternalIDFunc func(ctx context.Context, workspace *entity.Workspace, kind string, externalID string, tx *sql.Tx) error
@@ -859,7 +868,7 @@ type RepositoryMock struct {
 	InsertAccountSessionFunc func(ctx context.Context, accountSession *entity.AccountSession) error
 
 	// InsertAppFunc mocks the InsertApp method.
-	InsertAppFunc func(ctx context.Context, app *entity.App, tx *sql.Tx) error
+	InsertAppFunc func(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) error
 
 	// InsertAppItemFunc mocks the InsertAppItem method.
 	InsertAppItemFunc func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error
@@ -1056,6 +1065,9 @@ type RepositoryMock struct {
 	// ReleaseUsersLockFunc mocks the ReleaseUsersLock method.
 	ReleaseUsersLockFunc func(workspaceID string, lock *entity.UsersLock) error
 
+	// RemoveSQLUserFunc mocks the RemoveSQLUser method.
+	RemoveSQLUserFunc func(ctx context.Context, username string) error
+
 	// RenameTableFunc mocks the RenameTable method.
 	RenameTableFunc func(ctx context.Context, workspaceID string, tableName string, newName string) error
 
@@ -1096,7 +1108,7 @@ type RepositoryMock struct {
 	UpdateAccountSessionLastAccessFunc func(ctx context.Context, accountID string, accountSessionID string, now time.Time) error
 
 	// UpdateAppFunc mocks the UpdateApp method.
-	UpdateAppFunc func(ctx context.Context, app *entity.App, tx *sql.Tx) error
+	UpdateAppFunc func(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) error
 
 	// UpdateAppItemFunc mocks the UpdateAppItem method.
 	UpdateAppItemFunc func(ctx context.Context, kind string, upsertedAppItem *entity.AppItem, tx *sql.Tx) error
@@ -1311,6 +1323,15 @@ type RepositoryMock struct {
 			// WorkspaceID is the workspaceID argument value.
 			WorkspaceID string
 		}
+		// CreateAppSQLAccess holds details about calls to the CreateAppSQLAccess method.
+		CreateAppSQLAccess []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
+			// App is the app argument value.
+			App *entity.App
+		}
 		// CreateChannel holds details about calls to the CreateChannel method.
 		CreateChannel []struct {
 			// Ctx is the ctx argument value.
@@ -1384,8 +1405,8 @@ type RepositoryMock struct {
 		DeleteApp []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// AppID is the appID argument value.
-			AppID string
+			// App is the app argument value.
+			App *entity.App
 			// Tx is the tx argument value.
 			Tx *sql.Tx
 		}
@@ -2084,6 +2105,8 @@ type RepositoryMock struct {
 		InsertApp []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
 			// App is the app argument value.
 			App *entity.App
 			// Tx is the tx argument value.
@@ -2764,6 +2787,13 @@ type RepositoryMock struct {
 			// Lock is the lock argument value.
 			Lock *entity.UsersLock
 		}
+		// RemoveSQLUser holds details about calls to the RemoveSQLUser method.
+		RemoveSQLUser []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Username is the username argument value.
+			Username string
+		}
 		// RenameTable holds details about calls to the RenameTable method.
 		RenameTable []struct {
 			// Ctx is the ctx argument value.
@@ -2897,6 +2927,8 @@ type RepositoryMock struct {
 		UpdateApp []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+			// WorkspaceID is the workspaceID argument value.
+			WorkspaceID string
 			// App is the app argument value.
 			App *entity.App
 			// Tx is the tx argument value.
@@ -3134,6 +3166,7 @@ type RepositoryMock struct {
 	lockClearUserSegmentQueue                 sync.RWMutex
 	lockConsumeInvitation                     sync.RWMutex
 	lockCountSuccessfulDataLogsForDemo        sync.RWMutex
+	lockCreateAppSQLAccess                    sync.RWMutex
 	lockCreateChannel                         sync.RWMutex
 	lockCreateOrganization                    sync.RWMutex
 	lockCreateSubscriptionList                sync.RWMutex
@@ -3273,6 +3306,7 @@ type RepositoryMock struct {
 	lockMigrateTable                          sync.RWMutex
 	lockPreviewSegment                        sync.RWMutex
 	lockReleaseUsersLock                      sync.RWMutex
+	lockRemoveSQLUser                         sync.RWMutex
 	lockRenameTable                           sync.RWMutex
 	lockResetAccountPassword                  sync.RWMutex
 	lockResetPostviewsAttributedForConversion sync.RWMutex
@@ -3877,6 +3911,46 @@ func (mock *RepositoryMock) CountSuccessfulDataLogsForDemoCalls() []struct {
 	return calls
 }
 
+// CreateAppSQLAccess calls CreateAppSQLAccessFunc.
+func (mock *RepositoryMock) CreateAppSQLAccess(ctx context.Context, workspaceID string, app *entity.App) error {
+	if mock.CreateAppSQLAccessFunc == nil {
+		panic("RepositoryMock.CreateAppSQLAccessFunc: method is nil but Repository.CreateAppSQLAccess was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		WorkspaceID string
+		App         *entity.App
+	}{
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		App:         app,
+	}
+	mock.lockCreateAppSQLAccess.Lock()
+	mock.calls.CreateAppSQLAccess = append(mock.calls.CreateAppSQLAccess, callInfo)
+	mock.lockCreateAppSQLAccess.Unlock()
+	return mock.CreateAppSQLAccessFunc(ctx, workspaceID, app)
+}
+
+// CreateAppSQLAccessCalls gets all the calls that were made to CreateAppSQLAccess.
+// Check the length with:
+//
+//	len(mockedRepository.CreateAppSQLAccessCalls())
+func (mock *RepositoryMock) CreateAppSQLAccessCalls() []struct {
+	Ctx         context.Context
+	WorkspaceID string
+	App         *entity.App
+} {
+	var calls []struct {
+		Ctx         context.Context
+		WorkspaceID string
+		App         *entity.App
+	}
+	mock.lockCreateAppSQLAccess.RLock()
+	calls = mock.calls.CreateAppSQLAccess
+	mock.lockCreateAppSQLAccess.RUnlock()
+	return calls
+}
+
 // CreateChannel calls CreateChannelFunc.
 func (mock *RepositoryMock) CreateChannel(ctx context.Context, workspace *entity.Workspace, channel *entity.Channel) error {
 	if mock.CreateChannelFunc == nil {
@@ -4170,23 +4244,23 @@ func (mock *RepositoryMock) DeactivateOrganizationAccountCalls() []struct {
 }
 
 // DeleteApp calls DeleteAppFunc.
-func (mock *RepositoryMock) DeleteApp(ctx context.Context, appID string, tx *sql.Tx) error {
+func (mock *RepositoryMock) DeleteApp(ctx context.Context, app *entity.App, tx *sql.Tx) error {
 	if mock.DeleteAppFunc == nil {
 		panic("RepositoryMock.DeleteAppFunc: method is nil but Repository.DeleteApp was just called")
 	}
 	callInfo := struct {
-		Ctx   context.Context
-		AppID string
-		Tx    *sql.Tx
+		Ctx context.Context
+		App *entity.App
+		Tx  *sql.Tx
 	}{
-		Ctx:   ctx,
-		AppID: appID,
-		Tx:    tx,
+		Ctx: ctx,
+		App: app,
+		Tx:  tx,
 	}
 	mock.lockDeleteApp.Lock()
 	mock.calls.DeleteApp = append(mock.calls.DeleteApp, callInfo)
 	mock.lockDeleteApp.Unlock()
-	return mock.DeleteAppFunc(ctx, appID, tx)
+	return mock.DeleteAppFunc(ctx, app, tx)
 }
 
 // DeleteAppCalls gets all the calls that were made to DeleteApp.
@@ -4194,14 +4268,14 @@ func (mock *RepositoryMock) DeleteApp(ctx context.Context, appID string, tx *sql
 //
 //	len(mockedRepository.DeleteAppCalls())
 func (mock *RepositoryMock) DeleteAppCalls() []struct {
-	Ctx   context.Context
-	AppID string
-	Tx    *sql.Tx
+	Ctx context.Context
+	App *entity.App
+	Tx  *sql.Tx
 } {
 	var calls []struct {
-		Ctx   context.Context
-		AppID string
-		Tx    *sql.Tx
+		Ctx context.Context
+		App *entity.App
+		Tx  *sql.Tx
 	}
 	mock.lockDeleteApp.RLock()
 	calls = mock.calls.DeleteApp
@@ -7022,23 +7096,25 @@ func (mock *RepositoryMock) InsertAccountSessionCalls() []struct {
 }
 
 // InsertApp calls InsertAppFunc.
-func (mock *RepositoryMock) InsertApp(ctx context.Context, app *entity.App, tx *sql.Tx) error {
+func (mock *RepositoryMock) InsertApp(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) error {
 	if mock.InsertAppFunc == nil {
 		panic("RepositoryMock.InsertAppFunc: method is nil but Repository.InsertApp was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
-		App *entity.App
-		Tx  *sql.Tx
+		Ctx         context.Context
+		WorkspaceID string
+		App         *entity.App
+		Tx          *sql.Tx
 	}{
-		Ctx: ctx,
-		App: app,
-		Tx:  tx,
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		App:         app,
+		Tx:          tx,
 	}
 	mock.lockInsertApp.Lock()
 	mock.calls.InsertApp = append(mock.calls.InsertApp, callInfo)
 	mock.lockInsertApp.Unlock()
-	return mock.InsertAppFunc(ctx, app, tx)
+	return mock.InsertAppFunc(ctx, workspaceID, app, tx)
 }
 
 // InsertAppCalls gets all the calls that were made to InsertApp.
@@ -7046,14 +7122,16 @@ func (mock *RepositoryMock) InsertApp(ctx context.Context, app *entity.App, tx *
 //
 //	len(mockedRepository.InsertAppCalls())
 func (mock *RepositoryMock) InsertAppCalls() []struct {
-	Ctx context.Context
-	App *entity.App
-	Tx  *sql.Tx
+	Ctx         context.Context
+	WorkspaceID string
+	App         *entity.App
+	Tx          *sql.Tx
 } {
 	var calls []struct {
-		Ctx context.Context
-		App *entity.App
-		Tx  *sql.Tx
+		Ctx         context.Context
+		WorkspaceID string
+		App         *entity.App
+		Tx          *sql.Tx
 	}
 	mock.lockInsertApp.RLock()
 	calls = mock.calls.InsertApp
@@ -9841,6 +9919,42 @@ func (mock *RepositoryMock) ReleaseUsersLockCalls() []struct {
 	return calls
 }
 
+// RemoveSQLUser calls RemoveSQLUserFunc.
+func (mock *RepositoryMock) RemoveSQLUser(ctx context.Context, username string) error {
+	if mock.RemoveSQLUserFunc == nil {
+		panic("RepositoryMock.RemoveSQLUserFunc: method is nil but Repository.RemoveSQLUser was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		Username string
+	}{
+		Ctx:      ctx,
+		Username: username,
+	}
+	mock.lockRemoveSQLUser.Lock()
+	mock.calls.RemoveSQLUser = append(mock.calls.RemoveSQLUser, callInfo)
+	mock.lockRemoveSQLUser.Unlock()
+	return mock.RemoveSQLUserFunc(ctx, username)
+}
+
+// RemoveSQLUserCalls gets all the calls that were made to RemoveSQLUser.
+// Check the length with:
+//
+//	len(mockedRepository.RemoveSQLUserCalls())
+func (mock *RepositoryMock) RemoveSQLUserCalls() []struct {
+	Ctx      context.Context
+	Username string
+} {
+	var calls []struct {
+		Ctx      context.Context
+		Username string
+	}
+	mock.lockRemoveSQLUser.RLock()
+	calls = mock.calls.RemoveSQLUser
+	mock.lockRemoveSQLUser.RUnlock()
+	return calls
+}
+
 // RenameTable calls RenameTableFunc.
 func (mock *RepositoryMock) RenameTable(ctx context.Context, workspaceID string, tableName string, newName string) error {
 	if mock.RenameTableFunc == nil {
@@ -10386,23 +10500,25 @@ func (mock *RepositoryMock) UpdateAccountSessionLastAccessCalls() []struct {
 }
 
 // UpdateApp calls UpdateAppFunc.
-func (mock *RepositoryMock) UpdateApp(ctx context.Context, app *entity.App, tx *sql.Tx) error {
+func (mock *RepositoryMock) UpdateApp(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) error {
 	if mock.UpdateAppFunc == nil {
 		panic("RepositoryMock.UpdateAppFunc: method is nil but Repository.UpdateApp was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
-		App *entity.App
-		Tx  *sql.Tx
+		Ctx         context.Context
+		WorkspaceID string
+		App         *entity.App
+		Tx          *sql.Tx
 	}{
-		Ctx: ctx,
-		App: app,
-		Tx:  tx,
+		Ctx:         ctx,
+		WorkspaceID: workspaceID,
+		App:         app,
+		Tx:          tx,
 	}
 	mock.lockUpdateApp.Lock()
 	mock.calls.UpdateApp = append(mock.calls.UpdateApp, callInfo)
 	mock.lockUpdateApp.Unlock()
-	return mock.UpdateAppFunc(ctx, app, tx)
+	return mock.UpdateAppFunc(ctx, workspaceID, app, tx)
 }
 
 // UpdateAppCalls gets all the calls that were made to UpdateApp.
@@ -10410,14 +10526,16 @@ func (mock *RepositoryMock) UpdateApp(ctx context.Context, app *entity.App, tx *
 //
 //	len(mockedRepository.UpdateAppCalls())
 func (mock *RepositoryMock) UpdateAppCalls() []struct {
-	Ctx context.Context
-	App *entity.App
-	Tx  *sql.Tx
+	Ctx         context.Context
+	WorkspaceID string
+	App         *entity.App
+	Tx          *sql.Tx
 } {
 	var calls []struct {
-		Ctx context.Context
-		App *entity.App
-		Tx  *sql.Tx
+		Ctx         context.Context
+		WorkspaceID string
+		App         *entity.App
+		Tx          *sql.Tx
 	}
 	mock.lockUpdateApp.RLock()
 	calls = mock.calls.UpdateApp

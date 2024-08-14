@@ -4,6 +4,7 @@ import Prism from 'prismjs'
 type CodeProps = {
   language: 'javascript' | 'json' | 'css' | 'markup' | 'sql'
   children?: ReactNode
+  style?: any
 }
 
 export default function Code(props: CodeProps) {
@@ -18,7 +19,7 @@ export default function Code(props: CodeProps) {
 
   return (
     <pre>
-      <code ref={codeEl} className={'language-' + props.language}>
+      <code style={props.style} ref={codeEl} className={'language-' + props.language}>
         {props.children}
       </code>
     </pre>

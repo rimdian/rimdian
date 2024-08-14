@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	SQLSelect     = "select"
-	SQLFullAccess = "*"
+	SQLSelect = "select"
 
 	AppTestScheduledTask = "app_test_scheduledtask"
 
@@ -39,6 +38,14 @@ var (
 		Version:          "1.0.0",
 		UIEndpoint:       "https://console.rimdian.com/apps/test",
 		WebhookEndpoint:  "API_ENDPOINT/api/webhook.receiver",
+		SQLAccess: AppSQLAccessManifest{
+			TablesPermissions: []*TablePermission{
+				{
+					Table: "user",
+					Read:  true,
+				},
+			},
+		},
 		DataHooks: DataHooksManifest{
 			{
 				ID:   "app_test_table_oncreate",
@@ -245,7 +252,7 @@ type AppManifest struct {
 	ExtraColumns     ExtraColumnsManifest `json:"extra_columns,omitempty"` // i.e: {"user": [customColumn1, customColumn2]}
 	Tasks            TasksManifest        `json:"tasks,omitempty"`
 	DataHooks        DataHooksManifest    `json:"data_hooks,omitempty"`
-	SQLQueries       SQLQueriesManifest   `json:"sql_queries,omitempty"`
+	SQLAccess        AppSQLAccessManifest `json:"sql_access,omitempty"`
 	CubeSchemas      CubeSchemasManifest  `json:"cube_schemas,omitempty"`
 }
 
@@ -341,12 +348,9 @@ func (x *AppManifest) Validate(installedApps InstalledApps, isReinstall bool) er
 
 	// TODO: verify that scheduled tasks id are prefixed with app ID
 
-	if x.SQLQueries != nil && len(x.SQLQueries) > 0 {
-		for _, query := range x.SQLQueries {
-			if err := query.Validate(); err != nil {
-				return err
-			}
-		}
+	// verify sql access
+	if err := x.SQLAccess.Validate(x.AppTables); err != nil {
+		return err
 	}
 
 	return nil
@@ -562,6 +566,72 @@ func DiffAppTables(from AppTablesManifest, to AppTablesManifest) (diff *AppTable
 	return diff, nil
 }
 
+type AppSQLAccessManifest struct {
+	TablesPermissions []*TablePermission  `json:"tables_permissions,omitempty"`
+	PredefinedQueries []*SQLQueryManifest `json:"predefined_queries,omitempty"`
+}
+
+type TablePermission struct {
+	Table string `json:"table"`
+	Read  bool   `json:"read"`
+	Write bool   `json:"write"`
+}
+
+func (x *AppSQLAccessManifest) Validate(appTables AppTablesManifest) error {
+
+	// tables allowed to read
+	readAllowed := []string{
+		"cart",
+		"cart_item",
+		"custom_event",
+		"device",
+		"order",
+		"order_item",
+		"pageview",
+		"postview",
+		"session",
+		"user",
+		"user_alias",
+	}
+
+	// add app tables
+	for _, table := range appTables {
+		readAllowed = append(readAllowed, table.Name)
+	}
+
+	// check that read tables are allowed
+	for _, perm := range x.TablesPermissions {
+
+		// read
+		if !govalidator.IsIn(perm.Table, readAllowed...) {
+			return eris.Errorf("table '%v' is not allowed to read", perm.Table)
+		}
+
+		// write
+		// tables allowed to write should belong to the app
+		found := false
+		for _, appTable := range appTables {
+			if appTable.Name == perm.Table {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return eris.Errorf("table '%v' is not allowed to write", perm.Table)
+		}
+
+	}
+
+	// check that predefined queries are valid
+	for _, query := range x.PredefinedQueries {
+		if err := query.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type DataHooksManifest []*DataHookManifest
 
 type DataHookManifest struct {
@@ -605,16 +675,14 @@ func (x *SQLQueryManifest) Validate() error {
 	}
 
 	// parse query to check if it's valid
-	if x.Query != SQLFullAccess {
 
-		if x.Type == SQLSelect && !strings.HasPrefix(x.Query, "SELECT ") && !strings.HasPrefix(x.Query, "select ") {
-			return eris.Errorf("query '%v' should start with SELECT statement", x.Query)
-		}
+	if x.Type == SQLSelect && !strings.HasPrefix(x.Query, "SELECT ") && !strings.HasPrefix(x.Query, "select ") {
+		return eris.Errorf("query '%v' should start with SELECT statement", x.Query)
+	}
 
-		_, err := sqlparser.Parse(x.Query)
-		if err != nil {
-			return eris.Wrap(err, "query is not valid")
-		}
+	_, err := sqlparser.Parse(x.Query)
+	if err != nil {
+		return eris.Wrap(err, "query is not valid")
 	}
 
 	return nil

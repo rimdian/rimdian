@@ -13,6 +13,7 @@ import (
 var (
 	migrations = map[float64]entity.MajorMigrationInterface{
 		// add new migrations here
+		42: migration.NewMigration43(),
 		41: migration.NewMigration42(),
 		40: migration.NewMigration41(),
 		39: migration.NewMigration40(),

@@ -400,7 +400,7 @@ func TaskExecUpgradeApp(ctx context.Context, pipe *TaskExecPipeline) (result *en
 			app.Manifest = *newManifest
 			app.Status = entity.AppStatusInit
 
-			if err := pipe.Repository.UpdateApp(ctx, app, tx); err != nil {
+			if err := pipe.Repository.UpdateApp(ctx, pipe.Workspace.ID, app, tx); err != nil {
 				return 500, eris.Wrap(err, "TaskUpgradeApp")
 			}
 
@@ -432,7 +432,7 @@ func abortWithError(ctx context.Context, pipe *TaskExecPipeline, app *entity.App
 
 		app.Status = entity.AppStatusStopped
 
-		if err := pipe.Repository.UpdateApp(ctx, app, tx); err != nil {
+		if err := pipe.Repository.UpdateApp(ctx, pipe.Workspace.ID, app, tx); err != nil {
 			return 500, eris.Wrap(err, "TaskUpgradeApp")
 		}
 

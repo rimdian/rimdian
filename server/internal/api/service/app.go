@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -144,7 +146,7 @@ func (svc *ServiceImpl) AppMutateState(ctx context.Context, accountID string, pa
 		app.ApplyMutations(params.Mutations)
 		app.UpdatedAt = time.Now()
 
-		if err := svc.Repo.UpdateApp(ctx, app, tx); err != nil {
+		if err := svc.Repo.UpdateApp(ctx, workspace.ID, app, tx); err != nil {
 			if sqlscan.NotFound(err) {
 				return 400, err
 			}
@@ -188,23 +190,42 @@ func (svc *ServiceImpl) AppExecQuery(ctx context.Context, accountID string, para
 
 	query := ""
 
-	if app.Manifest.SQLQueries == nil {
+	if app.Manifest.SQLAccess.PredefinedQueries == nil {
 		return result, 400, eris.New("AppExecQuery: app has no SQL queries")
 	}
 
 	// find query
-	for _, q := range app.Manifest.SQLQueries {
+	for _, q := range app.Manifest.SQLAccess.PredefinedQueries {
 		if q.ID == params.QueryID {
 			query = q.Query // use predefined query
-			if q.Query == entity.SQLFullAccess {
-				query = params.Query // use custom query
-			}
 			break
 		}
 	}
 
 	if query == "" {
 		return result, 400, eris.New("AppExecQuery: query not found")
+	}
+
+	// replace the PARAMS(n) with n x '?' in the query
+	// e.g. SELECT * FROM table WHERE id IN (PARAMS(3)) => SELECT * FROM table WHERE id IN (?,?,?)
+	if strings.Contains(query, "PARAMS(") {
+		// create a regex to match the PARAMS(n) pattern
+		re := regexp.MustCompile(`PARAMS\((\d+)\)`)
+
+		// find all matches
+		matches := re.FindAllString(query, -1)
+
+		// replace each match with n x '?'
+		for _, match := range matches {
+			// extract the number
+			n, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(match, "PARAMS("), ")"))
+			if err != nil {
+				return result, 400, eris.Wrap(err, "AppExecQuery")
+			}
+
+			// replace the match with n x '?'
+			query = strings.Replace(query, match, strings.Repeat("?,", n-1)+"?", 1)
+		}
 	}
 
 	// start timer
@@ -269,7 +290,7 @@ func (svc *ServiceImpl) AppActivate(ctx context.Context, accountID string, param
 	// save app state
 	code, err = svc.Repo.RunInTransactionForWorkspace(ctx, workspace.ID, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
 
-		if err := svc.Repo.UpdateApp(ctx, app, tx); err != nil {
+		if err := svc.Repo.UpdateApp(ctx, workspace.ID, app, tx); err != nil {
 			if sqlscan.NotFound(err) {
 				return 400, err
 			}
@@ -338,7 +359,7 @@ func (svc *ServiceImpl) AppDelete(ctx context.Context, accountID string, params 
 	app.DeletedAt = entity.TimePtr(time.Now())
 
 	code, err = svc.Repo.RunInTransactionForWorkspace(ctx, workspace.ID, func(ctx context.Context, tx *sql.Tx) (code int, err error) {
-		if err := svc.Repo.DeleteApp(ctx, app.ID, tx); err != nil {
+		if err := svc.Repo.DeleteApp(ctx, app, tx); err != nil {
 			return 500, eris.Wrap(err, "AppDelete")
 		}
 		return 200, nil
@@ -464,7 +485,7 @@ func (svc *ServiceImpl) AppUpgrade(ctx context.Context, accountID string, params
 
 		app.Status = entity.AppStatusUpgrading
 
-		if err := svc.Repo.UpdateApp(ctx, app, tx); err != nil {
+		if err := svc.Repo.UpdateApp(ctx, workspace.ID, app, tx); err != nil {
 			return 500, eris.Wrap(err, "AppStop")
 		}
 
@@ -524,7 +545,7 @@ func (svc *ServiceImpl) AppStop(ctx context.Context, accountID string, params *d
 			return 500, eris.Wrap(err, "AppStop")
 		}
 
-		if err := svc.Repo.UpdateApp(ctx, app, tx); err != nil {
+		if err := svc.Repo.UpdateApp(ctx, workspace.ID, app, tx); err != nil {
 			return 500, eris.Wrap(err, "AppStop")
 		}
 
@@ -622,8 +643,8 @@ func (svc *ServiceImpl) AppInstall(ctx context.Context, accountID string, params
 		return nil, 400, eris.New("AppInstall: secret_key is required")
 	}
 
+	// encrypt app secret key
 	encrypted, err := common.EncryptString(strings.TrimSpace(*params.SecretKey), svc.Config.SECRET_KEY)
-
 	if err != nil {
 		return nil, 500, eris.Wrap(err, "AppInstall")
 	}
@@ -634,12 +655,12 @@ func (svc *ServiceImpl) AppInstall(ctx context.Context, accountID string, params
 
 		// delete previous app if we reinstall it
 		if params.Reinstall {
-			if err := svc.Repo.DeleteApp(ctx, installedApp.Manifest.ID, tx); err != nil {
+			if err := svc.Repo.DeleteApp(ctx, installedApp, tx); err != nil {
 				return 500, eris.Wrap(err, "AppInstall")
 			}
 		}
 
-		if err := svc.Repo.InsertApp(ctx, installedApp, tx); err != nil {
+		if err := svc.Repo.InsertApp(ctx, workspace.ID, installedApp, tx); err != nil {
 			return 500, eris.Wrap(err, "AppInstall")
 		}
 

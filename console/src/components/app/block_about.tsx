@@ -18,6 +18,7 @@ import { css } from '@emotion/css'
 import { useMemo } from 'react'
 import TableTag from 'components/common/partial_table_tag'
 import { map, size } from 'lodash'
+import { faCircleXmark } from '@fortawesome/free-solid-svg-icons'
 
 type BlockAboutAppProps = {
   manifest: AppManifest
@@ -336,26 +337,100 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
         </>
       )
     }
-    const sqlQueriesTab = {
-      key: 'sqlQuery',
-      label: (
-        <span>
-          SQL queries ({props.manifest.sql_queries ? props.manifest.sql_queries.length : 0})
-        </span>
-      ),
+
+    let sqlAccessCount = 0
+    if (props.manifest.sql_access) {
+      sqlAccessCount += props.manifest.sql_access.predefined_queries?.length || 0
+      sqlAccessCount += props.manifest.sql_access.tables_permissions?.length || 0
+    }
+
+    const tablePermissions = props.manifest.sql_access?.tables_permissions || []
+
+    // append app_tables to tablePermissions
+    if (props.manifest.app_tables) {
+      props.manifest.app_tables.forEach((table) => {
+        tablePermissions.push({
+          table: table.name,
+          read: true,
+          write: true
+        })
+      })
+    }
+
+    const sqlAccessTab = {
+      key: 'sqlAccess',
+      label: <span>SQL access ({sqlAccessCount})</span>,
       children: (
         <>
           <div className={CSS.margin_v_l}>
+            {tablePermissions.length > 0 && (
+              <Table
+                pagination={false}
+                size="middle"
+                dataSource={tablePermissions}
+                className={CSS.margin_t_l}
+                rowKey="table"
+                columns={[
+                  {
+                    title: 'Tables access',
+                    key: 'table',
+                    render: (record) => {
+                      return <TableTag table={record.table} />
+                    }
+                  },
+                  // read
+                  {
+                    title: (
+                      <>
+                        Read <div className={CSS.font_size_xxs}>SELECT</div>
+                      </>
+                    ),
+                    key: 'read',
+                    render: (record) => {
+                      if (record.read) {
+                        return <FontAwesomeIcon icon={faCircleCheck} className={CSS.text_green} />
+                      }
+                      return (
+                        <FontAwesomeIcon
+                          icon={faCircleXmark}
+                          className={CSS.text_stone + ' ' + CSS.opacity_30}
+                        />
+                      )
+                    }
+                  },
+                  // write
+                  {
+                    title: (
+                      <>
+                        Write <div className={CSS.font_size_xxs}>INSERT, UPDATE, DELETE</div>
+                      </>
+                    ),
+                    key: 'write',
+                    render: (record) => {
+                      if (record.write) {
+                        return <FontAwesomeIcon icon={faCircleCheck} className={CSS.text_green} />
+                      }
+                      return (
+                        <FontAwesomeIcon
+                          icon={faCircleXmark}
+                          className={CSS.text_stone + ' ' + CSS.opacity_30}
+                        />
+                      )
+                    }
+                  }
+                ]}
+              />
+            )}
             <Table
               // showHeader={false}
               pagination={false}
               size="middle"
-              dataSource={props.manifest.sql_queries}
+              dataSource={props.manifest.sql_access?.predefined_queries || []}
               className={CSS.margin_t_l}
               rowKey="id"
               columns={[
                 {
-                  title: 'Name',
+                  title: 'Predefined queries',
                   key: 'id',
                   width: '40%',
                   // className: 'text-right',
@@ -374,7 +449,7 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
                   }
                 },
                 {
-                  title: 'Query',
+                  title: 'SQL',
                   key: 'query',
                   render: (record: SqlQuery) => {
                     if (record.query === '*') {
@@ -384,8 +459,10 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
                     }
                     return (
                       <div>
-                        <div className={CSS.font_size_xs} style={{ wordBreak: 'break-all' }}>
-                          <Code language="sql">{record.query}</Code>
+                        <div className={CSS.font_size_xs}>
+                          <Code language="sql" style={{ overflowWrap: 'anywhere' }}>
+                            {record.query}
+                          </Code>
                         </div>
                         {record.test_args && (
                           <div>
@@ -405,13 +482,18 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
         </>
       )
     }
+
     const items = []
 
     if (extraColumnsCount > 0) items.push(extraColumnsTab)
     if (props.manifest.app_tables?.length) items.push(customTablesTab)
     if (size(props.manifest.cube_schemas) > 0) items.push(cubeSchemasTab)
     if (props.manifest.data_hooks?.length) items.push(dataHooksTab)
-    if (props.manifest.sql_queries?.length) items.push(sqlQueriesTab)
+    if (
+      props.manifest.sql_access?.tables_permissions ||
+      props.manifest.sql_access?.predefined_queries
+    )
+      items.push(sqlAccessTab)
     if (props.manifest.tasks?.length) items.push(tasksTab)
 
     items.push({

@@ -115,7 +115,6 @@ type AppExecQuery struct {
 	WorkspaceID string        `json:"workspace_id"`
 	AppID       string        `json:"app_id"`
 	QueryID     string        `json:"query_id"`
-	Query       string        `json:"query"`
 	Args        []interface{} `json:"args"`
 }
 
@@ -128,8 +127,8 @@ func (data *AppExecQuery) Validate() error {
 		return eris.New("app_id is required")
 	}
 
-	if data.QueryID == "" && data.Query == "" {
-		return eris.New("query_id or query is required")
+	if data.QueryID == "" {
+		return eris.New("query_id is required")
 	}
 
 	return nil

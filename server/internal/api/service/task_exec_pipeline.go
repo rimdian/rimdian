@@ -237,7 +237,7 @@ func (pipe *TaskExecPipeline) ProcessNextStep(ctx context.Context) {
 					app.ApplyMutations(pipe.TaskExecResult.AppStateMutations)
 					app.UpdatedAt = time.Now()
 
-					if err := pipe.Repository.UpdateApp(ctx, app, tx); err != nil {
+					if err := pipe.Repository.UpdateApp(ctx, pipe.Workspace.ID, app, tx); err != nil {
 						if sqlscan.NotFound(err) {
 							return 400, err
 						}

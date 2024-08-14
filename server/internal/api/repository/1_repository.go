@@ -107,6 +107,10 @@ type Repository interface {
 	RenameTable(ctx context.Context, workspaceID string, tableName string, newName string) (err error)
 	IsExistingTableTheSame(ctx context.Context, workspaceID string, table *entity.AppTableManifest) (err error)
 
+	// app sql access
+	CreateAppSQLAccess(ctx context.Context, workspaceID string, app *entity.App) (err error)
+	RemoveSQLUser(ctx context.Context, username string) (err error)
+
 	// extra column
 	AddColumn(ctx context.Context, workspace *entity.Workspace, tableName string, column *entity.TableColumn) error
 	DeleteColumn(ctx context.Context, workspace *entity.Workspace, tableName string, columnName string) error
@@ -282,11 +286,11 @@ type Repository interface {
 	DeleteOrderItem(ctx context.Context, orderItemID string, userID string, tx *sql.Tx) (err error)
 
 	// apps
-	InsertApp(ctx context.Context, app *entity.App, tx *sql.Tx) (err error)
-	DeleteApp(ctx context.Context, appID string, tx *sql.Tx) (err error)
+	InsertApp(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) (err error)
+	DeleteApp(ctx context.Context, app *entity.App, tx *sql.Tx) (err error)
 	ListApps(ctx context.Context, workspaceID string) (apps []*entity.App, err error)
 	GetApp(ctx context.Context, workspaceID string, appID string) (app *entity.App, err error)
-	UpdateApp(ctx context.Context, app *entity.App, tx *sql.Tx) (err error)
+	UpdateApp(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) (err error)
 }
 
 type RepositoryImpl struct {

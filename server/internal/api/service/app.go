@@ -660,10 +660,6 @@ func (svc *ServiceImpl) AppInstall(ctx context.Context, accountID string, params
 			}
 		}
 
-		if err := svc.Repo.InsertApp(ctx, workspace.ID, installedApp, tx); err != nil {
-			return 500, eris.Wrap(err, "AppInstall")
-		}
-
 		// install extra columns
 		if installedApp.Manifest.ExtraColumns != nil && len(installedApp.Manifest.ExtraColumns) > 0 {
 			for _, extraColumnsManifest := range installedApp.Manifest.ExtraColumns {
@@ -687,6 +683,10 @@ func (svc *ServiceImpl) AppInstall(ctx context.Context, accountID string, params
 					return 500, eris.Wrap(err, "AppInstall")
 				}
 			}
+		}
+
+		if err := svc.Repo.InsertApp(ctx, workspace.ID, installedApp, tx); err != nil {
+			return 500, eris.Wrap(err, "AppInstall")
 		}
 
 		// update system DB

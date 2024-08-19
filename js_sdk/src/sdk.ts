@@ -505,7 +505,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.10.0',
+    version: '2.12.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -1591,7 +1591,6 @@ const Rimdian: IRimdian = {
   _onReady: (cfg: IConfig) => {
     // avoid calling onReady twice
     if (Rimdian.isReady) return
-    Rimdian.isReady = true
 
     Rimdian.log('info', 'onReady() called')
 
@@ -1630,6 +1629,8 @@ const Rimdian: IRimdian = {
     Rimdian._handleDevice()
     // init session context after device
     Rimdian._handleSession()
+
+    Rimdian.isReady = true
 
     // execute queued functions
     if (Rimdian.onReadyQueue.length > 0) {
@@ -1720,7 +1721,7 @@ const Rimdian: IRimdian = {
 
   _normalizeUTMSource: (source: string) => {
     // replace 98ad0bb6e8ada73c81aab4e8c2637e7f.safeframe.googlesyndication.com by safeframe.googlesyndication.com
-    if (source.indexOf('safeframe.googlesyndication.com') !== -1) {
+    if (source && source.indexOf('safeframe.googlesyndication.com') !== -1) {
       return 'safeframe.googlesyndication.com'
     }
 

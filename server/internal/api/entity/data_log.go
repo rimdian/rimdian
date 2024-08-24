@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang-module/carbon/v2"
 	"github.com/google/uuid"
 	"github.com/rimdian/rimdian/internal/common/dto"
 	"github.com/tidwall/gjson"
@@ -256,15 +257,12 @@ func ExtractFieldValueFromGJSON(fieldDefinition *TableColumn, result gjson.Resul
 		}
 
 		// parse time
-		layout := time.RFC3339Nano
-		if fieldDefinition.Type == ColumnTypeDate {
-			layout = "2006-01-02"
+		parsed := carbon.Parse(result.String())
+		if parsed.Error != nil {
+			return nil, fmt.Errorf("field %v is not a valid date, got %v, err: %v", fieldDefinition.Name, result.String(), parsed.Error)
 		}
 
-		t, err := time.Parse(layout, result.String())
-		if err != nil {
-			return nil, fmt.Errorf("ExtractAppItemAndValidate, field %v is not a valid date, got %v, err: %v", fieldDefinition.Name, result.String(), err)
-		}
+		t := parsed.StdTime()
 
 		// apply clock difference on system fields
 		if fieldDefinition.Name == "created_at" || fieldDefinition.Name == "updated_at" {

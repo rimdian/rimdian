@@ -6,9 +6,11 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/golang-module/carbon/v2"
 	"github.com/rotisserie/eris"
 	"github.com/tidwall/gjson"
 )
@@ -735,11 +737,19 @@ func NewAppItemFromDataLog(dataLog *DataLog, clockDifference time.Duration, work
 		// updated_at is not in the definition
 		if fieldName == "updated_at" {
 			// parse time
-			t, errParse := time.Parse(time.RFC3339Nano, value.String())
-			if errParse != nil {
-				err = fmt.Errorf("ExtractAppItemAndValidate, field updated_at is not a valid date, got %v, err: %v", value.String(), err)
+			parsed := carbon.Parse(value.String())
+			if parsed.Error != nil {
+				err = fmt.Errorf("field updated_at is not a valid date, got %v, err: %v", value.String(), err)
 				return false
 			}
+
+			t := parsed.StdTime()
+
+			// t, errParse := time.Parse(time.RFC3339Nano, value.String())
+			// if errParse != nil {
+			// 	err = fmt.Errorf("field updated_at is not a valid date, got %v, err: %v", value.String(), err)
+			// 	return false
+			// }
 
 			// apply clock difference on system fields
 			// apply clockDifference if date in future
@@ -758,6 +768,7 @@ func NewAppItemFromDataLog(dataLog *DataLog, clockDifference time.Duration, work
 				fieldValue, errExtract := ExtractFieldValueFromGJSON(fieldDefinition, value, clockDifference)
 
 				if errExtract != nil {
+					log.Printf("ExtractAppItemAndValidate, err: %v.%v: %v\n", dataLog.Kind, fieldName, errExtract)
 					err = eris.Wrapf(errExtract, "%v.%v", dataLog.Kind, fieldName)
 					return false
 				}
@@ -769,6 +780,10 @@ func NewAppItemFromDataLog(dataLog *DataLog, clockDifference time.Duration, work
 		return true
 	})
 
+	if err != nil {
+		return nil, err
+	}
+
 	externalID := fields.GetExternalID()
 
 	if externalID == nil {
@@ -778,11 +793,12 @@ func NewAppItemFromDataLog(dataLog *DataLog, clockDifference time.Duration, work
 	createdAt := fields.GetCreatedAt()
 
 	if createdAt == nil {
-		return nil, eris.Errorf("%v.created_at is required", dataLog.Kind)
+		log.Printf("fields: %+v\n", fields)
+		return nil, eris.Errorf("%v.created_at is required (nil)", dataLog.Kind)
 	}
 
 	if createdAt.IsZero() {
-		return nil, eris.Errorf("%v.created_at is required", dataLog.Kind)
+		return nil, eris.Errorf("%v.created_at is required (zero)", dataLog.Kind)
 	}
 
 	// use createdAt as updatedAt if not provided

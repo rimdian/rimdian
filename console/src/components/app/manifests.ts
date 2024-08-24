@@ -255,8 +255,8 @@ const meta: AppManifest = {
   icon_url: 'https://eu.rimdian.com/images/apps/meta.png',
   short_description: 'Meta Conversions API & campaigns ROAS.',
   description:
-    'Send your conversions to the Meta API and sync your campaigns stats to compute your ROAS.',
-  version: '1.0.0',
+    'Send your conversions to the Meta API and sync your daily ads stats to compute your ROAS.',
+  version: '1.4.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
   data_hooks: [
@@ -289,85 +289,178 @@ const meta: AppManifest = {
       minutes_interval: 720
     }
   ],
-  app_tables: [
-    {
-      name: 'appx_meta_campaign',
-      description: 'Meta campaigns',
-      shard_key: ['external_id'],
-      unique_key: ['external_id'],
-      sort_key: ['created_at'],
-      columns: [
-        {
-          name: 'id',
-          type: 'varchar',
-          size: 64,
-          is_required: true,
-          description: 'ID (sha1 of external_id)'
+  cube_schemas: {
+    Appx_meta_daily_ad_insights: {
+      sql: 'SELECT * FROM appx_meta_daily_ad_insights',
+      title: 'Meta daily ad insights',
+      description: 'Meta daily ad insights',
+      joins: {
+        Session: {
+          relationship: 'one_to_many',
+          sql: '${CUBE}.campaign_external_id = ${Session}.utm_campaign'
+        }
+      },
+      measures: {
+        spend: {
+          type: 'sum',
+          sql: 'spend',
+          title: 'Sum of spend',
+          description: 'Sum of spend (converted in workspace currency)'
         },
-        {
-          name: 'external_id',
-          type: 'varchar',
-          size: 256,
-          is_required: true,
-          description: 'External ID'
+        impressions: {
+          type: 'sum',
+          sql: 'impressions',
+          title: 'Impressions',
+          description: 'Sum of impressions'
         },
-        {
-          name: 'created_at',
-          type: 'datetime',
-          is_required: true,
+        reach: {
+          type: 'sum',
+          sql: 'reach',
+          title: 'Reach',
+          description: 'Sum of unique users reached'
+        },
+        mixed_clicks: {
+          type: 'sum',
+          sql: 'mixed_clicks',
+          title: 'Mixed clicks',
+          description: 'Sum of ad interactions + outbound clicks'
+        },
+        cpc_avg: {
+          type: 'avg',
+          sql: 'cpc',
+          title: 'Avg CPC',
+          description: 'Average CPC'
+        },
+        cpc_sum: {
+          type: 'sum',
+          sql: 'cpc',
+          title: 'Total CPC',
+          description: 'Sum of CPC'
+        },
+        cpm_avg: {
+          type: 'avg',
+          sql: 'cpm',
+          title: 'Avg CPM',
+          description: 'Average CPM'
+        },
+        cpm_sum: {
+          type: 'sum',
+          sql: 'cpm',
+          title: 'Total CPM',
+          description: 'Sum of CPM'
+        },
+        cpp_avg: {
+          type: 'avg',
+          sql: 'cpp',
+          title: 'Avg CPP',
+          description: 'Average CPP'
+        },
+        mixed_ctr: {
+          type: 'avg',
+          sql: 'mixed_ctr',
+          title: 'Mixed CTR',
+          description: 'Average mixed CTR (interactions + outbound clicks)'
+        },
+        outbound_clicks: {
+          type: 'sum',
+          sql: 'outbound_clicks',
+          title: 'Outbound clicks',
+          description: 'Sum of outbound clicks'
+        },
+        outbound_clicks_ctr: {
+          type: 'avg',
+          sql: 'outbound_clicks_ctr',
+          title: 'Outbound clicks CTR',
+          description: 'Average outbound clicks CTR'
+        },
+        roas_linear: {
+          type: 'number',
+          sql: 'SUM(${Session.linear_amount_attributed}) / SUM(${CUBE.spend})',
+          title: 'ROAS linear',
+          description:
+            'Return on ad spend with linear attribution (Session.linear_amount_attributed / Appx_meta_daily_ad_insights.spend)'
+        },
+        roas_contributive: {
+          type: 'number',
+          sql: '${Order.subtotal_sum} / ${CUBE.spend}',
+          title: 'ROAS contributive',
+          description:
+            'Return on ad spend with contributive attribution (Order.subtotal_sum / Appx_meta_daily_ad_insights.spend)'
+        }
+      },
+      dimensions: {
+        id: {
+          type: 'string',
+          sql: 'id',
+          primaryKey: true,
+          shown: false,
+          title: 'ID',
+          description: 'ID (sha1 of ad_id + metrics_date)'
+        },
+        created_at: {
+          type: 'time',
+          sql: 'created_at',
+          title: 'Created at',
           description: 'Created at'
         },
-        {
-          name: 'fields_timestamp',
-          type: 'json',
-          is_required: true,
-          description: 'Fields timestamp'
+        metrics_date: {
+          type: 'time',
+          sql: 'metrics_date',
+          title: 'Metric date',
+          description: 'Metric date'
         },
-        {
-          name: 'db_created_at',
-          type: 'timestamp',
-          size: 6,
-          is_required: true,
-          description: 'DB created at',
-          default_timestamp: 'CURRENT_TIMESTAMP(6)'
+        campaign_external_id: {
+          type: 'string',
+          sql: 'campaign_external_id',
+          title: 'Campaign external ID',
+          description: 'Campaign external ID'
         },
-        {
-          name: 'db_updated_at',
-          type: 'timestamp',
-          is_required: true,
-          description: 'DB updated at',
-          default_timestamp: 'CURRENT_TIMESTAMP',
-          extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
-        },
-        {
-          name: 'campaign_id',
-          type: 'varchar',
-          size: 256,
-          is_required: true,
-          description: 'Campaign ID'
-        },
-        {
-          name: 'account_id',
-          type: 'varchar',
-          size: 256,
-          is_required: true,
-          description: 'Account ID'
-        },
-        {
-          name: 'name',
-          type: 'varchar',
-          size: 256,
-          is_required: true,
+        campaign_name: {
+          type: 'string',
+          sql: 'campaign_name',
+          title: 'Campaign name',
           description: 'Campaign name'
+        },
+        adset_external_id: {
+          type: 'string',
+          sql: 'adset_external_id',
+          title: 'Adset external ID',
+          description: 'Adset external ID'
+        },
+        adset_name: {
+          type: 'string',
+          sql: 'adset_name',
+          title: 'Adset name',
+          description: 'Adset name'
+        },
+        ad_external_id: {
+          type: 'string',
+          sql: 'ad_external_id',
+          title: 'Ad external ID',
+          description: 'Ad external ID'
+        },
+        ad_name: {
+          type: 'string',
+          sql: 'ad_name',
+          title: 'Ad name',
+          description: 'Ad name'
+        },
+        currency_source: {
+          type: 'string',
+          sql: 'currency_source',
+          title: 'Ad account source currency',
+          description: 'Ad account source currency'
         }
-      ]
-    },
-    // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/insights
+      }
+    }
+  },
+  app_tables: [
+    // fields: https://developers.facebook.com/docs/marketing-api/reference/adgroup/insights/
     {
-      name: 'appx_meta_campaign_metric',
-      description: 'Meta campaigns daily metrics',
+      name: 'appx_meta_daily_ad_insights',
+      description: 'Meta daily ad insights',
       shard_key: ['campaign_external_id', 'metrics_date'],
-      unique_key: ['campaign_external_id', 'metrics_date'],
+      unique_key: ['campaign_external_id', 'adset_external_id', 'ad_external_id', 'metrics_date'],
       sort_key: ['metrics_date'],
       indexes: [],
       columns: [
@@ -414,23 +507,125 @@ const meta: AppManifest = {
           extra_definition: 'ON UPDATE CURRENT_TIMESTAMP'
         },
         {
+          name: 'metrics_date',
+          type: 'datetime',
+          is_required: true,
+          description: 'Metric date'
+        },
+        {
           name: 'campaign_external_id',
           type: 'varchar',
-          size: 256,
+          size: 128,
           is_required: true,
           description: 'Campaign external ID'
         },
         {
-          name: 'clicks',
-          type: 'number',
+          name: 'campaign_name',
+          type: 'varchar',
+          size: 128,
+          is_required: true,
+          description: 'Campaign name'
+        },
+        {
+          name: 'adset_external_id',
+          type: 'varchar',
+          size: 128,
           is_required: false,
-          description: 'Clicks'
+          description: 'Adset external ID'
+        },
+        {
+          name: 'adset_name',
+          type: 'varchar',
+          size: 128,
+          is_required: false,
+          description: 'Adset name'
+        },
+        {
+          name: 'ad_external_id',
+          type: 'varchar',
+          size: 128,
+          is_required: false,
+          description: 'Ad external ID'
+        },
+        {
+          name: 'ad_name',
+          type: 'varchar',
+          size: 128,
+          is_required: false,
+          description: 'Ad name'
         },
         {
           name: 'spend',
           type: 'number',
           is_required: false,
-          description: `The estimated total amount of money you've spent on your campaign, ad set or ad during its schedule. This metric is estimated.`
+          description: 'Spend (converted in workspace currency)'
+        },
+        {
+          name: 'spend_source',
+          type: 'number',
+          is_required: false,
+          description: 'Spend (in ad account currency)'
+        },
+        {
+          name: 'currency_source',
+          type: 'varchar',
+          size: 32,
+          is_required: true,
+          description: 'Ad account source currency'
+        },
+        {
+          name: 'impressions',
+          type: 'number',
+          is_required: false,
+          description: 'Impressions'
+        },
+        {
+          name: 'reach',
+          type: 'number',
+          is_required: false,
+          description: 'Unique users reached'
+        },
+        {
+          name: 'mixed_clicks',
+          type: 'number',
+          is_required: false,
+          description: 'Ad interactions + outbound clicks'
+        },
+        {
+          name: 'cpc',
+          type: 'number',
+          is_required: false,
+          description: 'CPC'
+        },
+        {
+          name: 'cpm',
+          type: 'number',
+          is_required: false,
+          description: 'CPM'
+        },
+        {
+          name: 'cpp',
+          type: 'number',
+          is_required: false,
+          description: 'CPP'
+        },
+        {
+          name: 'mixed_ctr',
+          type: 'number',
+          is_required: false,
+          description: 'Mixed CTR (interactions + outbound clicks)'
+        },
+        {
+          name: 'outbound_clicks',
+          type: 'number',
+          is_required: false,
+          description: 'Outbound clicks'
+        },
+        {
+          name: 'outbound_clicks_ctr',
+          type: 'number',
+          is_required: false,
+          description: 'Outbound clicks CTR'
         }
       ]
     }

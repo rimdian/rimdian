@@ -20,7 +20,6 @@ import { AccountContextValue, useAccount } from 'components/login/context_accoun
 import DrawerShowUser from 'components/user/drawer_show'
 import { difference, forEach } from 'lodash'
 import { Segment } from 'components/segment/interfaces'
-import LicenseWarning from './block_license_warning'
 import { RimdianCubeProvider } from './context_cube'
 
 interface SegmentList {
@@ -316,7 +315,6 @@ export const CurrentWorkspaceCtx = () => {
         {showUserId && showUserId !== '' && (
           <DrawerShowUser workspaceCtx={ctx} userExternalId={showUserId} />
         )}
-        <LicenseWarning workspaceCtx={ctx} />
         {/* <BadgeRunningTasks
           organizationId={currentOrgCtx.organization.id}
           workspaceId={workspace.id}

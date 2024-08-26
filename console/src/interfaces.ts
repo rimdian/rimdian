@@ -756,10 +756,8 @@ export interface Workspace {
 }
 
 export interface LicenseInfo {
-  usq: number // user segments quota
-  dlo90: number // data logs over 90 days
+  rapps: boolean // has access to Rimdian Enterprise apps
   ar: boolean // has admin role
-  uslq: number // user subscription lists quota
 }
 
 export interface Session {

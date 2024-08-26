@@ -10,9 +10,7 @@ import {
   Tag,
   Progress,
   Popover,
-  message,
-  Modal,
-  Alert
+  message
 } from 'antd'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import { useMemo, useState } from 'react'
@@ -20,39 +18,17 @@ import { TreeNodeInput, HasLeaf } from './input'
 import { Segment } from './interfaces'
 import { Timezones } from 'utils/countries_timezones'
 import CSS from 'utils/css'
-import { forEach, size } from 'lodash'
+import { forEach } from 'lodash'
 
 const ButtonUpsertSegment = (props: { segment?: Segment }) => {
   const [drawserVisible, setDrawserVisible] = useState(false)
-  const workspaceCtx = useCurrentWorkspaceCtx()
-
-  const segmentsCount = useMemo(() => {
-    return size(workspaceCtx.segmentsMap)
-  }, [workspaceCtx.segmentsMap])
-
-  const max = workspaceCtx.workspace.license_info.usq
-  const onNewSegment = () => {
-    if (segmentsCount >= max) {
-      Modal.warning({
-        title: 'Quota reached',
-        content: (
-          <Alert
-            description={`You have reached your user segments quota of ${segmentsCount}/${max}. Please upgrade your license to create more segments.`}
-            type="warning"
-          />
-        )
-      })
-    } else {
-      setDrawserVisible(true)
-    }
-  }
 
   const button = props.segment ? (
     <Button type="primary" size="small" ghost onClick={() => setDrawserVisible(!drawserVisible)}>
       Edit segment
     </Button>
   ) : (
-    <Button type="primary" block ghost onClick={onNewSegment}>
+    <Button type="primary" block ghost>
       New segment
     </Button>
   )

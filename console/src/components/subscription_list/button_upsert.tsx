@@ -1,54 +1,20 @@
-import {
-  Button,
-  Drawer,
-  Form,
-  Input,
-  Select,
-  Space,
-  Tag,
-  message,
-  Modal,
-  Alert,
-  Switch
-} from 'antd'
+import { Button, Drawer, Form, Input, Select, Space, Tag, message, Switch } from 'antd'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
-import { useMemo, useState } from 'react'
-import { kebabCase, size } from 'lodash'
+import { useState } from 'react'
+import { kebabCase } from 'lodash'
 import { SubscriptionList } from 'interfaces'
 import EmailTemplateInput from 'components/assets/message_template/input_email'
 import Messages from 'utils/formMessages'
 
 const ButtonUpsertSubscriptionList = (props: { list?: SubscriptionList; channel?: string }) => {
   const [drawserVisible, setDrawserVisible] = useState(false)
-  const workspaceCtx = useCurrentWorkspaceCtx()
-
-  const listsCount = useMemo(() => {
-    return size(workspaceCtx.segmentsMap)
-  }, [workspaceCtx.segmentsMap])
-
-  const max = workspaceCtx.workspace.license_info.uslq
-  const onNewSubscriptionList = () => {
-    if (listsCount >= max) {
-      Modal.warning({
-        title: 'Quota reached',
-        content: (
-          <Alert
-            description={`You have reached your user subscription list quota of ${listsCount}/${max}. Please upgrade your license to create more segments.`}
-            type="warning"
-          />
-        )
-      })
-    } else {
-      setDrawserVisible(true)
-    }
-  }
 
   const button = props.list ? (
     <Button type="primary" size="small" ghost onClick={() => setDrawserVisible(!drawserVisible)}>
       Edit list
     </Button>
   ) : (
-    <Button type="primary" block ghost onClick={onNewSubscriptionList}>
+    <Button type="primary" block ghost>
       New list
     </Button>
   )

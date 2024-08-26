@@ -505,7 +505,7 @@ const Rimdian: IRimdian = {
     namespace: '_rmd_',
     cross_domains: [],
     ignored_origins: [],
-    version: '2.12.0',
+    version: '2.13.0',
     log_level: 'error',
     max_retry: 10,
     from_cm: false
@@ -675,6 +675,8 @@ const Rimdian: IRimdian = {
 
   // tracks the current pageview
   trackPageview: (data: any) => {
+    Rimdian.log('info', 'trackPageview()', data)
+
     if (!Rimdian.isReady) {
       Rimdian.log('debug', 'RMD is not yet ready for trackPageview, queuing function...')
       Rimdian._execWhenReady(() => Rimdian.trackPageview(data))
@@ -773,6 +775,8 @@ const Rimdian: IRimdian = {
 
   // tracks the current customEvent
   trackCustomEvent: (data: any) => {
+    Rimdian.log('info', 'trackCustomEvent()', data)
+
     if (!Rimdian.isReady) {
       Rimdian.log('debug', 'RMD is not yet ready for trackCustomEvent, queuing function...')
       Rimdian._execWhenReady(() => Rimdian.trackCustomEvent(data))
@@ -821,6 +825,8 @@ const Rimdian: IRimdian = {
   },
 
   trackCart: (data: ICart) => {
+    Rimdian.log('info', 'trackCart()', data)
+
     if (!Rimdian.isReady) {
       Rimdian.log('debug', 'RMD is not yet ready for trackCart, queuing function...')
       Rimdian._execWhenReady(() => Rimdian.trackCart(data))
@@ -896,6 +902,8 @@ const Rimdian: IRimdian = {
   },
 
   trackOrder: (data: IOrder) => {
+    Rimdian.log('info', 'trackOrder()', data)
+
     if (!Rimdian.isReady) {
       Rimdian.log('debug', 'RMD is not yet ready for trackOrder, queuing function...')
       Rimdian._execWhenReady(() => Rimdian.trackOrder(data))
@@ -943,6 +951,8 @@ const Rimdian: IRimdian = {
   },
 
   setDeviceContext: (data: IDevice) => {
+    Rimdian.log('info', 'setDeviceContext()', data)
+
     if (!Rimdian.isReady) {
       Rimdian.log('debug', 'RMD is not yet ready for setDeviceContext, queuing function...')
       Rimdian._execWhenReady(() => Rimdian.setDeviceContext(data))
@@ -970,6 +980,8 @@ const Rimdian: IRimdian = {
   },
 
   setSessionContext: (data: ISession) => {
+    Rimdian.log('info', 'setSessionContext()', data)
+
     if (!Rimdian.isReady) {
       Rimdian.log('debug', 'RMD is not yet ready for setSessionContext, queuing function...')
       Rimdian._execWhenReady(() => Rimdian.setSessionContext(data))
@@ -998,6 +1010,8 @@ const Rimdian: IRimdian = {
   // or user_alias if previous was anonymous
   // set new user fields and eventually enqueue user
   setUserContext: (data: IUser) => {
+    Rimdian.log('info', 'setUserContext()', data)
+
     if (!Rimdian.isReady) {
       Rimdian.log('debug', 'RMD is not yet ready for setUserContext, queuing function...')
       Rimdian._execWhenReady(() => Rimdian.setUserContext(data))

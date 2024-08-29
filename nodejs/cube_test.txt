@@ -1,0 +1,23 @@
+{
+    "cubeQuery": {
+                "measures": ["visitors.count"],
+                "timeDimensions": [],
+                "filters": [
+                    {
+                        "member": "visitors.name",
+                        "operator": "equals",
+                        "values": [null]
+                    }
+                ],
+                "timezone": "America/Los_Angeles"
+            }, 
+    "schemas": [
+        {
+            "fileName": "Visitors.js",
+            "content": "cube('visitors', {sql: 'select * from visitors',measures: {  count: {type: 'count'  }, unboundedCount: {type: 'count',rollingWindow: {  trailing: 'unbounded'}  }}, dimensions: {  createdAt: {type: 'time',sql: 'created_at'  },  name: {type: 'string',sql: 'name'  }}});"
+        }
+    ]
+}
+
+// base 64 encoded
+ewogICAgImN1YmVRdWVyeSI6IHsKICAgICAgICAgICAgICAgICJtZWFzdXJlcyI6IFsidmlzaXRvcnMuY291bnQiXSwKICAgICAgICAgICAgICAgICJ0aW1lRGltZW5zaW9ucyI6IFtdLAogICAgICAgICAgICAgICAgImZpbHRlcnMiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAibWVtYmVyIjogInZpc2l0b3JzLm5hbWUiLAogICAgICAgICAgICAgICAgICAgICAgICAib3BlcmF0b3IiOiAiZXF1YWxzIiwKICAgICAgICAgICAgICAgICAgICAgICAgInZhbHVlcyI6IFtudWxsXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAidGltZXpvbmUiOiAiQW1lcmljYS9Mb3NfQW5nZWxlcyIKICAgICAgICAgICAgfSwgCiAgICAic2NoZW1hcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmaWxlTmFtZSI6ICJWaXNpdG9ycy5qcyIsCiAgICAgICAgICAgICJjb250ZW50IjogImN1YmUoJ3Zpc2l0b3JzJywge3NxbDogJ3NlbGVjdCAqIGZyb20gdmlzaXRvcnMnLG1lYXN1cmVzOiB7ICBjb3VudDoge3R5cGU6ICdjb3VudCcgIH0sIHVuYm91bmRlZENvdW50OiB7dHlwZTogJ2NvdW50Jyxyb2xsaW5nV2luZG93OiB7ICB0cmFpbGluZzogJ3VuYm91bmRlZCd9ICB9fSwgZGltZW5zaW9uczogeyAgY3JlYXRlZEF0OiB7dHlwZTogJ3RpbWUnLHNxbDogJ2NyZWF0ZWRfYXQnICB9LCAgbmFtZToge3R5cGU6ICdzdHJpbmcnLHNxbDogJ25hbWUnICB9fX0pOyIKICAgICAgICB9CiAgICBdCn0=

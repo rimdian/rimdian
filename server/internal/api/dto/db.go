@@ -1,11 +1,39 @@
 package dto
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/rotisserie/eris"
 )
+
+// type DBAnalyticsQuery struct {
+// 	Measures       []string      `json:"measures"`
+// 	Dimensions     []string      `json:"dimensions"`
+// 	Filters        []interface{} `json:"filters"`
+// 	TimeDimensions []interface{} `json:"time_dimensions"`
+// 	Segments       []string      `json:"segments"`
+// 	Limit          *int64        `json:"limit,omitempty"`
+// 	Offset         *int64        `json:"offset,omitempty"`
+// 	Order          interface{}   `json:"order,omitempty"`
+// 	Timezone       string        `json:"timezone"`
+// 	RenewQuery     *bool         `json:"renew_query,omitempty"`
+// 	Ungrouped      *bool         `json:"ungrouped,omitempty"`
+// 	ResponseFormat *string       `json:"response_format,omitempty"`
+// 	Total          *bool         `json:"total,omitempty"`
+// }
+
+type DBAnalyticsResult struct {
+	SQL  string        `json:"sql"`
+	Args []interface{} `json:"args"`
+	Data interface{}   `json:"data"`
+}
+
+type DBAnalyticsParams struct {
+	WorkspaceID string          `json:"workspace_id"`
+	Query       json.RawMessage `json:"query"`
+}
 
 type DBSelectParams struct {
 	WorkspaceID string        `json:"workspace_id"`

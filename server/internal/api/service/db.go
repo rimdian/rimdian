@@ -10,8 +10,81 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/rimdian/rimdian/internal/api/dto"
+	"github.com/rimdian/rimdian/internal/api/entity"
 	"github.com/rotisserie/eris"
 )
+
+func (svc *ServiceImpl) DBAnalytics(ctx context.Context, accountID string, params *dto.DBAnalyticsParams) (result *dto.DBAnalyticsResult, code int, err error) {
+
+	workspace, code, err := svc.GetWorkspaceForAccount(ctx, accountID, params.WorkspaceID)
+
+	if err != nil {
+		return nil, code, eris.Wrap(err, "DBAnalytics")
+	}
+
+	payload := struct {
+		CubeQuery string        `json:"cubeQuery"`
+		Schemas   []interface{} `json:"schemas"`
+	}{
+		CubeQuery: string(params.Query),
+		Schemas:   []interface{}{},
+	}
+
+	files := []dto.CubeJSSchemaFile{}
+	schemasMap := entity.GenerateSchemas(workspace.InstalledApps)
+
+	for fileName, schema := range schemasMap {
+		files = append(files, dto.CubeJSSchemaFile{FileName: fileName + ".js", Content: "cube(" + fileName + "," + schema.BuildContent(fileName) + ")"})
+	}
+
+	// json encode payload
+	payloadJSON, err := json.Marshal(payload)
+
+	if err != nil {
+		return nil, 500, eris.Wrap(err, "DBAnalytics")
+	}
+
+	payloadB64 := base64.StdEncoding.EncodeToString(payloadJSON)
+
+	dir, err := GetNodeJSDir()
+	if err != nil {
+		return nil, 500, eris.Wrap(err, "DBAnalytics")
+	}
+
+	scriptPath := dir + "cube-to-query.js"
+
+	// svc.Logger.Printf("scriptPath: %v, payload %v", scriptPath, payloadB64)
+
+	// call nodejs cmd
+	data, err := exec.Command("node", scriptPath, payloadB64).Output()
+
+	if err != nil {
+		return nil, 500, eris.Wrap(err, "DBAnalytics")
+	}
+
+	// decode output
+	cubeResult := struct {
+		SQL  string        `json:"sql"`
+		Args []interface{} `json:"args"`
+	}{}
+
+	if err = json.Unmarshal(data, &cubeResult); err != nil {
+		return nil, 400, eris.Wrap(err, "DBAnalytics")
+	}
+
+	// TODO: extract measures and dimensions from params.Query raw JSON
+	// used to cast properly the output
+	columns := []string{}
+
+	// exec query
+	result, err = svc.Repo.QueryAnalytics(ctx, workspace, schemasMap, columns, cubeResult.SQL, cubeResult.Args)
+
+	if err != nil {
+		return nil, 500, eris.Wrap(err, "DBAnalytics")
+	}
+
+	return result, 200, nil
+}
 
 func (svc *ServiceImpl) DBSelect(ctx context.Context, accountID string, params *dto.DBSelectParams) (rows []map[string]interface{}, code int, err error) {
 

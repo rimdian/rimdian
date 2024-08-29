@@ -479,6 +479,9 @@ var _ Repository = &RepositoryMock{}
 //			PreviewSegmentFunc: func(ctx context.Context, workspaceID string, parentSegmentID *string, filter *entity.SegmentTreeNode, timezone string) (int64, string, []interface{}, error) {
 //				panic("mock out the PreviewSegment method")
 //			},
+//			QueryAnalyticsFunc: func(ctx context.Context, workspace *entity.Workspace, schemasMap map[string]*entity.CubeJSSchema, columns []string, query string, args []interface{}) (*dto.DBAnalyticsResult, error) {
+//				panic("mock out the QueryAnalytics method")
+//			},
 //			ReleaseUsersLockFunc: func(workspaceID string, lock *entity.UsersLock) error {
 //				panic("mock out the ReleaseUsersLock method")
 //			},
@@ -1061,6 +1064,9 @@ type RepositoryMock struct {
 
 	// PreviewSegmentFunc mocks the PreviewSegment method.
 	PreviewSegmentFunc func(ctx context.Context, workspaceID string, parentSegmentID *string, filter *entity.SegmentTreeNode, timezone string) (int64, string, []interface{}, error)
+
+	// QueryAnalyticsFunc mocks the QueryAnalytics method.
+	QueryAnalyticsFunc func(ctx context.Context, workspace *entity.Workspace, schemasMap map[string]*entity.CubeJSSchema, columns []string, query string, args []interface{}) (*dto.DBAnalyticsResult, error)
 
 	// ReleaseUsersLockFunc mocks the ReleaseUsersLock method.
 	ReleaseUsersLockFunc func(workspaceID string, lock *entity.UsersLock) error
@@ -2780,6 +2786,21 @@ type RepositoryMock struct {
 			// Timezone is the timezone argument value.
 			Timezone string
 		}
+		// QueryAnalytics holds details about calls to the QueryAnalytics method.
+		QueryAnalytics []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Workspace is the workspace argument value.
+			Workspace *entity.Workspace
+			// SchemasMap is the schemasMap argument value.
+			SchemasMap map[string]*entity.CubeJSSchema
+			// Columns is the columns argument value.
+			Columns []string
+			// Query is the query argument value.
+			Query string
+			// Args is the args argument value.
+			Args []interface{}
+		}
 		// ReleaseUsersLock holds details about calls to the ReleaseUsersLock method.
 		ReleaseUsersLock []struct {
 			// WorkspaceID is the workspaceID argument value.
@@ -3305,6 +3326,7 @@ type RepositoryMock struct {
 	lockMergeUserSessions                     sync.RWMutex
 	lockMigrateTable                          sync.RWMutex
 	lockPreviewSegment                        sync.RWMutex
+	lockQueryAnalytics                        sync.RWMutex
 	lockReleaseUsersLock                      sync.RWMutex
 	lockRemoveSQLUser                         sync.RWMutex
 	lockRenameTable                           sync.RWMutex
@@ -9880,6 +9902,58 @@ func (mock *RepositoryMock) PreviewSegmentCalls() []struct {
 	mock.lockPreviewSegment.RLock()
 	calls = mock.calls.PreviewSegment
 	mock.lockPreviewSegment.RUnlock()
+	return calls
+}
+
+// QueryAnalytics calls QueryAnalyticsFunc.
+func (mock *RepositoryMock) QueryAnalytics(ctx context.Context, workspace *entity.Workspace, schemasMap map[string]*entity.CubeJSSchema, columns []string, query string, args []interface{}) (*dto.DBAnalyticsResult, error) {
+	if mock.QueryAnalyticsFunc == nil {
+		panic("RepositoryMock.QueryAnalyticsFunc: method is nil but Repository.QueryAnalytics was just called")
+	}
+	callInfo := struct {
+		Ctx        context.Context
+		Workspace  *entity.Workspace
+		SchemasMap map[string]*entity.CubeJSSchema
+		Columns    []string
+		Query      string
+		Args       []interface{}
+	}{
+		Ctx:        ctx,
+		Workspace:  workspace,
+		SchemasMap: schemasMap,
+		Columns:    columns,
+		Query:      query,
+		Args:       args,
+	}
+	mock.lockQueryAnalytics.Lock()
+	mock.calls.QueryAnalytics = append(mock.calls.QueryAnalytics, callInfo)
+	mock.lockQueryAnalytics.Unlock()
+	return mock.QueryAnalyticsFunc(ctx, workspace, schemasMap, columns, query, args)
+}
+
+// QueryAnalyticsCalls gets all the calls that were made to QueryAnalytics.
+// Check the length with:
+//
+//	len(mockedRepository.QueryAnalyticsCalls())
+func (mock *RepositoryMock) QueryAnalyticsCalls() []struct {
+	Ctx        context.Context
+	Workspace  *entity.Workspace
+	SchemasMap map[string]*entity.CubeJSSchema
+	Columns    []string
+	Query      string
+	Args       []interface{}
+} {
+	var calls []struct {
+		Ctx        context.Context
+		Workspace  *entity.Workspace
+		SchemasMap map[string]*entity.CubeJSSchema
+		Columns    []string
+		Query      string
+		Args       []interface{}
+	}
+	mock.lockQueryAnalytics.RLock()
+	calls = mock.calls.QueryAnalytics
+	mock.lockQueryAnalytics.RUnlock()
 	return calls
 }
 

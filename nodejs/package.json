@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {},
   "dependencies": {
+    "@cubejs-backend/schema-compiler": "^0.35.77",
     "mysql": "^2.18.1",
     "mysql2": "^3.6.3",
     "nunjucks": "^3.2.4",

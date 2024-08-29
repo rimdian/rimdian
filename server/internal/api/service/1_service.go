@@ -104,8 +104,9 @@ type Service interface {
 	DataLogReprocessOne(ctx context.Context, accountID string, params *dto.DataLogReprocessOne) (result *common.ResponseForTaskQueue, code int, err error)
 	DataLogReprocessUntil(ctx context.Context, untilDate time.Time) (code int, err error)
 
-	// DB Select
+	// DB query
 	DBSelect(ctx context.Context, accountID string, params *dto.DBSelectParams) (rows []map[string]interface{}, code int, err error)
+	DBAnalytics(ctx context.Context, accountID string, params *dto.DBAnalyticsParams) (result *dto.DBAnalyticsResult, code int, err error)
 	DoDBSelect(workspaceID string, query string, args []interface{}) (jsonData []byte, err error)
 
 	// user

@@ -20,24 +20,27 @@ import { Timezones } from 'utils/countries_timezones'
 import CSS from 'utils/css'
 import { forEach } from 'lodash'
 
-const ButtonUpsertSegment = (props: { segment?: Segment }) => {
+const ButtonUpsertSegment = (props: {
+  segment?: Segment
+  btnType?: 'primary' | 'default' | 'dashed' | 'link' | 'text' | undefined
+  btnSize?: 'small' | 'middle' | 'large' | undefined
+}) => {
   const [drawserVisible, setDrawserVisible] = useState(false)
-
-  const button = props.segment ? (
-    <Button type="primary" size="small" ghost onClick={() => setDrawserVisible(!drawserVisible)}>
-      Edit segment
-    </Button>
-  ) : (
-    <Button type="primary" block ghost>
-      New segment
-    </Button>
-  )
 
   // but the drawer in a separate component to make sure the
   // form is reset when the drawer is closed
   return (
     <>
-      {button}
+      {
+        <Button
+          type={props.btnType || 'primary'}
+          size={props.btnSize || 'small'}
+          ghost
+          onClick={() => setDrawserVisible(!drawserVisible)}
+        >
+          {props.segment ? 'Edit segment' : 'Create'}
+        </Button>
+      }
       {drawserVisible && (
         <DrawerSegment segment={props.segment} setDrawserVisible={setDrawserVisible} />
       )}

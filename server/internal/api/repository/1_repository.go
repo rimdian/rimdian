@@ -291,9 +291,6 @@ type Repository interface {
 	ListApps(ctx context.Context, workspaceID string) (apps []*entity.App, err error)
 	GetApp(ctx context.Context, workspaceID string, appID string) (app *entity.App, err error)
 	UpdateApp(ctx context.Context, workspaceID string, app *entity.App, tx *sql.Tx) (err error)
-
-	// analytics
-	QueryAnalytics(ctx context.Context, workspace *entity.Workspace, schemasMap map[string]*entity.CubeJSSchema, columns []string, query string, args []interface{}) (result *dto.DBAnalyticsResult, err error)
 }
 
 type RepositoryImpl struct {

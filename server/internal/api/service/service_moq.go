@@ -97,9 +97,6 @@ var _ Service = &ServiceMock{}
 //			CubeJSSchemasFunc: func(ctx context.Context, accountID string, workspaceID string) (dto.CubeJSSchemas, int, error) {
 //				panic("mock out the CubeJSSchemas method")
 //			},
-//			DBAnalyticsFunc: func(ctx context.Context, accountID string, params *dto.DBAnalyticsParams) (*dto.DBAnalyticsResult, int, error) {
-//				panic("mock out the DBAnalytics method")
-//			},
 //			DBSelectFunc: func(ctx context.Context, accountID string, params *dto.DBSelectParams) ([]map[string]interface{}, int, error) {
 //				panic("mock out the DBSelect method")
 //			},
@@ -379,9 +376,6 @@ type ServiceMock struct {
 
 	// CubeJSSchemasFunc mocks the CubeJSSchemas method.
 	CubeJSSchemasFunc func(ctx context.Context, accountID string, workspaceID string) (dto.CubeJSSchemas, int, error)
-
-	// DBAnalyticsFunc mocks the DBAnalytics method.
-	DBAnalyticsFunc func(ctx context.Context, accountID string, params *dto.DBAnalyticsParams) (*dto.DBAnalyticsResult, int, error)
 
 	// DBSelectFunc mocks the DBSelect method.
 	DBSelectFunc func(ctx context.Context, accountID string, params *dto.DBSelectParams) ([]map[string]interface{}, int, error)
@@ -799,15 +793,6 @@ type ServiceMock struct {
 			AccountID string
 			// WorkspaceID is the workspaceID argument value.
 			WorkspaceID string
-		}
-		// DBAnalytics holds details about calls to the DBAnalytics method.
-		DBAnalytics []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// AccountID is the accountID argument value.
-			AccountID string
-			// Params is the params argument value.
-			Params *dto.DBAnalyticsParams
 		}
 		// DBSelect holds details about calls to the DBSelect method.
 		DBSelect []struct {
@@ -1377,7 +1362,6 @@ type ServiceMock struct {
 	lockChannelGroupUpsert                      sync.RWMutex
 	lockChannelUpdate                           sync.RWMutex
 	lockCubeJSSchemas                           sync.RWMutex
-	lockDBAnalytics                             sync.RWMutex
 	lockDBSelect                                sync.RWMutex
 	lockDataHookUpdate                          sync.RWMutex
 	lockDataLogImportFromQueue                  sync.RWMutex
@@ -2427,46 +2411,6 @@ func (mock *ServiceMock) CubeJSSchemasCalls() []struct {
 	mock.lockCubeJSSchemas.RLock()
 	calls = mock.calls.CubeJSSchemas
 	mock.lockCubeJSSchemas.RUnlock()
-	return calls
-}
-
-// DBAnalytics calls DBAnalyticsFunc.
-func (mock *ServiceMock) DBAnalytics(ctx context.Context, accountID string, params *dto.DBAnalyticsParams) (*dto.DBAnalyticsResult, int, error) {
-	if mock.DBAnalyticsFunc == nil {
-		panic("ServiceMock.DBAnalyticsFunc: method is nil but Service.DBAnalytics was just called")
-	}
-	callInfo := struct {
-		Ctx       context.Context
-		AccountID string
-		Params    *dto.DBAnalyticsParams
-	}{
-		Ctx:       ctx,
-		AccountID: accountID,
-		Params:    params,
-	}
-	mock.lockDBAnalytics.Lock()
-	mock.calls.DBAnalytics = append(mock.calls.DBAnalytics, callInfo)
-	mock.lockDBAnalytics.Unlock()
-	return mock.DBAnalyticsFunc(ctx, accountID, params)
-}
-
-// DBAnalyticsCalls gets all the calls that were made to DBAnalytics.
-// Check the length with:
-//
-//	len(mockedService.DBAnalyticsCalls())
-func (mock *ServiceMock) DBAnalyticsCalls() []struct {
-	Ctx       context.Context
-	AccountID string
-	Params    *dto.DBAnalyticsParams
-} {
-	var calls []struct {
-		Ctx       context.Context
-		AccountID string
-		Params    *dto.DBAnalyticsParams
-	}
-	mock.lockDBAnalytics.RLock()
-	calls = mock.calls.DBAnalytics
-	mock.lockDBAnalytics.RUnlock()
 	return calls
 }
 

@@ -188,7 +188,6 @@ func NewAPI(cfg *entity.Config, svc service.Service, log *logrus.Logger) *API {
 		r.Post("/api/app.execQuery", api.AppExecQuery)
 
 		r.Post("/api/db.select", api.DBSelect)
-		r.Post("/api/db.analytics", api.DBAnalytics)
 		r.Get("/api/cubejs.schemas", api.CubeJSSchemas)
 	})
 

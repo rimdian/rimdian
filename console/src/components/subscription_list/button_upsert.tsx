@@ -14,8 +14,8 @@ const ButtonUpsertSubscriptionList = (props: { list?: SubscriptionList; channel?
       Edit list
     </Button>
   ) : (
-    <Button type="primary" block ghost>
-      New list
+    <Button type="primary" size="small" ghost onClick={() => setDrawserVisible(!drawserVisible)}>
+      Create
     </Button>
   )
 

@@ -106,7 +106,6 @@ type Service interface {
 
 	// DB query
 	DBSelect(ctx context.Context, accountID string, params *dto.DBSelectParams) (rows []map[string]interface{}, code int, err error)
-	DBAnalytics(ctx context.Context, accountID string, params *dto.DBAnalyticsParams) (result *dto.DBAnalyticsResult, code int, err error)
 	DoDBSelect(workspaceID string, query string, args []interface{}) (jsonData []byte, err error)
 
 	// user

@@ -212,10 +212,7 @@ export type RenderKPIProps = {
 export const kpiCss = {
   self: css(
     {
-      overflow: 'hidden',
-      // '& :not(:last-child)': {
-      //   borderRight: '1px solid ' + borderColorSecondary
-      // },
+      // overflow: 'hidden',
       '& .echart > div': {
         cursor: 'default'
       }

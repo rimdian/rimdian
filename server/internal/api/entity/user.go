@@ -2243,8 +2243,8 @@ func NewUserCube() *CubeJSSchema {
 		Measures: map[string]CubeJSSchemaMeasure{
 			"count": {
 				Type:        "count",
-				Title:       "Count all",
-				Description: "Count all",
+				Title:       "Users",
+				Description: "Users count",
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
@@ -2257,6 +2257,22 @@ func NewUserCube() *CubeJSSchema {
 				Meta: MapOfInterfaces{
 					"hide_from_segmentation": true,
 				},
+			},
+			// average lifetime value
+			"avg_ltv": {
+				Type:        "avg",
+				SQL:         "${CUBE}.orders_ltv",
+				Title:       "Avg LTV",
+				Description: "Average lifetime value",
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
+				},
+			},
+			"avg_orders": {
+				Type:        "avg",
+				SQL:         "${CUBE}.orders_count",
+				Title:       "Avg orders",
+				Description: "Average orders count per user",
 			},
 		},
 		Dimensions: map[string]CubeJSSchemaDimension{

@@ -67,7 +67,15 @@ export const blockCss = {
 
   extra: css({
     fontSize: 14,
-    lineHeight: '32px',
+    lineHeight: '22px',
+    marginInlineStart: 'auto',
+    fontWeight: 400,
+    color: 'inherit'
+  }),
+
+  extraSmall: css({
+    fontSize: 14,
+    lineHeight: '18px',
     marginInlineStart: 'auto',
     fontWeight: 400,
     color: 'inherit'
@@ -83,7 +91,11 @@ const Block = (props: BlockProps) => {
         <div className={css([blockCss.head, props.small && blockCss.headSmall])}>
           <div className={blockCss.headWrapper}>
             {props.title && <div className={blockCss.title}>{props.title}</div>}
-            {props.extra && <div className={blockCss.extra}>{props.extra}</div>}
+            {props.extra && (
+              <div className={css([blockCss.extra, props.small && blockCss.extraSmall])}>
+                {props.extra}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -797,6 +797,12 @@ func NewOrderItemCube() *CubeJSSchema {
 				Title:       "Currency",
 				Description: "field: currency",
 			},
+			"image_url": {
+				SQL:         "image_url",
+				Type:        "string",
+				Title:       "Image URL",
+				Description: "field: image_url",
+			},
 		},
 	}
 }

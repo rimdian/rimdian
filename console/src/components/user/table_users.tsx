@@ -371,6 +371,7 @@ const BlockUsers = (props: BlockUsersProps) => {
         rowKey="id"
         className={blockCss.self}
         columns={columns}
+        size="middle"
       />
     </>
   )

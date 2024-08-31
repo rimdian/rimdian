@@ -1,4 +1,4 @@
-import { Row, Col, Popconfirm, Badge, Space, Tooltip, Tag, Button } from 'antd'
+import { Row, Col, Popconfirm, Badge, Space, Tooltip, Tag, Button, Divider } from 'antd'
 import { SubscriptionList } from 'interfaces'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import Layout from 'components/common/layout'
@@ -138,7 +138,7 @@ const RouteUsers = () => {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={24}>
         <Col span={5}>
           <BlockSidebarUsers
             segments={segments}
@@ -154,6 +154,9 @@ const RouteUsers = () => {
               currentSegment={currentSegment}
             />
           )}
+          <Divider plain orientation="left">
+            Users
+          </Divider>
           <BlockUsers
             timezone={accountCtx.account?.account.timezone || 'UTC'}
             segments={segments}

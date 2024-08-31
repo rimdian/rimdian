@@ -1155,7 +1155,7 @@ func NewOrderCube() *CubeJSSchema {
 			"count": {
 				Type:        "count",
 				Title:       "Orders",
-				Description: "Count all",
+				Description: "Orders count",
 			},
 			"unique_users": {
 				Type:        "countDistinct",
@@ -1185,46 +1185,31 @@ func NewOrderCube() *CubeJSSchema {
 				},
 			},
 			"subtotal_sum": {
-				Type:        "number",
-				SQL:         "COALESCE(SUM(${CUBE}.subtotal_price), 0)",
+				Type:        "sum",
+				SQL:         "${CUBE}.subtotal_price",
 				Title:       "Subtotal",
-				Description: "SUM(subtotal_price)",
+				Description: "SUM(order.subtotal_price)",
 				Meta: MapOfInterfaces{
 					"rimdian_format": "currency",
 				},
 			},
 			"acquisition_subtotal_sum": {
-				Type:        "number",
+				Type:        "sum",
 				Title:       "Acquisition: subtotal",
 				Description: "SUM(subtotal_price)",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.is_first_conversion = 1 THEN ${CUBE}.subtotal_price ELSE 0 END), 0)",
+				SQL:         "${CUBE}.subtotal_price",
+				Filters: []CubeJSSchemaMeasureFilter{
+					{SQL: "${CUBE}.is_first_conversion = 1"},
+				},
 				Meta: MapOfInterfaces{
 					"rimdian_format": "currency",
 				},
 			},
 			"retention_subtotal_sum": {
-				Type:        "number",
+				Type:        "sum",
 				Title:       "Retention Subtotal sum",
 				Description: "SUM(subtotal_price) WHERE is_first_conversion = 0",
-				SQL:         "COALESCE(SUM(CASE WHEN ${CUBE}.is_first_conversion = 0 THEN ${CUBE}.subtotal_price ELSE 0 END), 0)",
-				Meta: MapOfInterfaces{
-					"rimdian_format": "currency",
-				},
-			},
-			"avg_cart": {
-				Type:        "number",
-				Title:       "Average cart",
-				Description: "AVG(subtotal_price)",
-				SQL:         "COALESCE(AVG(${CUBE}.subtotal_price), 0)",
-				Meta: MapOfInterfaces{
-					"rimdian_format": "currency",
-				},
-			},
-			"acquisition_avg_cart": {
-				Type:        "number",
-				Title:       "Acquisition average cart",
-				Description: "AVG(subtotal_price) WHERE is_first_conversion = 1",
-				SQL:         "COALESCE(AVG(${CUBE}.subtotal_price), 0)",
+				SQL:         "${CUBE}.subtotal_price",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "${CUBE}.is_first_conversion = 0"},
 				},
@@ -1232,49 +1217,70 @@ func NewOrderCube() *CubeJSSchema {
 					"rimdian_format": "currency",
 				},
 			},
-			"retention_avg_cart": {
-				Type:        "number",
-				Title:       "Retention average cart",
-				Description: "AVG(subtotal_price) WHERE is_first_conversion IS FALSE",
-				SQL:         "COALESCE(AVG(${CUBE}.subtotal_price), 0)",
+			"avg_cart": {
+				Type:        "avg",
+				Title:       "Average cart",
+				Description: "AVG(subtotal_price)",
+				SQL:         "${CUBE}.subtotal_price",
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
+				},
+			},
+			"acquisition_avg_cart": {
+				Type:        "avg",
+				Title:       "Acquisition average cart",
+				Description: "AVG(subtotal_price) WHERE is_first_conversion = 1",
+				SQL:         "${CUBE}.subtotal_price",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "is_first_conversion IS FALSE"},
+					{SQL: "${CUBE}.is_first_conversion = 1"},
+				},
+				Meta: MapOfInterfaces{
+					"rimdian_format": "currency",
+				},
+			},
+			"retention_avg_cart": {
+				Type:        "avg",
+				Title:       "Retention average cart",
+				Description: "AVG(subtotal_price) WHERE is_first_conversion = 0",
+				SQL:         "${CUBE}.subtotal_price",
+				Filters: []CubeJSSchemaMeasureFilter{
+					{SQL: "${CUBE}.is_first_conversion = 0"},
 				},
 				Meta: MapOfInterfaces{
 					"rimdian_format": "currency",
 				},
 			},
 			"avg_ttc": {
-				Type:        "number",
+				Type:        "avg",
 				Title:       "Average time to conversion",
 				Description: "AVG(time_to_conversion) WHERE time_to_conversion > 0",
-				SQL:         "COALESCE(AVG(${CUBE}.time_to_conversion), 0)",
+				SQL:         "${CUBE}.time_to_conversion",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "time_to_conversion > 0"},
+					{SQL: "${CUBE}.time_to_conversion > 0"},
 				},
 				Meta: MapOfInterfaces{
 					"rimdian_format": "duration",
 				},
 			},
 			"acquisition_avg_ttc": {
-				Type:        "number",
+				Type:        "avg",
 				Title:       "Acquisition Average time to conversion",
 				Description: "AVG(time_to_conversion) WHERE time_to_conversion > 0 AND is_first_conversion IS TRUE",
-				SQL:         "COALESCE(AVG(${CUBE}.time_to_conversion), 0)",
+				SQL:         "${CUBE}.time_to_conversion",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "time_to_conversion > 0 AND is_first_conversion IS TRUE"},
+					{SQL: "${CUBE}.time_to_conversion > 0 AND ${CUBE}.is_first_conversion = 1"},
 				},
 				Meta: MapOfInterfaces{
 					"rimdian_format": "duration",
 				},
 			},
 			"retention_avg_ttc": {
-				Type:        "number",
+				Type:        "avg",
 				Title:       "Retention Average time to conversion",
 				Description: "AVG(time_to_conversion) WHERE time_to_conversion > 0 AND is_first_conversion IS FALSE",
-				SQL:         "COALESCE(AVG(${CUBE}.time_to_conversion), 0)",
+				SQL:         "${CUBE}.time_to_conversion",
 				Filters: []CubeJSSchemaMeasureFilter{
-					{SQL: "time_to_conversion > 0 AND is_first_conversion IS FALSE"},
+					{SQL: "${CUBE}.time_to_conversion > 0 AND ${CUBE}.is_first_conversion = 0"},
 				},
 				Meta: MapOfInterfaces{
 					"rimdian_format": "duration",

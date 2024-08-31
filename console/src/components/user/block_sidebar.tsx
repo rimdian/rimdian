@@ -67,7 +67,7 @@ interface BlockSidebarProps {
 
 const BlockSidebarUsers = (props: BlockSidebarProps) => {
   const workspaceCtx = useCurrentWorkspaceCtx()
-  const [_searchParams, setSearchParams] = useSearchParams()
+  const [, setSearchParams] = useSearchParams()
 
   return (
     <>

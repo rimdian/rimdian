@@ -1968,7 +1968,7 @@ func NewSessionCube() *CubeJSSchema {
 				Type:        "count",
 				SQL:         "id",
 				Title:       "Contributions count",
-				Description: "count of: conversion_id IS NOT NULL",
+				Description: "count of: Session.conversion_id IS NOT NULL",
 				Filters: []CubeJSSchemaMeasureFilter{
 					{SQL: "${CUBE}.conversion_id IS NOT NULL"},
 				},

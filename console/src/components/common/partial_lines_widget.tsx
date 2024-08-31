@@ -101,7 +101,7 @@ export const LinesWidget = (props: LinesWidgetProps) => {
     props.line1,
     props.timeDimension,
     props.workspaceCtx,
-    props.timeDimension,
+    props.schema,
     props.refreshKey,
     refreshKeyRef
   ])
@@ -124,9 +124,9 @@ export const LinesWidget = (props: LinesWidgetProps) => {
     props.line2,
     props.timeDimension,
     props.workspaceCtx,
-    props.timeDimension,
     props.refreshKey,
-    refreshKeyRef
+    refreshKeyRef,
+    props.schema
   ])
 
   // fetch
@@ -174,7 +174,7 @@ export const LinesWidget = (props: LinesWidgetProps) => {
       .finally(() => {
         setIsLoading(false)
       })
-  }, [line1Query, line2Query, cubeApi, props.refreshKey])
+  }, [line1Query, line2Query, cubeApi, props.refreshKey, props.line1.name, props.line2.name])
 
   const series: SeriesOption[] = useMemo(() => {
     return [
@@ -199,7 +199,14 @@ export const LinesWidget = (props: LinesWidgetProps) => {
         data: line1Graph?.series.map((item: any) => item.value as number) || []
       }
     ] as SeriesOption[]
-  }, [line1Graph, line2Graph])
+  }, [
+    line1Graph,
+    line2Graph,
+    props.line1.color,
+    props.line1.name,
+    props.line2.color,
+    props.line2.name
+  ])
 
   const categories = useMemo(() => {
     if (!line1Graph) return []

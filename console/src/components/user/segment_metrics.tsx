@@ -164,7 +164,7 @@ const SegmentMetrics = (props: SegmentMetricsProps) => {
               { measure: 'Session.orders_contributions', title: 'Contributions' },
               { measure: 'Session.linear_amount_attributed', title: 'Linear revenue' }
             ]}
-            timeDimension="Session.event_at_trunc"
+            timeDimension="Session.created_at_trunc"
             dateFrom={dayjs().subtract(90, 'days').startOf('day').format('YYYY-MM-DD')}
             dateTo={dayjs().endOf('day').format('YYYY-MM-DD')}
             dimensions={[
@@ -210,7 +210,7 @@ const SegmentMetrics = (props: SegmentMetricsProps) => {
             workspaceCtx={workspaceCtx}
             title="Top 5 products (90 days)"
             measures={[{ measure: 'Order_item.count', title: 'Sold' }]}
-            timeDimension="Session.event_at_trunc"
+            timeDimension="Order.created_at_trunc"
             dateFrom={dayjs().subtract(90, 'days').startOf('day').format('YYYY-MM-DD')}
             dateTo={dayjs().endOf('day').format('YYYY-MM-DD')}
             dimensions={[
@@ -291,7 +291,7 @@ const SegmentMetrics = (props: SegmentMetricsProps) => {
               { measure: 'Session.orders_contributions', title: 'Contributions' },
               { measure: 'Session.linear_amount_attributed', title: 'Linear revenue' }
             ]}
-            timeDimension="Session.event_at_trunc"
+            timeDimension="Session.created_at_trunc"
             dateFrom={dayjs().subtract(90, 'days').startOf('day').format('YYYY-MM-DD')}
             dateTo={dayjs().endOf('day').format('YYYY-MM-DD')}
             dimensions={[
@@ -337,7 +337,7 @@ const SegmentMetrics = (props: SegmentMetricsProps) => {
             workspaceCtx={workspaceCtx}
             title="Top 5 products (90 days)"
             measures={[{ measure: 'Order_item.count', title: 'Sold' }]}
-            timeDimension="Session.event_at_trunc"
+            timeDimension="Order.created_at_trunc"
             dateFrom={dayjs().subtract(90, 'days').startOf('day').format('YYYY-MM-DD')}
             dateTo={dayjs().endOf('day').format('YYYY-MM-DD')}
             dimensions={[

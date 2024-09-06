@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
 import { Query, ResultSet, SqlData } from '@cubejs-client/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useDateRangeCtx } from 'components/common/context_date_range'
 import { cloneDeep, set } from 'lodash'
 import { ButtonExpand } from 'components/common/button_table_expand'
 import { ButtonSQLExecuted, ExecutedSQL } from './button_sql_executed'
@@ -27,12 +26,20 @@ import {
   GenerateTableColumns,
   TableRow
 } from './tab_sessions'
+import DateRangeSelector, {
+  DateRangePreset,
+  DateRangeValue,
+  dateRangeValuesFromSearchParams,
+  toEndOfDay,
+  toStartOfDay,
+  updateSearchParams,
+  vsDateRangeValues
+} from 'components/common/partial_date_range'
 
 const TabAttributionSessionsNotMapped = () => {
   const accountCtx = useAccount()
   const workspaceCtx = useCurrentWorkspaceCtx()
-  const dateRangeCtx = useDateRangeCtx()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const isMounted = useRef(true)
   const paramsHash = useRef<string | undefined>(undefined)
   const mutexObj = useMemo(() => {
@@ -80,6 +87,8 @@ const TabAttributionSessionsNotMapped = () => {
   }, [measuresMap])
 
   const params: AttributionParams = useMemo(() => {
+    const [dateFrom, dateTo] = dateRangeValuesFromSearchParams(searchParams)
+    const [vsDateFrom, vsDateTo] = vsDateRangeValues(dateFrom, dateTo)
     // console.log('defaultMeasures', defaultMeasures)
     return {
       sortKey: searchParams.get('sortKey') || 'Session.count',
@@ -89,13 +98,13 @@ const TabAttributionSessionsNotMapped = () => {
       dimension3: searchParams.get('dimension3') || 'Session.utm_campaign',
       measures: searchParams.get('measures') || defaultMeasures.map((field) => field.key).join(','),
       segment: searchParams.get('segment') || '_all',
-      date_from: dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-      date_to: dateRangeCtx.dateRange[1].format('YYYY-MM-DD'),
-      vs_date_from: dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-      vs_date_to: dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD'),
-      refresh_key: searchParams.get('refresh_key') || ''
+      date_from: dateFrom,
+      date_to: dateTo,
+      vs_date_from: vsDateFrom,
+      vs_date_to: vsDateTo,
+      refresh_key: searchParams.get('refresh_key') || 'default'
     }
-  }, [searchParams, dateRangeCtx, defaultMeasures])
+  }, [searchParams, defaultMeasures])
 
   const measures: string[] = useMemo(() => {
     if (!measuresMap) return []
@@ -131,14 +140,8 @@ const TabAttributionSessionsNotMapped = () => {
           dimension: 'Session.created_at_trunc',
           granularity: null as any,
           compareDateRange: [
-            [
-              dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRange[1].format('YYYY-MM-DD')
-            ],
-            [
-              dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD')
-            ]
+            [toStartOfDay(params.date_from), toEndOfDay(params.date_to)],
+            [toStartOfDay(params.vs_date_from), toEndOfDay(params.vs_date_to)]
           ]
         }
       ],
@@ -149,7 +152,17 @@ const TabAttributionSessionsNotMapped = () => {
       limit: 1000,
       renewQuery: renewQuery
     }
-  }, [measures, params.sortKey, params.sortOrder, dateRangeCtx, accountCtx, params.refresh_key])
+  }, [
+    measures,
+    params.sortKey,
+    params.sortOrder,
+    accountCtx,
+    params.refresh_key,
+    params.date_from,
+    params.date_to,
+    params.vs_date_from,
+    params.vs_date_to
+  ])
 
   const defaultTableData: TableRow[] = useMemo(() => {
     return [
@@ -439,6 +452,17 @@ const TabAttributionSessionsNotMapped = () => {
           dimension2={params.dimension2}
           dimension3={params.dimension3}
           dimensionsMap={dimensionsMap}
+        />
+
+        <div className={CSS.topSeparator}></div>
+
+        <DateRangeSelector
+          preset={(searchParams.get('date_range') as DateRangePreset) || '30D'}
+          value={dateRangeValuesFromSearchParams(searchParams)}
+          // timezone={accountCtx.account?.account.timezone || 'UTC'}
+          onChange={(preset: DateRangePreset, range: DateRangeValue) => {
+            updateSearchParams(searchParams, setSearchParams, preset, range)
+          }}
         />
       </div>
 

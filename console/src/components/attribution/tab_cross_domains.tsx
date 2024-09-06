@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
 import { Filter, Query, ResultSet, SqlData } from '@cubejs-client/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useDateRangeCtx } from 'components/common/context_date_range'
 import { cloneDeep } from 'lodash'
 import FormatNumber from 'utils/format_number'
 import FormatCurrency from 'utils/format_currency'
@@ -18,6 +17,12 @@ import FormatGrowth from 'utils/format_growth'
 import { faCircleQuestion } from '@fortawesome/free-regular-svg-icons'
 import { Fullscreenable } from 'components/common/fullscreenable'
 import { useRimdianCube } from 'components/workspace/context_cube'
+import {
+  dateRangeValuesFromSearchParams,
+  toEndOfDay,
+  toStartOfDay,
+  vsDateRangeValues
+} from 'components/common/partial_date_range'
 
 interface Params {
   sortKey: string
@@ -33,7 +38,6 @@ interface Params {
 const TabAttributionCrossDomains = () => {
   const accountCtx = useAccount()
   const workspaceCtx = useCurrentWorkspaceCtx()
-  const dateRangeCtx = useDateRangeCtx()
   const [searchParams, setSearchParams] = useSearchParams()
   const isMounted = useRef(true)
   const paramsHash = useRef<string | undefined>(undefined)
@@ -45,17 +49,20 @@ const TabAttributionCrossDomains = () => {
   const refreshKeyRef = useRef('')
 
   const params: Params = useMemo(() => {
+    const [dateFrom, dateTo] = dateRangeValuesFromSearchParams(searchParams)
+    const [vsDateFrom, vsDateTo] = vsDateRangeValues(dateFrom, dateTo)
+
     return {
       sortKey: searchParams.get('sortKey') || 'Order.count',
       sortOrder: searchParams.get('sortOrder') || 'desc',
       conversions_filter: searchParams.get('conversions_filter') || 'all',
-      date_from: dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-      date_to: dateRangeCtx.dateRange[1].format('YYYY-MM-DD'),
-      vs_date_from: dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-      vs_date_to: dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD'),
-      refresh_key: searchParams.get('refresh_key') || ''
+      date_from: dateFrom,
+      date_to: dateTo,
+      vs_date_from: vsDateFrom,
+      vs_date_to: vsDateTo,
+      refresh_key: searchParams.get('refresh_key') || 'default'
     }
-  }, [searchParams, dateRangeCtx])
+  }, [searchParams])
 
   const baseQuery: Query = useMemo(() => {
     const filters: Filter[] = [
@@ -103,14 +110,8 @@ const TabAttributionCrossDomains = () => {
           dimension: 'Order.created_at_trunc',
           granularity: null as any,
           compareDateRange: [
-            [
-              dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRange[1].format('YYYY-MM-DD')
-            ],
-            [
-              dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD')
-            ]
+            [toStartOfDay(params.date_from), toEndOfDay(params.date_to)],
+            [toStartOfDay(params.vs_date_from), toEndOfDay(params.vs_date_to)]
           ]
         }
       ],
@@ -125,7 +126,10 @@ const TabAttributionCrossDomains = () => {
     params.sortKey,
     params.sortOrder,
     params.conversions_filter,
-    dateRangeCtx,
+    params.date_from,
+    params.date_to,
+    params.vs_date_from,
+    params.vs_date_to,
     accountCtx,
     params.refresh_key
   ])

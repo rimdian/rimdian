@@ -12,7 +12,7 @@ import { useRimdianCube } from './context_cube'
 export type UsersPerDeviceProps = {
   workspaceId: string
   timezone: string
-  refreshAt: number
+  refreshKey: string
   dateFrom: string
   dateTo: string
   dateFromPrevious: string
@@ -22,7 +22,7 @@ export type UsersPerDeviceProps = {
 
 export const UsersPerDevice = (props: UsersPerDeviceProps) => {
   const { cubeApi } = useRimdianCube()
-  const refreshAtRef = useRef(0)
+  const refreshKeyRef = useRef('')
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
   const [error, setError] = useState<string | undefined>(undefined)
@@ -48,7 +48,7 @@ export const UsersPerDevice = (props: UsersPerDeviceProps) => {
         }
       ],
       timezone: props.timezone,
-      renewQuery: props.refreshAt !== refreshAtRef.current
+      renewQuery: props.refreshKey !== refreshKeyRef.current
     }
   }, [
     props.dateFrom,
@@ -56,14 +56,14 @@ export const UsersPerDevice = (props: UsersPerDeviceProps) => {
     props.timezone,
     props.dateFromPrevious,
     props.dateToPrevious,
-    props.refreshAt
+    props.refreshKey
   ])
 
   useEffect(() => {
-    if (props.refreshAt === refreshAtRef.current) {
+    if (props.refreshKey === refreshKeyRef.current) {
       return
     } else {
-      refreshAtRef.current = props.refreshAt
+      refreshKeyRef.current = props.refreshKey
     }
 
     setLoading(true)
@@ -115,7 +115,7 @@ export const UsersPerDevice = (props: UsersPerDeviceProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, cubeApi, props.refreshAt])
+  }, [query, cubeApi, props.refreshKey])
 
   // debug sql query
   //   cubeApi

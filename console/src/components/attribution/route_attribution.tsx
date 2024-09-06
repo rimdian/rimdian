@@ -1,7 +1,6 @@
 import { Alert, Tabs } from 'antd'
 import { useCurrentWorkspaceCtx } from 'components/workspace/context_current_workspace'
 import Layout from 'components/common/layout'
-import DateRangeSelector from 'components/common/partial_date_range'
 import CSS from 'utils/css'
 import TabAttributionSessions from './tab_sessions'
 // import TabAttributionPostviews from './tab_postviews'
@@ -12,10 +11,12 @@ import TabAttributionCrossDevices from './tab_cross_devices'
 import TabAttributionCrossDomains from './tab_cross_domains'
 import TabTrafficMapping from './mapping/tab_mapping'
 import ButtonReattributeConversions from './mapping/button_reattribute_conversions'
+import { useAccount } from 'components/login/context_account'
 
 const RouteAttribution = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
   const [searchParams, setSearchParams] = useSearchParams()
+  const account = useAccount()
 
   const activeKey = searchParams.get('tab') || 'sessions'
 
@@ -24,7 +25,6 @@ const RouteAttribution = () => {
       <div className={CSS.top}>
         <h1>Attribution</h1>
         <div className={CSS.topSeparator}></div>
-        {activeKey !== 'mapping' && <DateRangeSelector />}
       </div>
       <div>
         {workspaceCtx.workspace.outdated_conversions_attribution && (

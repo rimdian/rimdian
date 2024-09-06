@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
 import { Filter, Query, ResultSet, SqlData } from '@cubejs-client/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useDateRangeCtx } from 'components/common/context_date_range'
 import { cloneDeep, map, set } from 'lodash'
 import FormatNumber from 'utils/format_number'
 import FormatPercent from 'utils/format_percent'
@@ -29,6 +28,15 @@ import {
   generateDimensionsMap,
   generateMeasuresMap
 } from 'components/common/schema'
+import DateRangeSelector, {
+  DateRangePreset,
+  DateRangeValue,
+  dateRangeValuesFromSearchParams,
+  toEndOfDay,
+  toStartOfDay,
+  updateSearchParams,
+  vsDateRangeValues
+} from 'components/common/partial_date_range'
 
 export interface AttributionParams {
   sortKey: string
@@ -57,7 +65,6 @@ export interface TableRow {
 const TabAttributionSessions = () => {
   const accountCtx = useAccount()
   const workspaceCtx = useCurrentWorkspaceCtx()
-  const dateRangeCtx = useDateRangeCtx()
   const [searchParams, setSearchParams] = useSearchParams()
   const isMounted = useRef(true)
   const paramsHash = useRef<string | undefined>(undefined)
@@ -108,6 +115,9 @@ const TabAttributionSessions = () => {
   }, [measuresMap])
 
   const params: AttributionParams = useMemo(() => {
+    const [dateFrom, dateTo] = dateRangeValuesFromSearchParams(searchParams)
+    const [vsDateFrom, vsDateTo] = vsDateRangeValues(dateFrom, dateTo)
+
     // console.log('defaultMeasures', defaultMeasures)
     return {
       sortKey: searchParams.get('sortKey') || 'Session.count',
@@ -118,13 +128,13 @@ const TabAttributionSessions = () => {
       measures: searchParams.get('measures') || defaultMeasures.map((field) => field.key).join(','),
       segment: searchParams.get('segment') || '_all',
       conversions_filter: searchParams.get('conversions_filter') || 'all',
-      date_from: dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-      date_to: dateRangeCtx.dateRange[1].format('YYYY-MM-DD'),
-      vs_date_from: dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-      vs_date_to: dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD'),
-      refresh_key: searchParams.get('refresh_key') || ''
+      date_from: dateFrom,
+      date_to: dateTo,
+      vs_date_from: vsDateFrom,
+      vs_date_to: vsDateTo,
+      refresh_key: searchParams.get('refresh_key') || 'default'
     }
-  }, [searchParams, dateRangeCtx, defaultMeasures])
+  }, [searchParams, defaultMeasures])
 
   const measures: string[] = useMemo(() => {
     if (!measuresMap) return []
@@ -165,14 +175,8 @@ const TabAttributionSessions = () => {
           dimension: 'Session.created_at_trunc',
           granularity: null as any,
           compareDateRange: [
-            [
-              dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRange[1].format('YYYY-MM-DD')
-            ],
-            [
-              dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD')
-            ]
+            [toStartOfDay(params.date_from), toEndOfDay(params.date_to)],
+            [toStartOfDay(params.vs_date_from), toEndOfDay(params.vs_date_to)]
           ]
         }
       ],
@@ -188,7 +192,10 @@ const TabAttributionSessions = () => {
     params.sortKey,
     params.sortOrder,
     params.segment,
-    dateRangeCtx,
+    params.date_from,
+    params.date_to,
+    params.vs_date_from,
+    params.vs_date_to,
     accountCtx,
     params.refresh_key
   ])
@@ -485,44 +492,39 @@ const TabAttributionSessions = () => {
         <span className={CSS.padding_h_xs}></span>
         {/* <MeasuresSelector measures={params.measures.split(',')} fieldsMap={measuresMap} /> */}
         <div className={CSS.topSeparator}></div>
-        <Select
-          // style={{ width: 300 }}
-          popupMatchSelectWidth={false}
-          value={params.segment}
-          options={map(workspaceCtx.segmentsMap, (segment) => {
-            return {
-              value: segment.id,
-              label: (
-                <>
-                  <Tag color={segment.color}>{segment.name}</Tag>
-                  <span className={CSS.font_size_xxs}>{FormatNumber(segment.users_count)}</span>
-                </>
-              )
-            }
-          })}
-          onChange={(value) => {
-            const allParams: any = {}
-            searchParams.forEach((value, key: string) => {
-              allParams[key] = value
-            })
-            setSearchParams({ ...allParams, segment: value })
-          }}
-        />
-        {/* <Radio.Group
-          onChange={(e: RadioChangeEvent) => {
-            const allParams: any = {}
-            searchParams.forEach((value, key: string) => {
-              allParams[key] = value
-            })
-            setSearchParams({ ...allParams, conversions_filter: e.target.value })
-          }}
-          value={params.conversions_filter}
-          defaultValue={'all'}
-        >
-          <Radio.Button value={'all'}>All conversions</Radio.Button>
-          <Radio.Button value={'acquisition'}>Acquisition</Radio.Button>
-          <Radio.Button value={'repeat'}>Repeat</Radio.Button>
-        </Radio.Group> */}
+        <Space size={24}>
+          <Select
+            // style={{ width: 300 }}
+            popupMatchSelectWidth={false}
+            value={params.segment}
+            options={map(workspaceCtx.segmentsMap, (segment) => {
+              return {
+                value: segment.id,
+                label: (
+                  <>
+                    <Tag color={segment.color}>{segment.name}</Tag>
+                    <span className={CSS.font_size_xxs}>{FormatNumber(segment.users_count)}</span>
+                  </>
+                )
+              }
+            })}
+            onChange={(value) => {
+              const allParams: any = {}
+              searchParams.forEach((value, key: string) => {
+                allParams[key] = value
+              })
+              setSearchParams({ ...allParams, segment: value })
+            }}
+          />
+          <DateRangeSelector
+            preset={(searchParams.get('date_range') as DateRangePreset) || '30D'}
+            value={dateRangeValuesFromSearchParams(searchParams)}
+            // timezone={accountCtx.account?.account.timezone || 'UTC'}
+            onChange={(preset: DateRangePreset, range: DateRangeValue) => {
+              updateSearchParams(searchParams, setSearchParams, preset, range)
+            }}
+          />
+        </Space>
       </div>
 
       <Fullscreenable>

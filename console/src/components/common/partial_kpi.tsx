@@ -33,7 +33,7 @@ export type KPIProps = {
   color: string
   workspaceId: string
   timezone: string
-  refreshAt: number
+  refreshKey: string
   dateFrom: string
   dateTo: string
   dateFromPrevious: string
@@ -47,7 +47,7 @@ export const KPI = (props: KPIProps) => {
   const [value, setValue] = useState<number | undefined>(undefined)
   const [previousValue, setPreviousValue] = useState<number | undefined>(undefined)
   const [error, setError] = useState<string | undefined>(undefined)
-  const refreshAtRef = useRef(0)
+  const refreshKeyRef = useRef('')
   // graph
   const [isLoadingGraph, setIsLoadingGraph] = useState(true)
   const [valueGraph, setValueGraph] = useState<any[] | undefined>(undefined)
@@ -70,7 +70,7 @@ export const KPI = (props: KPIProps) => {
         }
       ],
       timezone: props.timezone,
-      renewQuery: refreshAtRef.current !== props.refreshAt
+      renewQuery: refreshKeyRef.current !== props.refreshKey
     }
   }, [
     props.measure,
@@ -82,8 +82,8 @@ export const KPI = (props: KPIProps) => {
     props.dateTo,
     props.dateFromPrevious,
     props.dateToPrevious,
-    props.refreshAt,
-    refreshAtRef
+    props.refreshKey,
+    refreshKeyRef
   ])
 
   const graphQuery = useMemo(() => {
@@ -102,7 +102,7 @@ export const KPI = (props: KPIProps) => {
         }
       ] as TimeDimension[],
       timezone: props.timezone,
-      renewQuery: refreshAtRef.current !== props.refreshAt
+      renewQuery: refreshKeyRef.current !== props.refreshKey
     }
   }, [
     props.measure,
@@ -114,16 +114,16 @@ export const KPI = (props: KPIProps) => {
     props.dateTo,
     props.dateFromPrevious,
     props.dateToPrevious,
-    props.refreshAt,
-    refreshAtRef
+    props.refreshKey,
+    refreshKeyRef
   ])
 
   // fetch
   useEffect(() => {
-    if (props.refreshAt === refreshAtRef.current) {
+    if (props.refreshKey === refreshKeyRef.current) {
       return
     } else {
-      refreshAtRef.current = props.refreshAt
+      refreshKeyRef.current = props.refreshKey
     }
 
     // console.log('KPI: fetch', totalQuery, graphQuery)
@@ -168,7 +168,7 @@ export const KPI = (props: KPIProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [totalQuery, graphQuery, cubeApi, props.refreshAt])
+  }, [totalQuery, graphQuery, cubeApi, props.refreshKey])
 
   let title = props.title
 

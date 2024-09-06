@@ -15,7 +15,7 @@ echarts.registerMap('world', worldMap as any)
 export type UsersPerCountryProps = {
   workspaceId: string
   timezone: string
-  refreshAt: number
+  refreshKey: string
   dateFrom: string
   dateTo: string
   dateFromPrevious: string
@@ -25,7 +25,7 @@ export type UsersPerCountryProps = {
 
 export const UsersPerCountry = (props: UsersPerCountryProps) => {
   const { cubeApi } = useRimdianCube()
-  const refreshAtRef = useRef(0)
+  const refreshKeyRef = useRef('')
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
   const [total, setTotal] = useState<number>(0)
@@ -46,7 +46,7 @@ export const UsersPerCountry = (props: UsersPerCountryProps) => {
         }
       ],
       timezone: props.timezone,
-      renewQuery: props.refreshAt !== refreshAtRef.current
+      renewQuery: props.refreshKey !== refreshKeyRef.current
     }
   }, [
     props.dateFrom,
@@ -54,14 +54,14 @@ export const UsersPerCountry = (props: UsersPerCountryProps) => {
     props.timezone,
     props.dateFromPrevious,
     props.dateToPrevious,
-    props.refreshAt
+    props.refreshKey
   ])
 
   useEffect(() => {
-    if (props.refreshAt === refreshAtRef.current) {
+    if (props.refreshKey === refreshKeyRef.current) {
       return
     } else {
-      refreshAtRef.current = props.refreshAt
+      refreshKeyRef.current = props.refreshKey
     }
 
     // console.log('query', query)
@@ -115,7 +115,7 @@ export const UsersPerCountry = (props: UsersPerCountryProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, cubeApi, props.refreshAt])
+  }, [query, cubeApi, props.refreshKey])
 
   let title = 'Users per country'
 

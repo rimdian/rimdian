@@ -25,7 +25,6 @@ import {
   DimensionsMapDefinition,
   DimensionDefinition
 } from './postviews_definitions'
-import { useDateRangeCtx } from 'components/common/context_date_range'
 import { capitalize, cloneDeep, forEach, map, set, upperFirst } from 'lodash'
 import FormatNumber from 'utils/format_number'
 import FormatPercent from 'utils/format_percent'
@@ -42,6 +41,12 @@ import { css } from '@emotion/css'
 import { Graph } from '@datastructures-js/graph'
 import { Fullscreenable } from 'components/common/fullscreenable'
 import { useRimdianCube } from 'components/workspace/context_cube'
+import {
+  dateRangeValuesFromSearchParams,
+  toEndOfDay,
+  toStartOfDay,
+  vsDateRangeValues
+} from 'components/common/partial_date_range'
 
 interface AttributionParams {
   sortKey: string
@@ -93,7 +98,6 @@ interface TableRow {
 const TabAttributionPostviews = () => {
   const accountCtx = useAccount()
   const workspaceCtx = useCurrentWorkspaceCtx()
-  const dateRangeCtx = useDateRangeCtx()
   const [searchParams, setSearchParams] = useSearchParams()
   const isMounted = useRef(true)
   const paramsHash = useRef<string | undefined>(undefined)
@@ -106,6 +110,8 @@ const TabAttributionPostviews = () => {
   const refreshKeyRef = useRef('')
 
   const params: AttributionParams = useMemo(() => {
+    const [dateFrom, dateTo] = dateRangeValuesFromSearchParams(searchParams)
+    const [vsDateFrom, vsDateTo] = vsDateRangeValues(dateFrom, dateTo)
     return {
       sortKey: searchParams.get('sortKey') || 'Postview.count',
       sortOrder: searchParams.get('sortOrder') || 'desc',
@@ -114,13 +120,13 @@ const TabAttributionPostviews = () => {
       dimension3: searchParams.get('dimension3') || 'Postview.channel_id',
       measures: searchParams.get('measures') || defaultMeasures.map((field) => field.key).join(','),
       conversions_filter: searchParams.get('conversions_filter') || 'all',
-      date_from: dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-      date_to: dateRangeCtx.dateRange[1].format('YYYY-MM-DD'),
-      vs_date_from: dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-      vs_date_to: dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD'),
-      refresh_key: searchParams.get('refresh_key') || ''
+      date_from: dateFrom,
+      date_to: dateTo,
+      vs_date_from: vsDateFrom,
+      vs_date_to: vsDateTo,
+      refresh_key: searchParams.get('refresh_key') || 'default'
     }
-  }, [searchParams, dateRangeCtx])
+  }, [searchParams])
 
   //   console.log(workspaceCtx.cubeSchemasMap)
 
@@ -291,14 +297,8 @@ const TabAttributionPostviews = () => {
           dimension: 'Postview.created_at_trunc',
           granularity: null as any,
           compareDateRange: [
-            [
-              dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRange[1].format('YYYY-MM-DD')
-            ],
-            [
-              dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD')
-            ]
+            [toStartOfDay(params.date_from), toEndOfDay(params.date_to)],
+            [toStartOfDay(params.vs_date_from), toEndOfDay(params.vs_date_to)]
           ]
         }
       ],
@@ -314,7 +314,10 @@ const TabAttributionPostviews = () => {
     params.sortKey,
     params.sortOrder,
     params.conversions_filter,
-    dateRangeCtx,
+    params.date_from,
+    params.date_to,
+    params.vs_date_from,
+    params.vs_date_to,
     accountCtx,
     params.refresh_key
   ])

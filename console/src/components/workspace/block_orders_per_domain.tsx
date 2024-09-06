@@ -14,7 +14,7 @@ export type OrdersPerDomainProps = {
   domains: Domain[]
   currency: string
   timezone: string
-  refreshAt: number
+  refreshKey: string
   dateFrom: string
   dateTo: string
   dateFromPrevious: string
@@ -24,7 +24,7 @@ export type OrdersPerDomainProps = {
 
 export const OrdersPerDomain = (props: OrdersPerDomainProps) => {
   const { cubeApi } = useRimdianCube()
-  const refreshAt = useRef(0)
+  const refreshKey = useRef('')
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
   const [error, setError] = useState<string | undefined>(undefined)
@@ -45,11 +45,11 @@ export const OrdersPerDomain = (props: OrdersPerDomainProps) => {
   }, [props.dateFrom, props.dateTo, props.timezone])
 
   useEffect(() => {
-    if (refreshAt.current === props.refreshAt) {
+    if (refreshKey.current === props.refreshKey) {
       return
     }
 
-    refreshAt.current = props.refreshAt
+    refreshKey.current = props.refreshKey
 
     setLoading(true)
 
@@ -63,7 +63,7 @@ export const OrdersPerDomain = (props: OrdersPerDomainProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, props.refreshAt, cubeApi])
+  }, [query, props.refreshKey, cubeApi])
 
   let title = 'Orders per domain'
 

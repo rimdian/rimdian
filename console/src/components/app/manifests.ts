@@ -2584,6 +2584,48 @@ const wooCommerce: AppManifest = {
   ]
 }
 
-const apps: AppManifest[] = [googleAds, metaCapi, shopify, wooCommerce, meta, affilae, googleCM360]
+const staminads: AppManifest = {
+  id: 'appx_staminads',
+  name: 'Staminads',
+  homepage: 'https://www.staminads.com/',
+  author: 'Staminads',
+  icon_url: 'https://cdn-eu.rimdian.com/images/staminads_icon.png',
+  short_description: 'Analyze the traffic quality of your campaigns',
+  description:
+    'Staminads is a traffic quality analysis tool that helps you to analyze the quality of your traffic sources.',
+  version: '1.0.0',
+  ui_endpoint: 'https://nativeapps.rimdian.com',
+  webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
+  sql_access: {
+    tables_permissions: [
+      {
+        table: 'session',
+        read: true,
+        write: false
+      },
+      {
+        table: 'pageview',
+        read: true,
+        write: false
+      },
+      {
+        table: 'device',
+        read: true,
+        write: false
+      }
+    ]
+  }
+}
+
+const apps: AppManifest[] = [
+  googleAds,
+  metaCapi,
+  shopify,
+  wooCommerce,
+  meta,
+  affilae,
+  staminads,
+  googleCM360
+]
 
 export default apps

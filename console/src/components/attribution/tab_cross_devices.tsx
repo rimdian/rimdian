@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useAccount } from 'components/login/context_account'
 import { Filter, Query, ResultSet, SqlData } from '@cubejs-client/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useDateRangeCtx } from 'components/common/context_date_range'
 import { cloneDeep } from 'lodash'
 import FormatNumber from 'utils/format_number'
 import FormatCurrency from 'utils/format_currency'
@@ -21,6 +20,12 @@ import { Fullscreenable } from 'components/common/fullscreenable'
 import Block from 'components/common/block'
 import { KPI } from 'components/common/partial_kpi'
 import { useRimdianCube } from 'components/workspace/context_cube'
+import {
+  dateRangeValuesFromSearchParams,
+  toEndOfDay,
+  toStartOfDay,
+  vsDateRangeValues
+} from 'components/common/partial_date_range'
 
 interface Params {
   sortKey: string
@@ -37,12 +42,6 @@ const TabAttributionCrossDevices = () => {
   const accountCtx = useAccount()
   const workspaceCtx = useCurrentWorkspaceCtx()
 
-  const dateRangeCtx = useDateRangeCtx()
-  const dateFrom = dateRangeCtx.dateRange[0].format('YYYY-MM-DD')
-  const dateTo = dateRangeCtx.dateRange[1].format('YYYY-MM-DD')
-  const dateFromPrevious = dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD')
-  const dateToPrevious = dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD')
-
   const [searchParams, setSearchParams] = useSearchParams()
   const isMounted = useRef(true)
   const paramsHash = useRef<string | undefined>(undefined)
@@ -54,17 +53,20 @@ const TabAttributionCrossDevices = () => {
   const refreshKeyRef = useRef('')
 
   const params: Params = useMemo(() => {
+    const [dateFrom, dateTo] = dateRangeValuesFromSearchParams(searchParams)
+    const [vsDateFrom, vsDateTo] = vsDateRangeValues(dateFrom, dateTo)
+
     return {
       sortKey: searchParams.get('sortKey') || 'Order.count',
       sortOrder: searchParams.get('sortOrder') || 'desc',
       conversions_filter: searchParams.get('conversions_filter') || 'all',
-      date_from: dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-      date_to: dateRangeCtx.dateRange[1].format('YYYY-MM-DD'),
-      vs_date_from: dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-      vs_date_to: dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD'),
-      refresh_key: searchParams.get('refresh_key') || ''
+      date_from: dateFrom,
+      date_to: dateTo,
+      vs_date_from: vsDateFrom,
+      vs_date_to: vsDateTo,
+      refresh_key: searchParams.get('refresh_key') || 'default'
     }
-  }, [searchParams, dateRangeCtx])
+  }, [searchParams])
 
   const filters = useMemo(() => {
     const filters: Filter[] = [
@@ -116,14 +118,8 @@ const TabAttributionCrossDevices = () => {
           dimension: 'Order.created_at_trunc',
           granularity: null as any,
           compareDateRange: [
-            [
-              dateRangeCtx.dateRange[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRange[1].format('YYYY-MM-DD')
-            ],
-            [
-              dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD'),
-              dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD')
-            ]
+            [toStartOfDay(params.date_from), toEndOfDay(params.date_to)],
+            [toStartOfDay(params.vs_date_from), toEndOfDay(params.vs_date_to)]
           ]
         }
       ],
@@ -134,7 +130,17 @@ const TabAttributionCrossDevices = () => {
       limit: 300,
       renewQuery: renewQuery
     }
-  }, [params.sortKey, params.sortOrder, dateRangeCtx, accountCtx, filters, params.refresh_key])
+  }, [
+    params.sortKey,
+    params.sortOrder,
+    params.date_from,
+    params.date_to,
+    params.vs_date_from,
+    params.vs_date_to,
+    accountCtx,
+    filters,
+    params.refresh_key
+  ])
 
   const [tableData, setTableData] = useState<any[]>([])
 
@@ -304,11 +310,11 @@ const TabAttributionCrossDevices = () => {
           color="purple"
           workspaceId={workspaceCtx.workspace.id}
           timezone={accountCtx.account?.account.timezone || 'UTC'}
-          refreshAt={dateRangeCtx.refreshAt}
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          dateFromPrevious={dateFromPrevious}
-          dateToPrevious={dateToPrevious}
+          refreshKey={params.refresh_key}
+          dateFrom={toStartOfDay(params.date_from)}
+          dateTo={toEndOfDay(params.date_to)}
+          dateFromPrevious={toStartOfDay(params.vs_date_from)}
+          dateToPrevious={toEndOfDay(params.vs_date_to)}
         />
         <KPI
           title="Desktop only"
@@ -320,11 +326,11 @@ const TabAttributionCrossDevices = () => {
           color="purple"
           workspaceId={workspaceCtx.workspace.id}
           timezone={accountCtx.account?.account.timezone || 'UTC'}
-          refreshAt={dateRangeCtx.refreshAt}
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          dateFromPrevious={dateFromPrevious}
-          dateToPrevious={dateToPrevious}
+          refreshKey={params.refresh_key}
+          dateFrom={toStartOfDay(params.date_from)}
+          dateTo={toEndOfDay(params.date_to)}
+          dateFromPrevious={toStartOfDay(params.vs_date_from)}
+          dateToPrevious={toEndOfDay(params.vs_date_to)}
         />
         <KPI
           title="Mobile only"
@@ -336,11 +342,11 @@ const TabAttributionCrossDevices = () => {
           color="purple"
           workspaceId={workspaceCtx.workspace.id}
           timezone={accountCtx.account?.account.timezone || 'UTC'}
-          refreshAt={dateRangeCtx.refreshAt}
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          dateFromPrevious={dateFromPrevious}
-          dateToPrevious={dateToPrevious}
+          refreshKey={params.refresh_key}
+          dateFrom={toStartOfDay(params.date_from)}
+          dateTo={toEndOfDay(params.date_to)}
+          dateFromPrevious={toStartOfDay(params.vs_date_from)}
+          dateToPrevious={toEndOfDay(params.vs_date_to)}
         />
         <KPI
           title="Tablet only"
@@ -352,11 +358,11 @@ const TabAttributionCrossDevices = () => {
           color="purple"
           workspaceId={workspaceCtx.workspace.id}
           timezone={accountCtx.account?.account.timezone || 'UTC'}
-          refreshAt={dateRangeCtx.refreshAt}
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          dateFromPrevious={dateFromPrevious}
-          dateToPrevious={dateToPrevious}
+          refreshKey={params.refresh_key}
+          dateFrom={toStartOfDay(params.date_from)}
+          dateTo={toEndOfDay(params.date_to)}
+          dateFromPrevious={toStartOfDay(params.vs_date_from)}
+          dateToPrevious={toEndOfDay(params.vs_date_to)}
         />
       </Block>
 

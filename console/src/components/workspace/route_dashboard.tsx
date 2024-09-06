@@ -3,28 +3,31 @@ import { useCurrentWorkspaceCtx } from './context_current_workspace'
 import { Row, Col } from 'antd'
 import { useAccount } from 'components/login/context_account'
 import { Account } from 'interfaces'
-import { useDateRangeCtx } from 'components/common/context_date_range'
 import { KPI } from 'components/common/partial_kpi'
 import { UsersPerCountry } from './block_users_per_country'
 import { UsersPerDevice } from './block_users_per_device'
 import { OrdersPerDomain } from './block_orders_per_domain'
 import { TrafficSources } from './block_traffic_sources'
 import { UsersOnline } from './block_users_online'
-import DateRangeSelector from 'components/common/partial_date_range'
+import DateRangeSelector, {
+  dateRangeValuesFromSearchParams,
+  updateSearchParams,
+  vsDateRangeValues
+} from 'components/common/partial_date_range'
 import { useMemo } from 'react'
 import Block from 'components/common/block'
 import CSS from 'utils/css'
+import { useSearchParams } from 'react-router-dom'
 
 const RouteWorkspaceDashboard = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
   const accountCtx = useAccount()
   const account = accountCtx.account?.account as Account
-  const dateRangeCtx = useDateRangeCtx()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const dateFrom = dateRangeCtx.dateRange[0].format('YYYY-MM-DD')
-  const dateTo = dateRangeCtx.dateRange[1].format('YYYY-MM-DD')
-  const dateFromPrevious = dateRangeCtx.dateRangePrevious[0].format('YYYY-MM-DD')
-  const dateToPrevious = dateRangeCtx.dateRangePrevious[1].format('YYYY-MM-DD')
+  const [dateFrom, dateTo] = dateRangeValuesFromSearchParams(searchParams)
+  const [dateFromPrevious, dateToPrevious] = vsDateRangeValues(dateFrom, dateTo)
+  const refreshKey = searchParams.get('refresh_key') || 'default'
 
   const webDomains = useMemo(() => {
     const domains: string[] = []
@@ -41,31 +44,26 @@ const RouteWorkspaceDashboard = () => {
       <Row gutter={24} className={CSS.margin_t_l}>
         <Col span={12}>
           <UsersOnline
-            refreshAt={dateRangeCtx.refreshAt}
+            refreshKey={refreshKey}
             workspaceId={workspaceCtx.workspace.id}
             timezone={account.timezone}
           />
         </Col>
         <Col span={12}>
           <div className={CSS.text_right}>
-            <DateRangeSelector />
+            <DateRangeSelector
+              preset={'30D'}
+              // timezone={accountCtx.account?.account.timezone || 'UTC'}
+              onChange={(preset, range) => {
+                updateSearchParams(searchParams, setSearchParams, preset, range)
+              }}
+            />
           </div>
         </Col>
       </Row>
 
       <Row gutter={24}>
         <Col span={12}>
-          {/* <div
-            className={css([
-              CSS.text_gray,
-              CSS.font_weight_semibold,
-              CSS.font_size_s,
-              CSS.margin_t_l,
-              CSS.margin_b_s
-            ])}
-          >
-            Users
-          </div> */}
           <Block classNames={[CSS.margin_t_l]} grid={true}>
             <KPI
               title="Users"
@@ -76,7 +74,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -91,7 +89,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -113,7 +111,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -130,7 +128,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -146,7 +144,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -160,7 +158,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -171,7 +169,7 @@ const RouteWorkspaceDashboard = () => {
           <UsersPerCountry
             workspaceId={workspaceCtx.workspace.id}
             timezone={account.timezone}
-            refreshAt={dateRangeCtx.refreshAt}
+            refreshKey={refreshKey}
             dateFrom={dateFrom}
             dateTo={dateTo}
             dateFromPrevious={dateFromPrevious}
@@ -181,7 +179,7 @@ const RouteWorkspaceDashboard = () => {
           <UsersPerDevice
             workspaceId={workspaceCtx.workspace.id}
             timezone={account.timezone}
-            refreshAt={dateRangeCtx.refreshAt}
+            refreshKey={refreshKey}
             dateFrom={dateFrom}
             dateTo={dateTo}
             dateFromPrevious={dateFromPrevious}
@@ -199,7 +197,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -215,7 +213,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -231,7 +229,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -256,7 +254,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -278,7 +276,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -293,7 +291,7 @@ const RouteWorkspaceDashboard = () => {
               color="purple"
               workspaceId={workspaceCtx.workspace.id}
               timezone={account.timezone}
-              refreshAt={dateRangeCtx.refreshAt}
+              refreshKey={refreshKey}
               dateFrom={dateFrom}
               dateTo={dateTo}
               dateFromPrevious={dateFromPrevious}
@@ -306,7 +304,7 @@ const RouteWorkspaceDashboard = () => {
             domains={workspaceCtx.workspace.domains}
             currency={workspaceCtx.workspace.currency}
             timezone={account.timezone}
-            refreshAt={dateRangeCtx.refreshAt}
+            refreshKey={refreshKey}
             dateFrom={dateFrom}
             dateTo={dateTo}
             dateFromPrevious={dateFromPrevious}
@@ -317,7 +315,7 @@ const RouteWorkspaceDashboard = () => {
             workspaceId={workspaceCtx.workspace.id}
             currency={workspaceCtx.workspace.currency}
             timezone={account.timezone}
-            refreshAt={dateRangeCtx.refreshAt}
+            refreshKey={refreshKey}
             dateFrom={dateFrom}
             dateTo={dateTo}
             dateFromPrevious={dateFromPrevious}

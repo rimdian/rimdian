@@ -603,21 +603,23 @@ func (x *AppSQLAccessManifest) Validate(appTables AppTablesManifest) error {
 	for _, perm := range x.TablesPermissions {
 
 		// read
-		if !govalidator.IsIn(perm.Table, readAllowed...) {
+		if perm.Read && !govalidator.IsIn(perm.Table, readAllowed...) {
 			return eris.Errorf("table '%v' is not allowed to read", perm.Table)
 		}
 
 		// write
 		// tables allowed to write should belong to the app
-		found := false
-		for _, appTable := range appTables {
-			if appTable.Name == perm.Table {
-				found = true
-				break
+		if perm.Write {
+			found := false
+			for _, appTable := range appTables {
+				if appTable.Name == perm.Table {
+					found = true
+					break
+				}
 			}
-		}
-		if !found {
-			return eris.Errorf("table '%v' is not allowed to write", perm.Table)
+			if !found {
+				return eris.Errorf("table '%v' is not allowed to write", perm.Table)
+			}
 		}
 
 	}

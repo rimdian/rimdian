@@ -11,7 +11,7 @@ export type TrafficSourcesProps = {
   workspaceId: string
   currency: string
   timezone: string
-  refreshAt: number
+  refreshKey: string
   dateFrom: string
   dateTo: string
   dateFromPrevious: string
@@ -21,7 +21,7 @@ export type TrafficSourcesProps = {
 
 export const TrafficSources = (props: TrafficSourcesProps) => {
   const { cubeApi } = useRimdianCube()
-  const refreshAtRef = useRef(0)
+  const refreshKeyRef = useRef('')
   const [loading, setLoading] = useState<boolean>(true)
   const [tableData, setTableData] = useState<any[]>([])
   const [error, setError] = useState<string | undefined>(undefined)
@@ -40,15 +40,15 @@ export const TrafficSources = (props: TrafficSourcesProps) => {
       timezone: props.timezone,
       order: { 'Session.unique_users': 'desc' },
       limit: 100,
-      renewQuery: props.refreshAt !== refreshAtRef.current
+      renewQuery: props.refreshKey !== refreshKeyRef.current
     }
-  }, [props.dateFrom, props.dateTo, props.timezone, props.refreshAt])
+  }, [props.dateFrom, props.dateTo, props.timezone, props.refreshKey])
 
   useEffect(() => {
-    if (props.refreshAt === refreshAtRef.current) {
+    if (props.refreshKey === refreshKeyRef.current) {
       return
     } else {
-      refreshAtRef.current = props.refreshAt
+      refreshKeyRef.current = props.refreshKey
     }
 
     setLoading(true)
@@ -63,7 +63,7 @@ export const TrafficSources = (props: TrafficSourcesProps) => {
       .catch((error) => {
         setError(error.toString())
       })
-  }, [query, cubeApi, props.refreshAt])
+  }, [query, cubeApi, props.refreshKey])
 
   let title = 'Traffic sources'
 

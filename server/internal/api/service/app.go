@@ -623,7 +623,7 @@ func (svc *ServiceImpl) AppInstall(ctx context.Context, accountID string, params
 	// native apps use the secret key from the config
 	switch params.Manifest.ID {
 
-	case "appx_metacapi", "appx_meta", "appx_googleads", "appx_woocommerce", "appx_shopify", "appx_googlecm360", "appx_admo", "appx_affilae":
+	case "appx_metacapi", "appx_meta", "appx_googleads", "appx_woocommerce", "appx_shopify", "appx_googlecm360", "appx_admo", "appx_affilae", "appx_staminads":
 		params.SecretKey = &svc.Config.SECRET_KEY
 
 	// test

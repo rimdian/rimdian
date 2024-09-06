@@ -7,23 +7,23 @@ import { useRimdianCube } from './context_cube'
 export type UsersOnlineProps = {
   workspaceId: string
   timezone: string
-  refreshAt: number
+  refreshKey: string
 }
 
 export const UsersOnline = (props: UsersOnlineProps) => {
   const { cubeApi } = useRimdianCube()
-  const refreshAt = useRef(0)
+  const refreshKey = useRef('')
   const [loadingOnline, setLoadingOnline] = useState<boolean>(true)
   const [usersOnline, setUsersOnline] = useState<string | undefined>(undefined)
   const [loading24h, setLoading24h] = useState<boolean>(true)
   const [users24h, setUsers24h] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    if (refreshAt.current === props.refreshAt) {
+    if (refreshKey.current === props.refreshKey) {
       return
     }
 
-    refreshAt.current = props.refreshAt
+    refreshKey.current = props.refreshKey
 
     setLoadingOnline(true)
     setLoading24h(true)
@@ -63,7 +63,7 @@ export const UsersOnline = (props: UsersOnlineProps) => {
       .catch((_error) => {
         // setErrorGraph(error.toString())
       })
-  }, [props.refreshAt, cubeApi, props.timezone, loadingOnline])
+  }, [props.refreshKey, cubeApi, props.timezone, loadingOnline])
 
   return (
     <>

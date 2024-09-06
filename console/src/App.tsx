@@ -24,7 +24,6 @@ import RouteUsers from 'components/user/route_users'
 import RouteAttribution from 'components/attribution/route_attribution'
 import RouteListApps from 'components/app/route_list'
 import RouteShowApp from 'components/app/route_show'
-import { DateRangeProvider } from 'components/common/context_date_range'
 
 import { css, CSSInterpolation, injectGlobal } from '@emotion/css'
 import CSS from 'utils/css'
@@ -95,76 +94,71 @@ const App = () => {
           <ReactQueryDevtools initialIsOpen={false} />
           <AuthProvider>
             <BrowserRouter>
-              <DateRangeProvider>
-                <Routes>
-                  <Route path="/" element={<RouteHomepage />} />
-                  <Route path="/reset-password" element={<RouteResetPassword />} />
-                  <Route path="/consume-reset-password" element={<RouteConsumeResetPassword />} />
-                  <Route path="/accept-invitation" element={<RouteAcceptInvitation />} />
-                  <Route path="/logout" element={<RouteLogout />} />
+              <Routes>
+                <Route path="/" element={<RouteHomepage />} />
+                <Route path="/reset-password" element={<RouteResetPassword />} />
+                <Route path="/consume-reset-password" element={<RouteConsumeResetPassword />} />
+                <Route path="/accept-invitation" element={<RouteAcceptInvitation />} />
+                <Route path="/logout" element={<RouteLogout />} />
 
-                  {/* requires authenticated account */}
-                  <Route element={<OrganizationsCtx />}>
-                    <Route path="/orgs" element={<RouteOrganizations />} />
+                {/* requires authenticated account */}
+                <Route element={<OrganizationsCtx />}>
+                  <Route path="/orgs" element={<RouteOrganizations />} />
 
-                    {/* inside an organization */}
-                    <Route element={<CurrentOrganizationCtx />}>
+                  {/* inside an organization */}
+                  <Route element={<CurrentOrganizationCtx />}>
+                    <Route path="/orgs/:organizationId" element={<RouteOrganizationDashboard />} />
+
+                    {/* inside a workspace */}
+                    <Route element={<CurrentWorkspaceCtx />}>
                       <Route
-                        path="/orgs/:organizationId"
-                        element={<RouteOrganizationDashboard />}
+                        path="/orgs/:organizationId/workspaces/:workspaceId"
+                        element={<RouteWorkspaceDashboard />}
                       />
-
-                      {/* inside a workspace */}
-                      <Route element={<CurrentWorkspaceCtx />}>
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId"
-                          element={<RouteWorkspaceDashboard />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/attribution"
-                          element={<RouteAttribution />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/users"
-                          element={<RouteUsers />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/broadcasts"
-                          element={<RouteBroadcasts />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/assets"
-                          element={<RouteAssets />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/system/configuration"
-                          element={<RouteWorkspaceConfiguration />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/system/tasks"
-                          element={<RouteTasks />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/system/data-logs"
-                          element={<RouteDataLogs />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/system/database"
-                          element={<RouteDatabase />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/apps/:appId"
-                          element={<RouteShowApp />}
-                        />
-                        <Route
-                          path="/orgs/:organizationId/workspaces/:workspaceId/apps"
-                          element={<RouteListApps />}
-                        />
-                      </Route>
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/attribution"
+                        element={<RouteAttribution />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/users"
+                        element={<RouteUsers />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/broadcasts"
+                        element={<RouteBroadcasts />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/assets"
+                        element={<RouteAssets />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/system/configuration"
+                        element={<RouteWorkspaceConfiguration />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/system/tasks"
+                        element={<RouteTasks />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/system/data-logs"
+                        element={<RouteDataLogs />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/system/database"
+                        element={<RouteDatabase />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/apps/:appId"
+                        element={<RouteShowApp />}
+                      />
+                      <Route
+                        path="/orgs/:organizationId/workspaces/:workspaceId/apps"
+                        element={<RouteListApps />}
+                      />
                     </Route>
                   </Route>
-                </Routes>
-              </DateRangeProvider>
+                </Route>
+              </Routes>
             </BrowserRouter>
           </AuthProvider>
         </QueryClientProvider>

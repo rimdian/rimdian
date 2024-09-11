@@ -2593,7 +2593,7 @@ const staminads: AppManifest = {
   short_description: 'Analyze the traffic quality of your campaigns',
   description:
     'Staminads is a traffic quality analysis tool that helps you to analyze the quality of your traffic sources.',
-  version: '1.0.0',
+  version: '1.2.0',
   ui_endpoint: 'https://nativeapps.rimdian.com',
   webhook_endpoint: 'https://nativeapps.rimdian.com/api/webhooks',
   sql_access: {
@@ -2610,6 +2610,11 @@ const staminads: AppManifest = {
       },
       {
         table: 'device',
+        read: true,
+        write: false
+      },
+      {
+        table: 'order',
         read: true,
         write: false
       }

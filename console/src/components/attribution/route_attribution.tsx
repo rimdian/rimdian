@@ -11,12 +11,10 @@ import TabAttributionCrossDevices from './tab_cross_devices'
 import TabAttributionCrossDomains from './tab_cross_domains'
 import TabTrafficMapping from './mapping/tab_mapping'
 import ButtonReattributeConversions from './mapping/button_reattribute_conversions'
-import { useAccount } from 'components/login/context_account'
 
 const RouteAttribution = () => {
   const workspaceCtx = useCurrentWorkspaceCtx()
   const [searchParams, setSearchParams] = useSearchParams()
-  const account = useAccount()
 
   const activeKey = searchParams.get('tab') || 'sessions'
 

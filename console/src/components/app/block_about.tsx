@@ -357,6 +357,8 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
       })
     }
 
+    const predefinedQueries = props.manifest.sql_access?.predefined_queries || []
+
     const sqlAccessTab = {
       key: 'sqlAccess',
       label: <span>SQL access ({sqlAccessCount})</span>,
@@ -421,63 +423,70 @@ const BlockAboutApp = (props: BlockAboutAppProps) => {
                 ]}
               />
             )}
-            <Table
-              // showHeader={false}
-              pagination={false}
-              size="middle"
-              dataSource={props.manifest.sql_access?.predefined_queries || []}
-              className={CSS.margin_t_l}
-              rowKey="id"
-              columns={[
-                {
-                  title: 'Predefined queries',
-                  key: 'id',
-                  width: '40%',
-                  // className: 'text-right',
-                  render: (record: SqlQuery) => {
-                    return (
-                      <div>
-                        <p>
-                          <Tag color="green">{record.type}</Tag>
-                          <b>
-                            <Tooltip title={record.id}>{record.name}</Tooltip>
-                          </b>
-                        </p>
-                        {record.description}
-                      </div>
-                    )
-                  }
-                },
-                {
-                  title: 'SQL',
-                  key: 'query',
-                  render: (record: SqlQuery) => {
-                    if (record.query === '*') {
+            {predefinedQueries.length > 0 && (
+              <Table
+                // showHeader={false}
+                pagination={false}
+                size="middle"
+                dataSource={predefinedQueries}
+                className={CSS.margin_t_l}
+                rowKey="id"
+                columns={[
+                  {
+                    title: 'Predefined queries',
+                    key: 'id',
+                    width: '40%',
+                    // className: 'text-right',
+                    render: (record: SqlQuery) => {
                       return (
-                        <Alert type="warning" message="Query has SELECT * access on all tables." />
+                        <div>
+                          <p>
+                            <Tag color="green">{record.type}</Tag>
+                            <b>
+                              <Tooltip title={record.id}>{record.name}</Tooltip>
+                            </b>
+                          </p>
+                          {record.description}
+                        </div>
                       )
                     }
-                    return (
-                      <div>
-                        <div className={CSS.font_size_xs}>
-                          <Code language="sql" style={{ overflowWrap: 'anywhere' }}>
-                            {record.query}
-                          </Code>
-                        </div>
-                        {record.test_args && (
-                          <div>
-                            <div className={CSS.padding_v_m}>
-                              <b>Test args:</b>
-                            </div>
-                            <Code language="json">{JSON.stringify(record.test_args, null, 2)}</Code>
+                  },
+                  {
+                    title: 'SQL',
+                    key: 'query',
+                    render: (record: SqlQuery) => {
+                      if (record.query === '*') {
+                        return (
+                          <Alert
+                            type="warning"
+                            message="Query has SELECT * access on all tables."
+                          />
+                        )
+                      }
+                      return (
+                        <div>
+                          <div className={CSS.font_size_xs}>
+                            <Code language="sql" style={{ overflowWrap: 'anywhere' }}>
+                              {record.query}
+                            </Code>
                           </div>
-                        )}
-                      </div>
-                    )
+                          {record.test_args && (
+                            <div>
+                              <div className={CSS.padding_v_m}>
+                                <b>Test args:</b>
+                              </div>
+                              <Code language="json">
+                                {JSON.stringify(record.test_args, null, 2)}
+                              </Code>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
                   }
-                }
-              ]}
-            />
+                ]}
+              />
+            )}
           </div>
         </>
       )

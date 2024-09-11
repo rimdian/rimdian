@@ -9,7 +9,7 @@ import RouteLogin from 'components/login/route_login'
 import RouteResetPassword from 'components/login/route_reset_password'
 import RouteConsumeResetPassword from 'components/login/route_consume_reset_password'
 import RouteOrganizations from 'components/organization/route_list'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ConfigProvider, Spin } from 'antd'
 import RouteOrganizationDashboard from 'components/organization/route_dashboard'
 import { OrganizationsCtx } from 'components/organization/context_organizations'
@@ -91,7 +91,7 @@ const App = () => {
     <ConfigProvider theme={CSS.AntD}>
       <div className={appCss}>
         <QueryClientProvider client={queryClient}>
-          <ReactQueryDevtools initialIsOpen={false} />
+          {/* <ReactQueryDevtools initialIsOpen={false} /> */}
           <AuthProvider>
             <BrowserRouter>
               <Routes>

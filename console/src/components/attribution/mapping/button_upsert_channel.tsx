@@ -152,9 +152,14 @@ const AddOriginButton = (props: AddOriginButtonProps) => {
                   return origin
                 }) as any
 
+                // remove duplicates by comparing id
+                const uniqueOrigins = origins.filter(
+                  (v: any, i: number, a: any) => a.findIndex((t: any) => t.id === v.id) === i
+                )
+
                 form.resetFields()
                 setModalVisible(false)
-                props.onComplete(origins as Origin[])
+                props.onComplete(uniqueOrigins as Origin[])
               } else {
                 const origin = { ...values }
                 origin.match_operator = 'equals'

@@ -11,7 +11,8 @@ import {
   Tag,
   Modal,
   message,
-  Space
+  Space,
+  Tabs
 } from 'antd'
 import { find, kebabCase } from 'lodash'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -54,12 +55,13 @@ export const FindChannelFromOrigin = (
 
 type AddOriginButtonProps = {
   channels: Channel[]
-  onComplete: (origin: Origin) => void
+  onComplete: (origin: Origin | Origin[]) => void
 }
 
 const AddOriginButton = (props: AddOriginButtonProps) => {
   const [form] = Form.useForm()
   const [modalVisible, setModalVisible] = useState(false)
+  const [activeKey, setActiveKey] = useState('one')
 
   const onClicked = () => {
     setModalVisible(true)
@@ -84,6 +86,34 @@ const AddOriginButton = (props: AddOriginButtonProps) => {
     return Promise.resolve(undefined)
   }
 
+  const mappingListValidator = (_rule: any, value: any) => {
+    if (!value) return Promise.resolve(undefined)
+
+    // split list by line
+    const list = value.split('\n')
+
+    for (let line of list) {
+      const parts = line.split(' / ')
+      if (parts.length < 2 || parts[1] === '') {
+        return Promise.reject('The "medium" field is required!')
+      }
+      if (parts[0] === '') {
+        return Promise.reject('The "source" field is required!')
+      }
+
+      // check if this source/medium is already in another channel
+      const foundChannel = FindChannelFromOrigin(props.channels, parts[0], parts[1], parts[2])
+
+      if (foundChannel) {
+        return Promise.reject(
+          'This "source / medium" is already mapped in the channel ' + foundChannel.name + '!'
+        )
+      }
+    }
+
+    return Promise.resolve(undefined)
+  }
+
   return (
     <>
       <Button type="primary" size="small" block onClick={onClicked}>
@@ -102,44 +132,86 @@ const AddOriginButton = (props: AddOriginButtonProps) => {
           form
             .validateFields()
             .then((values: Origin) => {
-              // console.log('onComplete', values);
-              form.resetFields()
-              setModalVisible(false)
-              values.match_operator = 'equals'
-              values.id = values.utm_source.trim() + ' / ' + values.utm_medium.trim()
-              if (values.utm_campaign && values.utm_campaign.trim() !== '')
-                values.id += ' / ' + values.utm_campaign.trim()
-              props.onComplete(values)
+              if (values.list) {
+                // split list by line
+                const list = values.list.split('\n')
+                const origins = list.map((line) => {
+                  const parts = line.split(' / ')
+                  const origin = {
+                    match_operator: 'equals',
+                    utm_source: parts[0].trim(),
+                    utm_medium: parts[1].trim()
+                  } as any
+                  if (parts[2]) origin.utm_campaign = parts[2].trim()
+
+                  // compute id
+                  origin.id = origin.utm_source + ' / ' + origin.utm_medium
+                  if (origin.utm_campaign && origin.utm_campaign !== '') {
+                    origin.id += ' / ' + origin.utm_campaign
+                  }
+                  return origin
+                }) as any
+
+                form.resetFields()
+                setModalVisible(false)
+                props.onComplete(origins as Origin[])
+              } else {
+                const origin = { ...values }
+                origin.match_operator = 'equals'
+                origin.id = origin.utm_source.trim() + ' / ' + origin.utm_medium.trim()
+                if (origin.utm_campaign && origin.utm_campaign.trim() !== '')
+                  origin.id += ' / ' + origin.utm_campaign.trim()
+                form.resetFields()
+                setModalVisible(false)
+                props.onComplete(origin)
+              }
             })
             .catch(console.error)
         }}
       >
-        <Form form={form} name="form_add_origin" labelCol={{ span: 8 }} wrapperCol={{ span: 14 }}>
-          <Form.Item
-            label="utm_source"
-            name="utm_source"
-            rules={[{ required: true, type: 'string' }, { validator: mappingValidator }]}
-          >
-            <Input />
-          </Form.Item>
+        {/* Tab: one by one, Tab: paste list */}
+        <Tabs
+          className={CSS.padding_v_xl}
+          activeKey={activeKey}
+          onChange={(key) => setActiveKey(key)}
+          destroyInactiveTabPane={true}
+          items={[
+            {
+              label: 'Only one',
+              key: 'one',
+              children: (
+                <>
+                  <Form
+                    form={form}
+                    name="form_add_origin"
+                    labelCol={{ span: 8 }}
+                    wrapperCol={{ span: 14 }}
+                  >
+                    <Form.Item
+                      label="utm_source"
+                      name="utm_source"
+                      rules={[{ required: true, type: 'string' }, { validator: mappingValidator }]}
+                    >
+                      <Input />
+                    </Form.Item>
 
-          <Form.Item
-            label="utm_medium"
-            name="utm_medium"
-            rules={[{ required: true, type: 'string' }, { validator: mappingValidator }]}
-          >
-            <Input />
-          </Form.Item>
+                    <Form.Item
+                      label="utm_medium"
+                      name="utm_medium"
+                      rules={[{ required: true, type: 'string' }, { validator: mappingValidator }]}
+                    >
+                      <Input />
+                    </Form.Item>
 
-          <Form.Item
-            label="utm_campaign - optional"
-            name="utm_campaign"
-            rules={[{ required: false, type: 'string' }, { validator: mappingValidator }]}
-          >
-            <Input />
-          </Form.Item>
+                    <Form.Item
+                      label="utm_campaign - optional"
+                      name="utm_campaign"
+                      rules={[{ required: false, type: 'string' }, { validator: mappingValidator }]}
+                    >
+                      <Input />
+                    </Form.Item>
 
-          {/* <Form.Item shouldUpdate>
+                    {/* <Form.Item shouldUpdate>
                   {(_funcs) => {
                       // console.log('values', funcs.getFieldsValue());
 
@@ -176,7 +248,33 @@ const AddOriginButton = (props: AddOriginButtonProps) => {
                       </>
                   }}
               </Form.Item> */}
-        </Form>
+                  </Form>
+                </>
+              )
+            },
+            {
+              label: 'Paste list',
+              key: 'list',
+              children: (
+                <>
+                  <Form form={form} name="form_add_origin_list" layout="vertical">
+                    <Form.Item
+                      label="Paste list of origins"
+                      help="Each line should contain an utm_source / utm_medium. You can optionally add an utm_campaign."
+                      name="list"
+                      rules={[
+                        { required: true, type: 'string' },
+                        { validator: mappingListValidator }
+                      ]}
+                    >
+                      <Input.TextArea rows={10} />
+                    </Form.Item>
+                  </Form>
+                </>
+              )
+            }
+          ]}
+        />
       </Modal>
     </>
   )
@@ -412,9 +510,19 @@ const OriginsInput = (props: OriginsInputProps) => {
         channels={props.channels}
         onComplete={(values: any) => {
           const origins = props.value ? props.value.slice() : []
-          origins.push(values)
+          // if values is an array
+          if (Array.isArray(values)) {
+            origins.push(...values)
+          } else {
+            origins.push(values)
+          }
           props.onChange?.(origins)
         }}
+        // onCompleteMany={(values: any) => {
+        //   const origins = props.value ? props.value.slice() : []
+        //   origins.push(...values)
+        //   props.onChange?.(origins)
+        // }}
       />
     </div>
   )

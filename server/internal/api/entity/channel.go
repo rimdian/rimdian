@@ -210,7 +210,11 @@ func (origin *ChannelOrigin) Validate(forChannel *Channel, allChannels []*Channe
 	if found, _ := FindChannelFromOrigin(allChannels, origin.UTMSource, origin.UTMMedium, origin.UTMCampaign); found != nil && found.ID != forChannel.ID {
 		// log.Printf("forChannel %+v\n", forChannel)
 		// log.Printf("exists in %+v\n", found)
-		return eris.Wrapf(ErrChannelOriginAlreadyMapped, "exists in channel %v", found.Name)
+		campaign := ""
+		if origin.UTMCampaign != nil {
+			campaign = "/ " + *origin.UTMCampaign
+		}
+		return eris.Wrapf(ErrChannelOriginAlreadyMapped, "%v / %v %v exists in channel %v", origin.UTMSource, origin.UTMMedium, campaign, found.Name)
 	}
 
 	return nil

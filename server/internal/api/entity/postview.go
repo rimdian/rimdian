@@ -777,7 +777,7 @@ func (s *Postview) FindChannelFromOrigin(channels []*Channel) (channel *Channel,
 	}
 
 	// find eventual matching channel
-	return FindChannelFromOrigin(channels, source, medium, campaign)
+	return FindChannelFromOrigin(channels, false, source, medium, campaign)
 }
 
 func ComputePostviewID(externalID string) string {

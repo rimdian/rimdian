@@ -207,7 +207,7 @@ func (origin *ChannelOrigin) Validate(forChannel *Channel, allChannels []*Channe
 	}
 
 	// verify that origin is not already mapped
-	if found, origin := FindChannelFromOrigin(allChannels, origin.UTMSource, origin.UTMMedium, origin.UTMCampaign); found != nil && found.ID != forChannel.ID {
+	if found, origin := FindChannelFromOrigin(allChannels, true, origin.UTMSource, origin.UTMMedium, origin.UTMCampaign); found != nil && found.ID != forChannel.ID {
 		// log.Printf("forChannel %+v\n", forChannel)
 		// log.Printf("exists in %+v\n", found)
 		campaign := ""
@@ -367,7 +367,28 @@ func ExtractSourceMediumCampaignFromOrigin(origin string) (source string, medium
 	return source, medium, campaign, nil
 }
 
-func FindChannelFromOrigin(channels []*Channel, source string, medium string, campaignName *string) (*Channel, *ChannelOrigin) {
+func FindChannelFromOrigin(channels []*Channel, exactMatch bool, source string, medium string, campaignName *string) (*Channel, *ChannelOrigin) {
+
+	// exact match is used when we add new channel origins
+	if exactMatch {
+
+		for _, ch := range channels {
+			for _, origin := range ch.Origins {
+				// source medium campaign matches
+				if campaignName != nil {
+					if origin.UTMCampaign != nil && *origin.UTMCampaign == *campaignName && origin.UTMSource == source && origin.UTMMedium == medium {
+						return ch, origin
+					}
+				} else {
+					if origin.UTMCampaign == nil && origin.UTMSource == source && origin.UTMMedium == medium {
+						return ch, origin
+					}
+				}
+			}
+		}
+
+		return nil, nil
+	}
 
 	// find mapped campaign first
 	if campaignName != nil && *campaignName != "" {

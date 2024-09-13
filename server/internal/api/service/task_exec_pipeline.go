@@ -530,7 +530,7 @@ func (pipe *TaskExecPipeline) EnsureUsersLock(ctx context.Context) error {
 // for that reason they will trigger the eventual workflows+hooks asynchronously at the end  of the pipeline
 func (pipe *TaskExecPipeline) InsertChildDataLog(ctx context.Context, data entity.ChildDataLog) (err error) {
 
-	childDataLog := entity.NewTaskDataLog(pipe.Workspace.ID, pipe.Task.ID, data)
+	childDataLog := entity.NewTaskDataLog(pipe.Workspace.ID, pipe.TaskExec.ID, data)
 
 	// determine if this child data_log should be already considered as "done" or not
 	childDataLog.Checkpoint = entity.DataLogCheckpointDone

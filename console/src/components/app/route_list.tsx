@@ -36,7 +36,7 @@ const RouteApps = () => {
   // in dev we rewrite the endpoints to localhost
   if (window.Config.ENV === 'development') {
     manifests.forEach((app) => {
-      app.ui_endpoint = 'https://localhost:3000'
+      app.ui_endpoint = 'http://localhost:3000' + app.ui_endpoint.replace(/^https?:\/\/[^/]+/, '')
       app.webhook_endpoint = 'https://localhost:3000/api/webhooks'
     })
   }

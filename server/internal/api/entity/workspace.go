@@ -262,6 +262,16 @@ func (x MessagingSettings) Value() (driver.Value, error) {
 	return json.Marshal(x)
 }
 
+// restricted fields for apps
+type AppWorkspace struct {
+	ID            string        `json:"id"`
+	Name          string        `json:"name"`
+	Currency      string        `json:"currency"`
+	Domains       Domains       `json:"domains"`
+	Channels      Channels      `json:"channels"`
+	ChannelGroups ChannelGroups `json:"channel_groups"`
+}
+
 type Workspace struct {
 	ID               string     `db:"id" json:"id"`
 	Name             string     `db:"name" json:"name"`
@@ -301,6 +311,17 @@ type Workspace struct {
 	// Attached server-side
 	CubeJSToken string       `json:"cubejs_token,omitempty"`
 	LicenseInfo *LicenseInfo `json:"license_info,omitempty"`
+}
+
+func (w *Workspace) GetAppWorkspace() *AppWorkspace {
+	return &AppWorkspace{
+		ID:            w.ID,
+		Name:          w.Name,
+		Currency:      w.Currency,
+		Domains:       w.Domains,
+		Channels:      w.Channels,
+		ChannelGroups: w.ChannelGroups,
+	}
 }
 
 func (w *Workspace) AttachMetadatas(ctx context.Context, cfg *Config) (err error) {

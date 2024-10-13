@@ -12,7 +12,8 @@ type AppFromTokenParams struct {
 }
 
 type AppFromToken struct {
-	App *entity.App `json:"app"`
+	App       *entity.App          `json:"app"`
+	Workspace *entity.AppWorkspace `json:"workspace"`
 }
 
 type AppListResult struct {

@@ -103,6 +103,8 @@ func (svc *ServiceImpl) AppFromToken(ctx context.Context, params *dto.AppFromTok
 			return nil, eris.Wrap(err, "AppFromToken")
 		}
 
+		result.Workspace = workspace.GetAppWorkspace()
+
 		return []byte(result.App.SecretKey), nil
 	})
 

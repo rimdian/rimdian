@@ -440,7 +440,7 @@ func (pipe *DataLogPipeline) ProcessNextStep(ctx context.Context) {
 
 	// stop processing if there is an error in a previous step
 	if pipe.HasError() {
-		pipe.Logger.Printf("error in previous step, aborting: %+v\n", pipe.QueueResult)
+		pipe.Logger.Printf("error in previous step, aborting: %+v\n, workspace: %+v\n", pipe.QueueResult, pipe.Workspace)
 		return
 	}
 

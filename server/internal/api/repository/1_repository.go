@@ -355,6 +355,7 @@ func (repo *RepositoryImpl) GetWorkspaceConnection(ctx context.Context, workspac
 
 	// use the DB
 	if _, err := conn.ExecContext(ctx, fmt.Sprintf("USE %v", realName)); err != nil {
+		conn.Close()
 		return nil, eris.Wrapf(err, "GetConnection use DB %v error", realName)
 	}
 
